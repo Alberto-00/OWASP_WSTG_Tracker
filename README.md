@@ -30,7 +30,7 @@ pip install -r requirements.txt
 python main.py
 ```
 
-Assicurati che la seguente struttura sia mantenuta:
+La struttura del progetto è la seguente:
 
 ```
 .
