@@ -1,6 +1,6 @@
 # OWASP WSTG Checklist Tracker
 
-Applicazione desktop in PyQt6 pensata per facilitare i Web Application Penetration Test (WAPT), permettendo di visualizzare e gestire in modo interattivo l'intera checklist delle OWASP Web Security Testing Guide (WSTG). Grazie al tracciamento dello stato di ogni test e alla possibilità di filtrare e annotare, l'app semplifica l'organizzazione e la documentazione delle attività durante un assessment. Ogni test è corredato da riferimenti, strumenti consigliati e misure di remediation.
+Applicazione desktop pensata per facilitare i Web Application Penetration Test (WAPT), permettendo di visualizzare e gestire in modo interattivo l'intera checklist delle OWASP Web Security Testing Guide (WSTG). Grazie al tracciamento dello stato di ogni test e alla possibilità di filtrare e annotare, l'app semplifica l'organizzazione e la documentazione delle attività durante un assessment. Ogni test è corredato da riferimenti, strumenti consigliati e misure di remediation.
 
 Gli eseguibili per Windows e Linux sono disponibili nella sezione **Releases** del repository.
 
@@ -51,7 +51,7 @@ Assicurati che la seguente struttura sia mantenuta:
 └── main.py
 ```
 
-## Salvataggio Stato Checklist
+## Salvataggio stato WSTG
 
 Il file viene salvato in `saves/progress_temp.json` o in un file selezionato manualmente via GUI.
 
