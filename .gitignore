@@ -57,3 +57,4 @@ pylint-global.txt
 .pyre/
 
 .megaignore
+*.ini
