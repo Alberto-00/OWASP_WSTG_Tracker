@@ -35,8 +35,10 @@ La struttura del progetto è la seguente:
 ```
 .
 ├── public/
-│   ├── asset/
-│   │   └── logo.png
+│   ├── icon/
+│   │   ├── icon_256x256.ico
+│   │   ├── logo_app.png
+│   │   └── logo_app_2.png
 │   ├── json/
 │   │   ├── category_descriptions.json
 │   │   ├── checklist.json
