@@ -1,100 +1,61 @@
-import sys
 import os
 import json
-import requests
-from bs4 import BeautifulSoup
+import re
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QListWidget,
     QComboBox, QTextEdit, QLineEdit, QPushButton, QListWidgetItem,
-    QFileDialog, QMenu, QFrame
+    QFileDialog, QMenu, QFrame, QLabel
 )
 from PyQt6.QtGui import QTextCharFormat, QFont, QColor
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QSize
 from PyQt6.QtWidgets import QStyledItemDelegate
-from PyQt6.QtGui import QBrush
 from PyQt6.QtWidgets import QMessageBox
+from PyQt6 import QtCore
 
-JSON_URL = "https://raw.githubusercontent.com/OWASP/wstg/master/checklists/checklist.json"
+
+WSTG = "../public/json/checklist.json"
+WSTG_INFO = "../public/json/checklist_info_data.json"
+LOAD_DEFAULT_CHECKLIST_STATE = "../public/json/progress.json"
+WSTG_CATEGORY_DESCRIPTIONS = "../public/json/category_descriptions.json"
+OWASP_TOP_10 = "../public/json/owasp_top_10.json"
+
+SAVES_WSTG_STATE = "../public/saves/progress_temp.json"
+
 
 def fetch_checklist():
-    response = requests.get(JSON_URL)
-    if response.status_code == 200:
-        return response.json()
-    return {}
-
-def fetch_reference_details(url):
     try:
-        response = requests.get(url)
-        if response.status_code != 200:
-            return {"summary": "<i>Failed to fetch reference.</i>"}
-
-        soup = BeautifulSoup(response.text, "html.parser")
-        main_content = soup.find("div", id="main")
-        if not main_content:
-            return {"summary": "<i>Main content not found.</i>"}
-
-        sections = {
-            "summary": "",
-            "how-to": "",
-            "tools": "",
-            "test objectives": "",
-            "remediation": ""
-        }
-
-        current_section = "summary"
-        capture = False
-
-        for element in main_content.find_all(['h2', 'p', 'ul', 'li', 'pre', 'code', 'br']):
-            if element.name == 'h2':
-                section_id = element.get('id', '').lower()
-                title = element.get_text(strip=True)
-                if 'summary' in section_id:
-                    current_section = "summary"
-                    capture = True
-                elif 'how-to' in section_id:
-                    current_section = "how-to"
-                elif 'tools' in section_id:
-                    current_section = "tools"
-                elif 'test objectives' in section_id:
-                    current_section = "test objectives"
-                elif 'remediation' in section_id:
-                    current_section = "remediation"
-
-                sections[current_section] += f"<h3>{title}</h3>"
-            elif capture:
-                if element.name == 'p':
-                    sections[current_section] += f"<p>{element.get_text(' ', strip=True)}</p>"
-                elif element.name == 'ul':
-                    sections[current_section] += "<ul>"
-                    for li in element.find_all('li'):
-                        sections[current_section] += f"<li>{li.get_text(strip=True)}</li>"
-                    sections[current_section] += "</ul>"
-                elif element.name == 'pre':
-                    code_block = element.get_text(" ", strip=True)
-                    sections[current_section] += f"<pre><code>{code_block}</code></pre>"
-                elif element.name == 'br':
-                    sections[current_section] += "<br>"
-                elif element.name[0] == 'h' and element.name != "h2":
-                    sections[current_section] += f"<h5>{element.get_text(strip=True)}</h5>"
-
-        return sections
-
+        filepath = os.path.join(os.path.dirname(__file__), WSTG)
+        with open(filepath, "r", encoding="utf-8") as f:
+            return json.load(f)
     except Exception as e:
-        return {"summary": f"<i>Error fetching reference: {str(e)}</i>"}
-
+        print(f"Errore nel caricamento del checklist locale: {e}")
+        return {}
 
 
 class ColorPreservingDelegate(QStyledItemDelegate):
     def paint(self, painter, option, index):
         fg = index.data(Qt.ItemDataRole.ForegroundRole)
         bg = index.data(Qt.ItemDataRole.BackgroundRole)
+        border_color = index.data(Qt.ItemDataRole.UserRole + 1)
 
-        if bg is not None:
-            option.palette.setBrush(option.palette.ColorRole.Highlight, QBrush(bg))
-        if fg is not None:
-            option.palette.setBrush(option.palette.ColorRole.HighlightedText, QBrush(fg))
+        painter.save()
 
+        # Background personalizzato
+        if bg:
+            painter.fillRect(option.rect, bg)
+
+        # Disegna il testo
         super().paint(painter, option, index)
+
+        # Bordo personalizzato
+        if border_color and border_color != "transparent":
+            pen = painter.pen()
+            pen.setColor(QColor(border_color))
+            pen.setWidth(1)
+            painter.setPen(pen)
+            painter.drawRect(option.rect.adjusted(0, 0, -1, -1))
+
+        painter.restore()
 
 
 class OWASPChecklistApp(QWidget):
@@ -107,30 +68,49 @@ class OWASPChecklistApp(QWidget):
         self.categories = sorted(self.data["categories"].keys())
         self.status_map = {}
         self.category_descriptions = self.loadCategoryDescriptions()
+        self.offline_reference_data = self.loadOfflineReferenceData()
 
-        self.loadProgressFromFile()  # 👈 carica in automatico
+        # self.loadProgressFromFile()  # 👈 carica in automatico
         self.initUI()
     
-    def conditionalContextMenu(self, pos):
-        selected_category = self.categoryDropdown.currentText()
-        if selected_category == "📂 All Categories":
-            self.showListContextMenu(pos)
+    def loadOfflineReferenceData(self):
+        try:
+            filepath = os.path.join(os.path.dirname(__file__), WSTG_INFO)
+            with open(filepath, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"Errore caricando dati offline: {e}")
+            return {}
     
     def loadProgressFromFile(self):
-        filepath = os.path.join(os.path.dirname(__file__), "progress.json")
+        filepath = os.path.join(os.path.dirname(__file__), LOAD_DEFAULT_CHECKLIST_STATE)
         if os.path.exists(filepath):
             with open(filepath, "r") as f:
                 self.status_map = json.load(f)
     
     def loadCategoryDescriptions(self):
         try:
-            filepath = os.path.join(os.path.dirname(__file__), "category_descriptions.json")
+            filepath = os.path.join(os.path.dirname(__file__), WSTG_CATEGORY_DESCRIPTIONS)
             if os.path.exists(filepath):
                 with open(filepath, "r", encoding="utf-8") as f:
                     return json.load(f)
         except Exception as e:
             print(f"Errore nel caricamento descrizioni categorie: {e}")
         return {}
+
+    def loadOwaspTop10(self):
+        try:
+            path = os.path.join(os.path.dirname(__file__), OWASP_TOP_10)
+            with open(path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"Errore nel caricamento OWASP Top 10: {e}")
+            return {}
+    
+    def conditionalContextMenu(self, pos):
+        selected_category = self.categoryDropdown.currentText()
+        if selected_category == "📂 All Categories":
+            self.showListContextMenu(pos)
 
     def initUI(self):
         layout = QVBoxLayout()
@@ -188,7 +168,6 @@ class OWASPChecklistApp(QWidget):
             }
         """)
 
-
         topControlsLayout = QHBoxLayout()
         
         self.searchBar = QLineEdit()
@@ -202,6 +181,10 @@ class OWASPChecklistApp(QWidget):
         self.categoryDropdown.currentIndexChanged.connect(self.updateChecklist)
         topControlsLayout.addWidget(self.categoryDropdown)
 
+        self.mappingButton = QPushButton("🧩 Mapping WSTG ↔ OWASP Top 10")
+        self.mappingButton.clicked.connect(self.showMappingTable)
+        topControlsLayout.addWidget(self.mappingButton)
+
         self.saveButton = QPushButton("💾 Salva Stato")
         self.saveButton.clicked.connect(self.saveStatus)
         topControlsLayout.addWidget(self.saveButton)
@@ -210,20 +193,50 @@ class OWASPChecklistApp(QWidget):
         self.loadButton.clicked.connect(self.loadStatus)
         topControlsLayout.addWidget(self.loadButton)
 
+        self.mappingButton.setFixedHeight(32)
+        self.mappingButton.setStyleSheet("""
+            QPushButton {
+                background-color: #80bfff;
+                color: #2f3035;
+                border: 1px solid #555;
+                border-radius: 5px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #5aaaff;
+            }
+        """)
+        
         layout.addLayout(topControlsLayout)
 
         mainLayout = QHBoxLayout()
 
         self.checklistBox = QListWidget()
+        self.checklistBox.setStyleSheet("""
+            QListWidget::item {
+                border: 1px solid transparent;
+                padding: 6px;
+                margin: 1px;
+                border-radius: 4px;
+                outline: none;
+            }
+            QListWidget::item:hover {
+                border: 1px solid #5aaaff;
+                background-color: rgba(90, 170, 255, 0.1);
+            }
+            QListWidget::item:selected {
+                border: 1px solid #80bfff;
+                background-color: rgba(90, 170, 255, 0.2);
+            }
+        """)
         self.checklistBox.setItemDelegate(ColorPreservingDelegate())
         self.checklistBox.itemClicked.connect(self.displayDetails)
         self.checklistBox.currentRowChanged.connect(self.handleArrowKeyNavigation)
+        self.checklistBox.setFocusPolicy(Qt.FocusPolicy.NoFocus)
        
         # Abilita menu contestuale personalizzato (clic destro)
         self.checklistBox.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.checklistBox.customContextMenuRequested.connect(self.showListContextMenu)
-
-
         self.checklistBox.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         mainLayout.addWidget(self.checklistBox)
 
@@ -250,22 +263,20 @@ class OWASPChecklistApp(QWidget):
         self.btnSummary = QPushButton("📄 Summary")
         self.btnHowTo = QPushButton("🔍 How-To")
         self.btnTools = QPushButton("🛠 Tools")
-        self.btnObjectives = QPushButton("🎯 Objectives")
         self.btnRemediation = QPushButton("🛡 Remediation")
 
         # Raccogli i pulsanti reference in una lista
         self.referenceButtons = [
-            self.btnSummary, self.btnHowTo, self.btnTools, self.btnObjectives, self.btnRemediation
+            self.btnSummary, self.btnHowTo, self.btnTools, self.btnRemediation
         ]
 
         # Disabilita tutti i pulsanti all'avvio (rimangono visibili)
         for btn in self.referenceButtons:
             btn.setEnabled(False)
     
-
         # Stile coerente
-        for btn in [self.btnSummary, self.btnHowTo, self.btnTools, self.btnObjectives, self.btnRemediation]:
-            btn.setFixedSize(120, 40)
+        for btn in [self.btnSummary, self.btnHowTo, self.btnTools, self.btnRemediation]:
+            btn.setFixedSize(160, 40)
             btn.setStyleSheet("""
                 QPushButton {
                     background-color: #2f3035;
@@ -287,24 +298,158 @@ class OWASPChecklistApp(QWidget):
         # Aggiungi layout al rightLayout
         rightLayout.addLayout(self.referenceTabs)
 
-
         mainLayout.addLayout(rightLayout)
         layout.addLayout(mainLayout)
         self.setLayout(layout)
 
         self.updateChecklist()
+        self.owasp_top10 = self.loadOwaspTop10()
 
     def _make_button(self, label, action):
         btn = QPushButton(label)
         btn.clicked.connect(action)
         return btn
-    
+
+    def showMappingTable(self):
+        from PyQt6.QtWidgets import QSplitter, QListWidgetItem, QTextEdit, QHBoxLayout, QListWidget, QWidget
+
+        mapping_data = {
+            "Information Gathering": "A01, A05, A06",
+            "Configuration and Deployment Management Testing": "A05, A06",
+            "Identity Management Testing": "A07",
+            "Authentication Testing": "A07",
+            "Authorization Testing": "A01",
+            "Session Management Testing": "A07",
+            "Input Validation Testing": "A03, A10",
+            "Testing for Error Handling": "A05",
+            "Testing for Weak Cryptography": "A02, A08",
+            "Business Logic Testing": "A04, A08",
+            "Client-side Testing": "A03, A05",
+            "API Testing": "A01, A03, A05, A06, A10"
+        }
+
+        level_colors = {
+            "critico": "#ff4c4c",
+            "alto": "#ff9800",
+            "medio": "#ffc107",
+            "basso": "#4caf50"
+        }
+
+        dialog = QWidget()
+        dialog.setWindowTitle("Mapping WSTG ↔ OWASP Top 10")
+        dialog.setGeometry(200, 200, 1300, 580)
+        layout = QHBoxLayout(dialog)
+
+        splitter = QSplitter()
+        splitter.setOrientation(Qt.Orientation.Horizontal)
+
+        # Tabella mapping WSTG ↔ OWASP
+        html = (
+            "<table border='0' cellspacing='0' cellpadding='6' "
+            "style='border-collapse: collapse; table-layout: fixed; width: 100%;"
+            "background-color: rgba(33, 34, 38, 0.95); border: 1px solid #3a3b40; box-shadow: 0 0 15px rgba(128,191,255,0.3); border-radius: 6px;'>"
+            "<col style='width: 49%; text-align: left;'>"
+            "<col style='width: 2%; background-color: rgba(90,170,255,0.2);'>"
+            "<col style='width: 49%;'>"
+        )
+
+        html += (
+            "<tr style='background-color: rgba(128,191,255,0.12);'>"
+            "<th align='left' style='color:#d2eaff; font-size: 15px; padding: 10px 6px;'>Categoria WSTG</th>"
+            "<th></th>"
+            "<th style='color:#d2eaff; font-size: 15px; padding: 10px 6px;'>OWASP Top 10 (2021)</th>"
+            "</tr>"
+        )
+
+        row_colors = ["rgba(46, 49, 55, 0.7)", "rgba(38, 40, 45, 0.7)"]
+        for i, (wstg_cat, owasp_refs) in enumerate(mapping_data.items()):
+            bg_color = row_colors[i % 2]
+            html += (
+                f"<tr style='background-color:{bg_color};'>"
+                f"<td style='padding: 10px 8px; color:#dceaf7;'>{wstg_cat}</td>"
+                f"<td></td>"
+                f"<td style='padding: 10px 8px; color:#e6f2ff;'>{owasp_refs}</td>"
+                f"</tr>"
+            )
+
+        html += "</table>"
+
+        html_box = QTextEdit()
+        html_box.setMinimumWidth(475)
+        html_box.setHtml(html)
+        html_box.setReadOnly(True)
+        html_box.setStyleSheet("background-color: #2a2b2e; color: #ffffff; font-size: 13px; border: none; border-radius: 6px;")
+
+        # Lista OWASP Top 10
+        self.owasp_list_widget = QListWidget()
+        self.owasp_list_widget.setMinimumWidth(340)
+        self.owasp_list_widget.setStyleSheet("background-color: #2a2b2e; color: #ffffff; font-size: 13px;")
+
+        for code, entry in self.owasp_top10.items():
+            item = QListWidgetItem(code)
+            level = entry.get("level", "medio")
+            color = QColor(level_colors.get(level, "#ffffff"))
+            item.setForeground(color)
+            
+            # Imposta un'altezza maggiore per ogni riga OWASP
+            item.setSizeHint(QSize(0, 34))  # Altezza riga personalizzata
+            
+            self.owasp_list_widget.addItem(item)
+
+        # Box descrizione OWASP
+        self.owasp_detail_box = QTextEdit()
+        self.owasp_detail_box.setReadOnly(True)
+        self.owasp_detail_box.setStyleSheet("background-color: #232429; color: #d0d0d0; font-family: Consolas; font-size: 13px;")
+
+        self.owasp_list_widget.currentItemChanged.connect(self.showOwaspDescription)
+
+        # Layout
+        splitter.addWidget(html_box)
+        splitter.addWidget(self.owasp_list_widget)
+        splitter.addWidget(self.owasp_detail_box)
+        splitter.setStretchFactor(0, 3)
+        splitter.setStretchFactor(1, 2)
+        splitter.setStretchFactor(2, 5)
+
+        layout.addWidget(splitter)
+        dialog.setLayout(layout)
+        dialog.setStyleSheet("background-color: #232429;")
+        dialog.show()
+        dialog.raise_()
+        dialog.activateWindow()
+        
+        OWASPChecklistApp.center_window_on_screen(dialog)
+        self.mappingWindow = dialog
+
+    def center_window_on_screen(window):
+        screen_geometry = QApplication.primaryScreen().availableGeometry()
+        x = (screen_geometry.width() - window.width()) // 2
+        y = (screen_geometry.height() - window.height()) // 2
+        window.move(x, y)
+
+    def showOwaspDescription(self):
+        item = self.owasp_list_widget.currentItem()
+        if item:
+            code = item.text()
+            entry = self.owasp_top10.get(code, {})
+            desc_raw = entry.get("it", {}).get("description", "Descrizione non trovata.")
+            desc_html = desc_raw.replace("**Esempio:**", "<b style='color:#dddddd;'>Esempio:</b><br>").replace("\n", "<br>")
+            desc_html = re.sub(r"`([^`]+)`", r"<code style='background-color:#333;padding:2px 4px;border-radius:4px;font-family:Consolas;font-size:12px;'>\1</code>", desc_html)
+            link = entry.get("it", {}).get("link", "")
+
+            html = f"<h3 style='color:#80bfff;'>{code}</h3>"
+            html += f"<p style='color:#dddddd;'>{desc_html}</p>"
+
+            if link:
+                html += f"<p><a href='{link}' style='color:#bb86fc;'>{link}</a></p>"
+
+            self.owasp_detail_box.setHtml(html)
+
     def updateFooterStatus(self):
         done = sum(1 for v in self.status_map.values() if v == "done")
         progress = sum(1 for v in self.status_map.values() if v == "in-progress")
         pending = sum(1 for v in self.status_map.values() if v == "pending")
         if not hasattr(self, "footerStatus"):
-            from PyQt6.QtWidgets import QLabel
             self.footerStatus = QLabel()
             self.footerStatus.setStyleSheet("color: #aaaaaa; font-size: 12px; padding-top: 6px;")
             self.layout().addWidget(self.footerStatus)
@@ -359,8 +504,6 @@ class OWASPChecklistApp(QWidget):
 
         menu.exec(self.checklistBox.mapToGlobal(pos))
 
-
-
     def collapseAll(self, should_collapse):
         self.collapsed_sections = set(self.data["categories"].keys()) if should_collapse else set()
         self.updateChecklist()
@@ -368,7 +511,6 @@ class OWASPChecklistApp(QWidget):
 
         # Etichetta di riepilogo (solo se non già esistente)
         if not hasattr(self, "footerStatus"):
-            from PyQt6.QtWidgets import QLabel
             self.footerStatus = QLabel()
             self.footerStatus.setStyleSheet("color: #aaaaaa; font-size: 12px; padding-top: 6px;")
             self.layout().addWidget(self.footerStatus)
@@ -444,11 +586,13 @@ class OWASPChecklistApp(QWidget):
             if show_category:
                 if selected_category == "📂 All Categories":
                     spacer = QListWidgetItem("")
+                    spacer.setSizeHint(QtCore.QSize(0, 16))  # spazio ridotto
                     spacer.setFlags(Qt.ItemFlag.NoItemFlags)
                     self.checklistBox.addItem(spacer)
 
                     arrow = '▼' if category not in self.collapsed_sections else '▶'
                     category_title = QListWidgetItem(f"{arrow} {category}")
+                    category_title.setSizeHint(QtCore.QSize(0, 28))  # altezza maggiore
                     font = category_title.font()
                     font.setBold(True)
                     category_title.setFont(font)
@@ -479,21 +623,30 @@ class OWASPChecklistApp(QWidget):
 
                     if status == "done":
                         icon = "✅"
-                        bg, fg = QColor("#2e7d57"), QColor("#d0f5e0")
+                        bg = QColor(46, 125, 87, 30)  # verde trasparente
+                        fg = QColor("#d0f5e0")
+                        border_color = "#2e7d57"
                     elif status == "in-progress":
                         icon = "⏳"
-                        # bg, fg = QColor("#345481"), QColor("#d0e8ff") // Colore Blu
-                        bg, fg = QColor("#442c5c"), QColor("#bb86fc")  # Colore Grigio
+                        bg = QColor(187, 134, 252, 30)  # viola trasparente
+                        fg = QColor("#bb86fc")
+                        border_color = "#bb86fc"
                     else:
                         icon = "◻"
-                        bg, fg = QColor("transparent"), QColor("#dcdcdc")
+                        bg = QColor(0, 0, 0, 0)  # completamente trasparente
+                        fg = QColor("#dcdcdc")
+                        border_color = "transparent"
+
 
                     title = f"{icon} {test_id} - {test['name']}"
                     if search_query in test['name'].lower() or search_query in test['id'].lower():
                         item = QListWidgetItem(title)
                         item.setBackground(bg)
                         item.setForeground(fg)
+                        item.setData(Qt.ItemDataRole.UserRole + 1, border_color)
                         item.setData(Qt.ItemDataRole.UserRole, test_id)
+
+                        item.setSizeHint(QSize(0, 28))  # Altezza tra le righe personalizzata (default ≈ 22)
                         self.checklistBox.addItem(item)
 
         try:
@@ -508,17 +661,21 @@ class OWASPChecklistApp(QWidget):
                 color: #dcdcdc;
                 border: 1px solid #444;
                 padding: 6px;
+                border-radius: 4px;
             }
+            /*
             QComboBox::drop-down {
                 subcontrol-origin: padding;
                 subcontrol-position: top right;
                 width: 20px;
                 border-left: 1px solid #444;
-            }
+            }*/
             QComboBox QAbstractItemView {
                 background-color: #2a2b30;
                 selection-background-color: #3a3b40;
                 color: #ffffff;
+                border: 1px solid #444;
+                padding: 4px;
             }
             QComboBox:hover {
                 background-color: #383a40;
@@ -566,11 +723,9 @@ class OWASPChecklistApp(QWidget):
         for btn in self.referenceButtons:
             btn.setEnabled(False)
     
-
         # Reset pulsanti tab
-        for btn in [self.btnSummary, self.btnHowTo, self.btnTools, self.btnObjectives, self.btnRemediation]:
+        for btn in [self.btnSummary, self.btnHowTo, self.btnTools, self.btnRemediation]:
             btn.setChecked(False)
-
 
     def handleListClick(self, item):
         data = item.data(Qt.ItemDataRole.UserRole)
@@ -592,8 +747,6 @@ class OWASPChecklistApp(QWidget):
         elif selected_category != "📂 All Categories" and item.text().strip().endswith(":"):
             self.showCategoryDescription(selected_category)
 
-
-
     def displayDetails(self, item):
         if item:
             self.showDetails(item.text())
@@ -613,7 +766,7 @@ class OWASPChecklistApp(QWidget):
                     bold = QTextCharFormat()
                     bold.setFontWeight(QFont.Weight.Bold)
                     bold.setForeground(QColor("#ff80ab"))
-                    
+
                     cursor.insertText(f"📌 Category: {category}\n\n", bold)
                     cursor.insertText(f"🆔 ID: {test['id']}\n\n", bold)
 
@@ -629,43 +782,63 @@ class OWASPChecklistApp(QWidget):
                     cursor.insertHtml(f'<a href="{test["reference"]}" style="color:#ff80ab;">{test["reference"]}</a>\n\n')
                     self.detailsBox.setTextCursor(cursor)
 
-                    # 🔽 FETCH E VISUALIZZAZIONE DELLE SEZIONI REFERENCE
-                    self.current_reference_sections = fetch_reference_details(test.get("reference", ""))
+                    # 🔽 CARICAMENTO DATI DA FILE JSON OFFLINE
+                    self.current_reference_sections = self.offline_reference_data.get(test["id"])
+                    if not self.current_reference_sections:
+                        self.current_reference_sections = {
+                            "summary": "<i>Dati non disponibili offline.</i>",
+                            "how-to": "",
+                            "tools": [],
+                            "remediation": "",
+                            "test_objectives": []
+                        }
+
                     self.displayReferenceSection("summary")
 
-                    # 🔗 COLLEGA I PULSANTI ALLE SEZIONI
+                    # COLLEGA I BOTTONI
                     self.btnSummary.clicked.connect(lambda: self.displayReferenceSection("summary"))
                     self.btnHowTo.clicked.connect(lambda: self.displayReferenceSection("how-to"))
                     self.btnTools.clicked.connect(lambda: self.displayReferenceSection("tools"))
-                    self.btnObjectives.clicked.connect(lambda: self.displayReferenceSection("test objectives"))
                     self.btnRemediation.clicked.connect(lambda: self.displayReferenceSection("remediation"))
 
-                    # 🔘 IMPOSTA 'Summary' COME SELEZIONATO DI DEFAULT
-                    for btn in [self.btnSummary, self.btnHowTo, self.btnTools, self.btnObjectives, self.btnRemediation]:
+                    for btn in [self.btnSummary, self.btnHowTo, self.btnTools, self.btnRemediation]:
                         btn.setChecked(False)
                     self.btnSummary.setChecked(True)
 
-                    # Riabilita i pulsanti delle sezioni
                     for btn in self.referenceButtons:
                         btn.setEnabled(True)
                     return
 
-
     def displayReferenceSection(self, section):
-        html = self.current_reference_sections.get(section, "<i>Section not found.</i>")
-        self.referenceDetailsBox.setHtml(html)
-        for btn in [self.btnSummary, self.btnHowTo, self.btnTools, self.btnObjectives, self.btnRemediation]:
+        # Reset di tutti i pulsanti SEMPRE, prima di ogni altro controllo
+        for btn in self.referenceButtons:
             btn.setChecked(False)
+
+        # Mappa sezione → bottone
         mapping = {
             "summary": self.btnSummary,
             "how-to": self.btnHowTo,
             "tools": self.btnTools,
-            "test objectives": self.btnObjectives,
             "remediation": self.btnRemediation
         }
+
+        # Recupera i contenuti della sezione richiesta
+        content = self.current_reference_sections.get(section)
+
+        # Se vuoto o non esiste → messaggio fallback
+        if not content or (isinstance(content, str) and not content.strip()):
+            self.referenceDetailsBox.setHtml("<i>Sezione vuota o non disponibile.</i>")
+        else:
+            # Rendi HTML come lista solo se tools / test_objectives sono liste
+            if section in ["tools", "test_objectives", "test objectives"] and isinstance(content, list):
+                html = "<ul>" + "".join(f"<li>{item}</li>" for item in content) + "</ul>"
+            else:
+                html = content if isinstance(content, str) else str(content)
+            self.referenceDetailsBox.setHtml(html)
+
+        # Imposta il pulsante attuale come selezionato (se esiste)
         if section in mapping:
             mapping[section].setChecked(True)
-
 
     def showContextMenu(self, position):
         item = self.checklistBox.itemAt(position)
@@ -683,7 +856,7 @@ class OWASPChecklistApp(QWidget):
         self.updateChecklist()
 
     def saveStatus(self):
-        filepath = os.path.join(os.path.dirname(__file__), "progress_temp.json")
+        filepath = os.path.join(os.path.dirname(__file__), SAVES_WSTG_STATE)
         with open(filepath, 'w') as f:
             json.dump(self.status_map, f, indent=4)
 
@@ -693,7 +866,7 @@ class OWASPChecklistApp(QWidget):
             "<div style='font-size:15px; font-weight:600; letter-spacing:0.5px;'>"
             "Stato salvato correttamente</div>"
             "<br><div style='font-size:13px; font-weight:400;'>"
-            "Il file <code>progress_temp.json</code> è stato aggiornato."
+            "Il file <code>saves/progress_temp.json</code> è stato aggiornato."
             "</div>"
         )
         msg.setIcon(QMessageBox.Icon.Information)
@@ -729,9 +902,6 @@ class OWASPChecklistApp(QWidget):
 
         msg.exec()
 
-
-
-
     def loadStatus(self):
         filename, _ = QFileDialog.getOpenFileName(self, "Carica stato", "", "JSON Files (*.json)")
         if filename:
@@ -739,8 +909,3 @@ class OWASPChecklistApp(QWidget):
                 self.status_map = json.load(f)
             self.updateChecklist()
 
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    window = OWASPChecklistApp()
-    window.show()
-    sys.exit(app.exec())

@@ -58,3 +58,4 @@ pylint-global.txt
 
 .megaignore
 *.ini
+utils
