@@ -1,6 +1,8 @@
 # OWASP WSTG Checklist Tracker
 
-Applicazione desktop in PyQt6 per visualizzare, filtrare e annotare la checklist dell'OWASP Web Security Testing Guide (WSTG), con riferimento incrociato all'OWASP Top 10.
+Applicazione desktop in PyQt6 pensata per facilitare i Web Application Penetration Test (WAPT), permettendo di visualizzare e gestire in modo interattivo l'intera checklist delle OWASP Web Security Testing Guide (WSTG). Grazie al tracciamento dello stato di ogni test e alla possibilità di filtrare e annotare, l'app semplifica l'organizzazione e la documentazione delle attività durante un assessment. Ogni test è corredato da riferimenti, strumenti consigliati e misure di remediation.
+
+Gli eseguibili per Windows e Linux sono disponibili nella sezione **Releases** del repository.
 
 ## Caratteristiche
 
@@ -10,8 +12,6 @@ Applicazione desktop in PyQt6 per visualizzare, filtrare e annotare la checklist
 * 📚 Dettagli offline per ogni test (How-To, Tools, Remediation).
 * 🧩 Mappa visiva WSTG ↔ OWASP Top 10 (2021).
 * 💾 Salvataggio/caricamento stato checklist in JSON.
-* 🎨 UI dark mode moderna + splash screen animato.
-* 🖱️ Effetto hover coerente su ogni riga della lista e sulla tabella mapping.
 
 ## Requisiti
 
@@ -24,7 +24,7 @@ Installa le dipendenze con:
 pip install -r requirements.txt
 ```
 
-## Esecuzione
+## Esecuzione da terminale
 
 ```bash
 python main.py
@@ -34,61 +34,47 @@ Assicurati che la seguente struttura sia mantenuta:
 
 ```
 .
-├── asset/
-│   └── logo.png
-├── json/
-│   ├── checklist.json
-│   ├── category_descriptions.json
-│   ├── owasp_top_10.json
-│   └── wstg_offline_data.json
-├── saves/
-│   └── progress_temp.json (generato al salvataggio)
+├── public/
+│   ├── asset/
+│   │   └── logo.png
+│   ├── json/
+│   │   ├── category_descriptions.json
+│   │   ├── checklist.json
+│   │   ├── checklist_info_data.json
+│   │   ├── owasp_top_10.json
+│   │   └── progress.json
+│   └── saves/
+│       └── progress_temp.json
 ├── ui/
 │   ├── main_window.py
-│   └── splash_screen.py
-├── main.py
-├── requirements.txt
-└── README.md
+│   └── loading_screen.py
+└── main.py
 ```
 
 ## Salvataggio Stato Checklist
 
 Il file viene salvato in `saves/progress_temp.json` o in un file selezionato manualmente via GUI.
 
-## Produzione Eseguibili
+## Screenshot
 
-### Windows (usando PyInstaller)
+### Lista dei test WSTG
 
-```bash
-pip install pyinstaller
-pyinstaller --onefile --windowed --add-data "json;json" --add-data "asset;asset" main.py
-```
+![screenshot](screen/page_1.png)
 
-Output: `dist/main.exe`
+Questa schermata mostra l'elenco completo dei test WSTG, organizzati per categoria. È possibile espandere o comprimere le sezioni, cambiare lo stato dei test con il tasto destro e visualizzare i dettagli nella parte destra della finestra. Ogni test include obiettivi, link ufficiali e un sommario tecnico.
 
-### Linux
+---
 
-Stesso comando PyInstaller. Assicurati che i percorsi per `--add-data` siano compatibili:
+### Mappatura OWASP Top 10
 
-```bash
-pyinstaller --onefile --windowed \
-  --add-data "json:json" \
-  --add-data "asset:asset" \
-  main.py
-```
+![screenshot](screen/page_2.png)
 
-Esegui con:
+La seconda schermata evidenzia la corrispondenza tra le categorie WSTG e i rischi identificati dall'OWASP Top 10 (2021). Questo aiuta a comprendere quali vulnerabilità vengono coperte da ogni sezione della checklist e ad allineare i test alle priorità di rischio.
 
-```bash
-./dist/main
-```
+---
 
-## Esempio Screenshot
+## Autore & Contatti
 
-![screenshot](asset/screen_sample.png)
-
-## TODO Futuri
-
-* Esportazione in PDF.
-* Modifica dei test custom.
-* Sincronizzazione con repository remoti OWASP.
+| Nome | Descrizione |
+| --- | --- |
+| <p dir="auto"><strong>Alberto Montefusco</strong> |<br>Developer - <a href="https://github.com/Alberto-00">Alberto-00</a></p><p dir="auto">LinkedIn - <a href="https://www.linkedin.com/in/alberto-montefusco">Alberto Montefusco</a></p><p dir="auto">My WebSite - <a href="https://alberto-00.github.io/">alberto-00.github.io</a></p><br>|
