@@ -12,7 +12,8 @@ class ModernSplashScreenPNG(QSplashScreen):
 
         # Caricamento PNG ad alta qualità
         raw_logo = QPixmap(logo_path)
-        self.logo = raw_logo.scaled(200, 200, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+        # Se si mette il logo del red team pass a 200 200
+        self.logo = raw_logo.scaled(180, 180, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation) 
 
         # Messaggi testuali simulati stile terminale
         self.status_lines = [
@@ -132,5 +133,12 @@ class ModernSplashScreenPNG(QSplashScreen):
         # Disegna logo PNG
         painter.drawPixmap(logo_x, logo_y, self.logo)
 
-        # Testo titolo sotto il logo con ombra (effetto 3D)
-        self.drawTextWithShadow(painter, self.title, QPoint(135, 90), self.font_title)
+        # Testo titolo sotto il logo, centrato dinamicamente
+        painter.setFont(self.font_title)
+        fm = painter.fontMetrics()
+        text_width = fm.horizontalAdvance(self.title)
+
+        title_x = (self.width() - text_width) // 2
+        title_y = 85  # abbassare o alzare questo valore se serve
+
+        self.drawTextWithShadow(painter, self.title, QPoint(title_x, title_y), self.font_title)

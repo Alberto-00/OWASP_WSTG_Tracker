@@ -59,3 +59,4 @@ pylint-global.txt
 .megaignore
 *.ini
 utils
+WSTG Tracker*

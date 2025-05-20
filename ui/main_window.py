@@ -11,15 +11,24 @@ from PyQt6.QtCore import Qt, QSize
 from PyQt6.QtWidgets import QStyledItemDelegate
 from PyQt6.QtWidgets import QMessageBox
 from PyQt6 import QtCore
+import sys
+
+def resource_path(relative_path):
+    if hasattr(sys, '_MEIPASS'):
+        base_path = sys._MEIPASS  # Path temporaneo usato da PyInstaller
+    else:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 
-WSTG = "../public/json/checklist.json"
-WSTG_INFO = "../public/json/checklist_info_data.json"
-LOAD_DEFAULT_CHECKLIST_STATE = "../public/json/progress.json"
-WSTG_CATEGORY_DESCRIPTIONS = "../public/json/category_descriptions.json"
-OWASP_TOP_10 = "../public/json/owasp_top_10.json"
+WSTG = resource_path("public/json/checklist.json")
+WSTG_INFO = resource_path("public/json/checklist_info_data.json")
+LOAD_DEFAULT_CHECKLIST_STATE = resource_path("public/json/progress.json")
+WSTG_CATEGORY_DESCRIPTIONS = resource_path("public/json/category_descriptions.json")
+OWASP_TOP_10 = resource_path("public/json/owasp_top_10.json")
 
-SAVES_WSTG_STATE = "../public/saves/progress_temp.json"
+SAVES_WSTG_STATE = resource_path("public/saves/progress_temp.json")
 
 
 def fetch_checklist():
