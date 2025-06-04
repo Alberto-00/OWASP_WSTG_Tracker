@@ -60,3 +60,4 @@ pylint-global.txt
 *.ini
 utils
 WSTG_Tracker*
+.idea
