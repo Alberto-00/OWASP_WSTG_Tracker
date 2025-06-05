@@ -1032,17 +1032,3 @@ class OWASPChecklistApp(QWidget):
     def _show_mapping_table(self) -> None:
         dlg = MappingDialog(self.owasp_top10, self)
         dlg.show(); dlg.raise_(); dlg.activateWindow()
-
-
-# -----------------------------------------------------------------------------
-# 4. ENTRY‑POINT
-# -----------------------------------------------------------------------------
-
-def main() -> None:
-    app = QApplication(sys.argv)
-    win = OWASPChecklistApp(); win.show()
-    sys.exit(app.exec())
-
-
-if __name__ == '__main__':
-    main()
