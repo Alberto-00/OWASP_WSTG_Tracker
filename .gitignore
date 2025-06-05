@@ -41,9 +41,6 @@ coverage.xml
 *.cover
 .hypothesis/
 
-# PyInstaller
-*.spec
-
 # mypy
 .mypy_cache/
 .dmypy.json
@@ -58,6 +55,5 @@ pylint-global.txt
 
 .megaignore
 *.ini
-utils
 WSTG_Tracker*
 .idea
