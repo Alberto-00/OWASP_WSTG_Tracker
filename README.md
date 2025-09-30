@@ -44,7 +44,6 @@ Pensata per lavorare **offline**, con **salvataggi persistenti** e build **porta
     └──  owasp_screen.py
 ```
 
----
 
 ## Requisiti
 
