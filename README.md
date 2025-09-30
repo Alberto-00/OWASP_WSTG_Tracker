@@ -5,7 +5,6 @@ Pensata per lavorare **offline**, con **salvataggi persistenti** e build **porta
 
 > Gli eseguibili sono disponibili nella sezione **Releases** del repository. In alternativa, puoi costruirli in locale seguendo le istruzioni sotto.
 
----
 
 ## Caratteristiche principali
 
@@ -16,7 +15,6 @@ Pensata per lavorare **offline**, con **salvataggi persistenti** e build **porta
 * 🧩 Mappa visiva WSTG ↔ OWASP Top 10 (2021).
 * 💾 Salvataggio/caricamento stato checklist in JSON.
 
----
 
 ## Struttura del progetto
 
@@ -67,7 +65,6 @@ Esegui:
 python main.py
 ```
 
----
 
 ## Build degli eseguibili (Windows & Linux)
 
@@ -104,8 +101,6 @@ pyinstaller --noconfirm --clean --name OWASP --noconsole --onefile \
 > In `--onefile` puoi spostare liberamente l’eseguibile.<br>
 > In `--onedir` **devi spostare l’intera cartella** `dist/OWASP/` (exe + risorse).
 
----
-
 
 ## Screenshot
 
@@ -123,7 +118,6 @@ Questa schermata mostra l'elenco completo dei test WSTG, organizzati per categor
 
 La seconda schermata evidenzia la corrispondenza tra le categorie WSTG e i rischi identificati dall'OWASP Top 10 (2021). Questo aiuta a comprendere quali vulnerabilità vengono coperte da ogni sezione della checklist e ad allineare i test alle priorità di rischio.
 
----
 
 ## Autore & Contatti
 
