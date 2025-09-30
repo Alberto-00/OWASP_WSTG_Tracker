@@ -16,7 +16,7 @@ CORNER_RADIUS: Final = 16
 LOGO_SIZE: Final = 140  # Ridotto per evitare problemi di memoria
 
 # Grigio scuro pastello per dark theme - più rilassante per gli occhi
-BG_COLOR: Final = QColor(45, 47, 51, 245)  # #2D2F33 con trasparenza
+BG_COLOR: Final = QColor(45, 47, 51, 255)  # il 255 indica la trasparenza (ora è disabilitata)
 GLOW_COLOR: Final = QColor(0, 200, 150, 50)  # Glow più tenue
 
 FADE_IN_MS: Final = 500

@@ -5,13 +5,12 @@ import re
 from pathlib import Path
 from typing import Dict, Any, Optional, List
 
-from PyQt6.QtCore import Qt, QSize, QPropertyAnimation, QEasingCurve
+from PyQt6.QtCore import Qt, QSize, QPropertyAnimation, QEasingCurve, QSettings
 from PyQt6.QtGui import QColor, QTextCharFormat, QFont
 from PyQt6.QtWidgets import (QVBoxLayout, QComboBox, QLineEdit, QPushButton,
                              QFileDialog, QMenu, QFrame, QLabel, QProgressBar, QMessageBox,
                              QWidget, QHBoxLayout, QSplitter, QTextEdit,
-                             QListWidget, QListWidgetItem, QApplication,QStyledItemDelegate )
-
+                             QListWidget, QListWidgetItem, QApplication, QStyledItemDelegate)
 
 # -----------------------------------------------------------------------------
 # 1. CONFIGURATION & HELPERS
@@ -37,16 +36,16 @@ class Config:
     }
 
     STATUS_CONFIG = {
-        'done':        {'icon': '✅', 'color': COLORS['success'], 'alpha': 30},
-        'in-progress': {'icon': '⏳', 'color': COLORS['purple'],  'alpha': 30},
-        'pending':     {'icon': '◻',  'color': 'transparent',    'alpha': 0},
+        'done': {'icon': '✅', 'color': COLORS['success'], 'alpha': 30},
+        'in-progress': {'icon': '⏳', 'color': COLORS['purple'], 'alpha': 30},
+        'pending': {'icon': '◻', 'color': 'transparent', 'alpha': 0},
     }
 
     LEVEL_COLORS = {
         'critico': '#ff4c4c',
-        'alto':    '#ff9800',
-        'medio':   '#ffc107',
-        'basso':   '#4caf50',
+        'alto': '#ff9800',
+        'medio': '#ffc107',
+        'basso': '#4caf50',
     }
 
 
@@ -56,11 +55,11 @@ class FileManager:
     def __init__(self) -> None:
         self.base_path = self._get_base_path()
         self.files = {
-            'checklist':   self.base_path / 'public' / 'json' / 'checklist.json',
-            'info':        self.base_path / 'public' / 'json' / 'checklist_info_data.json',
-            'categories':  self.base_path / 'public' / 'json' / 'category_descriptions.json',
+            'checklist': self.base_path / 'public' / 'json' / 'checklist.json',
+            'info': self.base_path / 'public' / 'json' / 'checklist_info_data.json',
+            'categories': self.base_path / 'public' / 'json' / 'category_descriptions.json',
             'owasp_top10': self.base_path / 'public' / 'json' / 'owasp_top_10.json',
-            'temp_save':   self.base_path / 'public' / 'saves' / 'progress_temp.json',
+            'progress_default': self.base_path / 'public' / 'json' / 'progress.json',
         }
 
     # ------------------------------------------------------------------
@@ -104,76 +103,196 @@ class StyleManager:
     @staticmethod
     def main() -> str:
         c = Config.COLORS
+        # utility per trasformare un hex in rgba con alpha (0–1)
+        def rgba(hex_color: str, a: float) -> str:
+            hex_color = hex_color.lstrip('#')
+            r = int(hex_color[0:2], 16)
+            g = int(hex_color[2:4], 16)
+            b = int(hex_color[4:6], 16)
+            return f'rgba({r},{g},{b},{a})'
+
         return f"""
-            QWidget {{
-                background-color: {c['bg_primary']};
-                color: {c['text_primary']};
-                font-size: 13px;
-                font-family: 'Segoe UI', Arial, sans-serif;
-            }}
-            QLineEdit, QComboBox, QPushButton {{
-                font-size: 13px;
-                padding: 6px 8px;
-                background-color: {c['bg_secondary']};
-                color: {c['text_primary']};
-                border: 1px solid #555;
-                border-radius: 4px;
-            }}
-            QComboBox {{ background-color: {c['bg_tertiary']}; selection-background-color: #3a3b40; }}
-            QListWidget {{
-                font-size: 13px;
-                background-color: {c['bg_secondary']};
-                border: 1px solid #3d3d3d;
-                border-radius: 6px;
-                color: {c['text_primary']};
-                selection-background-color: rgba(90, 170, 255, 0.2);
-            }}
-            QListWidget::item {{ border: 1px solid transparent; padding: 6px; margin: 1px; border-radius: 4px; }}
-            QListWidget::item:hover {{ 
-                background-color: rgba(90, 170, 255, 0.1);
-                border: 1px solid rgba(90, 170, 255, 0.2);
-                border-radius: 4px; 
-            }}
-            QListWidget::item:selected {{ border: 1px solid #80bfff; background-color: rgba(90, 170, 255, 0.2); }}
-            QListWidget {{
-                outline: none;
-            }}
-            QTextEdit {{
-                font-family: 'Consolas', 'Courier New', monospace;
-                background-color: {c['bg_tertiary']};
-                padding: 10px;
-                color: {c['text_primary']};
-                border: 1px solid #505050;
-                border-radius: 6px;
-            }}
-            QPushButton {{
-                color: #2f3035; font-weight: bold;
-                background-color: #80bfff;
-                border-radius: 5px; border: 1px solid #666; padding: 8px 12px;
-            }}
-            QPushButton:hover {{ background-color: #5aaaff; }}
-            QPushButton:pressed {{ background-color: #4a9aef; }}
+        /* base -------------------------------------------------------- */
+        QWidget {{
+            background-color: {c['bg_primary']};
+            color: {c['text_primary']};
+            font-size: 13px;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            selection-background-color: {rgba(c['info'], 0.25)};
+            selection-color: {c['text_primary']};
+        }}
+        QToolTip {{
+            background-color: {c['bg_secondary']};
+            color: {c['text_primary']};
+            border: 1px solid {c['bg_tertiary']};
+            padding: 4px 8px;
+            border-radius: 6px;
+        }}
+
+        /* splitter + line -------------------------------------------- */
+        QSplitter::handle {{
+            background: {c['bg_tertiary']};
+            margin: 0 2px;
+        }}
+        QFrame[frameShape="4"] {{ /* HLine */
+            color: {c['bg_tertiary']};
+        }}
+
+        /* inputs ------------------------------------------------------ */
+        QLineEdit, QComboBox {{
+            background-color: {c['bg_secondary']};
+            color: {c['text_primary']};
+            border: 1px solid {c['bg_tertiary']};
+            border-radius: 8px;
+            padding: 6px 10px;
+        }}
+        QLineEdit:hover, QComboBox:hover {{
+            border-color: {rgba(c['accent_secondary'], 0.75)};
+            background-color: {c['bg_tertiary']};
+        }}
+        QLineEdit:focus, QComboBox:focus {{
+            border-color: {c['accent_primary']};
+            background-color: {c['bg_tertiary']};
+        }}
+        /* popup della combo */
+        QComboBox QAbstractItemView {{
+            background: {c['bg_secondary']};
+            color: {c['text_primary']};
+            border: 1px solid {c['bg_tertiary']};
+            selection-background-color: {rgba(c['info'], 0.20)};
+        }}
+
+        /* bottoni ----------------------------------------------------- */
+        QPushButton {{
+            background-color: {c['accent_primary']};
+            color: #232429;              /* testo scuro per contrasto */
+            border: 1px solid {rgba(c['accent_primary'], 0.35)};
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-weight: 600;
+        }}
+        QPushButton:hover {{
+            background-color: {c['accent_secondary']};
+        }}
+        QPushButton:pressed {{
+            background-color: {rgba(c['accent_secondary'], 0.85)};
+        }}
+        QPushButton:disabled {{
+            background: {rgba(c['bg_tertiary'], 0.65)};
+            color: {c['text_muted']};
+            border-color: {c['bg_tertiary']};
+        }}
+
+        /* “tab buttons” (Summary / How-To / Tools / Remediation) ------ */
+        QPushButton[variant="tab"] {{
+            background: {c['bg_secondary']};
+            color: {c['text_primary']};
+            border: 1px solid {c['bg_tertiary']};
+            border-radius: 10px;
+            padding: 8px 14px;
+        }}
+        QPushButton[variant="tab"]:hover {{
+            background: {c['bg_tertiary']};
+            border-color: {rgba(c['info'], 0.45)};
+        }}
+        QPushButton[variant="tab"]:checked {{
+            background: {rgba(c['info'], 0.22)};
+            border-color: {c['info']};
+        }}
+        QPushButton[variant="tab"]:disabled {{
+            color: {c['text_muted']};
+        }}
+
+        /* list -------------------------------------------------------- */
+        QListWidget {{
+            background-color: {c['bg_secondary']};
+            color: {c['text_primary']};
+            border: 1px solid {c['bg_tertiary']};
+            border-radius: 10px;
+            outline: none;
+            padding: 6px;
+        }}
+        QListWidget::item {{
+            border: 1px solid transparent;
+            padding: 8px 10px;
+            margin: 2px 4px;
+            border-radius: 8px;
+        }}
+        QListWidget::item:hover {{
+            background-color: {rgba(c['info'], 0.10)};
+            border-color: {rgba(c['info'], 0.20)};
+        }}
+        QListWidget::item:selected {{
+            background-color: {rgba(c['info'], 0.22)};
+            border-color: {c['info']};
+        }}
+
+        /* editors ----------------------------------------------------- */
+        QTextEdit {{
+            background-color: {c['bg_tertiary']};
+            color: {c['text_primary']};
+            border: 1px solid {c['bg_tertiary']};
+            border-radius: 10px;
+            padding: 10px;
+        }}
+
+        /* scrollbar unify -------------------------------------------- */
+        QScrollBar:vertical, QScrollBar:horizontal {{
+            background: {c['bg_secondary']};
+            border: none;
+            margin: 2px;
+        }}
+        QScrollBar:vertical {{ width: 10px; }}
+        QScrollBar:horizontal {{ height: 10px; }}
+        QScrollBar::handle {{
+            background: {c['bg_tertiary']};
+            border-radius: 6px;
+            min-height: 24px;
+            min-width: 24px;
+        }}
+        QScrollBar::handle:hover {{
+            background: {rgba(c['accent_primary'], 0.65)};
+        }}
+        QScrollBar::add-line, QScrollBar::sub-line {{
+            background: transparent;
+            border: none;
+        }}
         """
+
 
     @staticmethod
     def progress_bar() -> str:
         c = Config.COLORS
+        # Bordo & background con palette, chunk a gradiente dalla palette
         return f"""
-            QProgressBar {{
-                border: 2px solid {c['bg_tertiary']};
-                border-radius: 8px;
-                background-color: {c['bg_secondary']};
-                text-align: center; font-weight: bold; font-size: 13px;
-                color: {c['text_primary']}; padding: 1px;
-            }}
+        QProgressBar {{
+            border: 1px solid {c['bg_tertiary']};
+            border-radius: 10px;
+            background-color: {c['bg_secondary']};
+            color: {c['text_primary']};
+            text-align: center;
+            padding: 2px;
+            font-weight: 600;
+        }}
+        QProgressBar::chunk {{
+            border-radius: 8px;
+            margin: 1px;
+            background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
+                stop:0   {c['accent_primary']},
+                stop:0.5 {c['accent_secondary']},
+                stop:1   {c['accent_primary']}
+            );
+        }}
         """
 
     @staticmethod
     def context_menu() -> str:
+        c = Config.COLORS
         return (
-            " QMenu { background-color:#2a2b2e; color:#ffffff; border:1px solid #444; padding:4px; border-radius:4px; }"
-            " QMenu::item { padding:8px 20px; border-radius:3px; }"
-            " QMenu::item:selected { background-color:#5aaaff; color:#232429; }"
+            f"QMenu {{ background-color:{c['bg_secondary']}; color:{c['text_primary']}; "
+            f"border:1px solid {c['bg_tertiary']}; padding:4px; border-radius:8px; }}"
+            f"QMenu::item {{ padding:8px 14px; border-radius:6px; }}"
+            f"QMenu::item:selected {{ background-color:rgba(128,191,255,0.20); color:#232429; }}"
         )
 
 
@@ -291,6 +410,11 @@ class MappingDialog(QWidget):
     def __init__(self, owasp_data: Dict[str, Any], parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
 
+        # Lingua corrente (fallback: 'it')
+        try:
+            self._lang = getattr(parent, 'current_lang', 'it')
+        except Exception:
+            self._lang = 'it'
         # Verifica che owasp_data sia valido
         if not isinstance(owasp_data, dict):
             raise ValueError("owasp_data deve essere un dizionario")
@@ -300,6 +424,29 @@ class MappingDialog(QWidget):
         self._detail: Optional[QTextEdit] = None
 
         self._setup_ui()
+
+    def _extract_fields(self, entry: dict) -> tuple[str, str, str]:
+        """Estrae (description, link, level) da un record OWASP sia *flat* sia *multilingua*.
+        - Preferisce la lingua corrente (self._lang), con fallback 'it' -> 'en'.
+        - Accetta anche file legacy con 'description'/'link' al top-level.
+        - 'level' viene letto dal top-level, con fallback alla sezione locale.
+        """
+        if not isinstance(entry, dict):
+            return ("Descrizione non trovata.", "", "medio")
+
+        # Se multilingua
+        if 'it' in entry or 'en' in entry:
+            sec = entry.get(self._lang) or entry.get('it') or entry.get('en') or {}
+        else:
+            sec = entry  # struttura flat
+
+        if not isinstance(sec, dict):
+            sec = {}
+
+        description = sec.get('description') or entry.get('description') or "Descrizione non trovata."
+        link = sec.get('link') or entry.get('link') or ""
+        level = entry.get('level') or sec.get('level') or "medio"
+        return (description, link, level)
 
     def _setup_ui(self) -> None:
         """Configura l'interfaccia utente."""
@@ -403,15 +550,11 @@ class MappingDialog(QWidget):
         # Popola la lista
         for code, entry in self._owasp.items():
             item = QListWidgetItem(code)
-
-            # Gestione sicura del livello e colore
-            level = entry.get('level', 'medio') if isinstance(entry, dict) else 'medio'
-
+            _, _, level = self._extract_fields(entry)
             try:
                 color = Config.LEVEL_COLORS.get(level, '#ffffff')
             except (NameError, AttributeError):
-                color = '#ffffff'  # Fallback color
-
+                color = '#ffffff'
             item.setForeground(QColor(color))
             item.setSizeHint(QSize(0, 34))
             list_widget.addItem(item)
@@ -490,18 +633,14 @@ class MappingDialog(QWidget):
                 self._detail.setHtml(f"<p style='color: #ff6b6b;'>Errore: dati non validi per {code}</p>")
                 return
 
-            # Estrai descrizione in modo sicuro
-            it_section = entry.get('it', {})
-            if not isinstance(it_section, dict):
-                description = 'Descrizione non trovata.'
-            else:
-                description = it_section.get('description', 'Descrizione non trovata.')
+            # Estrai campi in modo robusto (multilingua o flat)
+            description, link, _level = self._extract_fields(entry)
 
             # Formatta la descrizione
             formatted_desc = self._format_description(description)
 
             # Estrai link in modo sicuro
-            link = it_section.get('link', '') if isinstance(it_section, dict) else ''
+            link = link
 
             # Costruisci HTML
             html_content = self._build_detail_html(code, formatted_desc, link)
@@ -521,13 +660,19 @@ class MappingDialog(QWidget):
         Returns:
             Stringa HTML formattata
         """
+        import html, re
+
         if not isinstance(description, str):
             return "Descrizione non valida."
 
-        # Sostituzioni sicure
+        # Escaping prima, così evitiamo HTML indesiderato
+        formatted = html.escape(description)
+
+        # Bold per **Esempio:** e **Example:**
         formatted = (
-            description
+            formatted
             .replace('**Esempio:**', '<b style="color: #dddddd;">Esempio:</b><br>')
+            .replace('**Example:**', '<b style="color: #dddddd;">Example:</b><br>')
             .replace('\n', '<br>')
         )
 
@@ -625,6 +770,49 @@ class MappingDialog(QWidget):
 # -----------------------------------------------------------------------------
 
 class OWASPChecklistApp(QWidget):
+    # ------------------------------------------------------------------
+    # Startup helpers
+    # ------------------------------------------------------------------
+    def _default_progress_path(self) -> Path:
+        return self._fm.base_path / 'public' / 'json' / 'progress.json'
+
+    def _saves_dir(self) -> Path:
+        return self._fm.base_path / 'public' / 'saves'
+
+    def _load_status_from_path(self, filename: str | Path) -> bool:
+        try:
+            p = Path(filename)
+            if not p.exists():
+                raise FileNotFoundError(str(p))
+            with open(p, 'r', encoding='utf-8') as f:
+                self.status_map = json.load(f)
+            self._update_checklist()
+            self._progress.update(self._count_completed(), len(self.status_map))
+            # Remember last project
+            self._last_project_path = str(p)
+            self._settings.setValue('last_project_path', self._last_project_path)
+            return True
+        except Exception as ex:  # noqa: BLE001
+            QMessageBox.critical(self, '❌ Errore', f'Errore durante il caricamento: {ex}')
+            return False
+
+    def _auto_open_last_or_default(self) -> None:
+        # 1) Prova l’ultimo progetto usato
+        last = str(self._last_project_path) if self._last_project_path else self._settings.value('last_project_path',
+                                                                                                 '')
+        if last:
+            if self._load_status_from_path(last):
+                return
+
+        # 2) Fallback: usa SOLO il file di default "Progress"
+        default_p = self._default_progress_path()  # -> public/json/progress.json
+        if not default_p.exists():
+            # Se non esiste, crealo vuoto (o con lo stato corrente)
+            # Qui salvo lo stato attuale (anche vuoto) per avere sempre un "paracadute"
+            self._fm.save_json(self.status_map or {}, default_p)
+
+        self._load_status_from_path(default_p)
+
     """Applicazione principale"""
 
     # ------------------------------------------------------------------
@@ -634,6 +822,15 @@ class OWASPChecklistApp(QWidget):
         super().__init__()
         self._fm = FileManager()
 
+        # Preferences (persist across runs)
+        self._settings = QSettings('AlbertoAltro', 'OWASP WSTG Checklist')
+        # Language preference (default to Italian)
+        saved_lang = self._settings.value('language', 'it')
+        if saved_lang not in ('it', 'en'):
+            saved_lang = 'it'
+        self.current_lang = saved_lang
+        # Last project path
+        self._last_project_path = self._settings.value('last_project_path', '')
         # Runtime state
         self.status_map: Dict[str, str] = {}
         self.collapsed_sections: set[str] = set()
@@ -650,6 +847,8 @@ class OWASPChecklistApp(QWidget):
         self._init_ui()
         self._update_checklist()
         self._progress.update(self._count_completed(), len(self.status_map), animate=False)
+        # Open last project or default progress file automatically
+        self._auto_open_last_or_default()
 
     # ------------------------------------------------------------------
     # Data helpers
@@ -672,20 +871,28 @@ class OWASPChecklistApp(QWidget):
         self.setStyleSheet(StyleManager.main())
 
         root = QVBoxLayout(self)
+        root.setContentsMargins(16, 16, 16, 12)
+        root.setSpacing(10)
 
         # -- Progress ---------------------------------------------------
         prog_layout = QHBoxLayout()
-        label = QLabel('📊 Progresso Complessivo:'); label.setStyleSheet(f"color:{Config.COLORS['text_secondary']};font-weight:bold;font-size:14px;")
+        prog_layout.setSpacing(8)
+        label = QLabel('📊 Progresso Complessivo:')
+        label.setStyleSheet(f"color:{Config.COLORS['text_secondary']};font-weight:bold;font-size:14px;")
         prog_layout.addWidget(label)
-        self._bar = QProgressBar(); self._progress = ProgressBarManager(self._bar)
+        self._bar = QProgressBar()
+        self._progress = ProgressBarManager(self._bar)
         prog_layout.addWidget(self._bar)
         root.addLayout(prog_layout)
 
         # -- Top controls ----------------------------------------------
-        root.addLayout(self._build_top_controls())
+        top = self._build_top_controls()
+        top.setSpacing(8)
+        root.addLayout(top)
 
         # -- Main content ----------------------------------------------
         main = QHBoxLayout()
+        main.setSpacing(10)
         main.addWidget(self._build_checklist_widget())
         main.addLayout(self._build_right_panel())
         root.addLayout(main)
@@ -705,6 +912,15 @@ class OWASPChecklistApp(QWidget):
         self._lang_cb.setFixedWidth(150)
         self._lang_cb.currentIndexChanged.connect(self._change_language)
         footer_layout.addWidget(self._lang_cb)
+        # Ensure UI reflects saved language (default Italian)
+        try:
+            idx = 1 if self.current_lang == 'en' else 0
+            # Block signal to avoid double reload during init
+            self._lang_cb.blockSignals(True)
+            self._lang_cb.setCurrentIndex(idx)
+            self._lang_cb.blockSignals(False)
+        except Exception:
+            pass
 
         root.addLayout(footer_layout)
 
@@ -713,22 +929,32 @@ class OWASPChecklistApp(QWidget):
     # ------------------------------------------------------------------
     def _build_top_controls(self) -> QHBoxLayout:
         lay = QHBoxLayout()
+        lay.setContentsMargins(0, 0, 0, 0)
+        lay.setSpacing(8)
 
         # Search bar
-        self._search = QLineEdit(); self._search.setPlaceholderText('🔍 Cerca test…'); self._search.textChanged.connect(self._update_checklist)
+        self._search = QLineEdit()
+        self._search.setPlaceholderText('🔍 Cerca test…')
+        self._search.textChanged.connect(self._update_checklist)
         lay.addWidget(self._search)
 
         # Category dropdown
-        self._cat_cb = QComboBox(); self._cat_cb.addItem('📂 Tutte le Categorie'); self._cat_cb.addItems(self.categories); self._cat_cb.currentIndexChanged.connect(self._update_checklist)
+        self._cat_cb = QComboBox()
+        self._cat_cb.addItem('📂 Tutte le Categorie')
+        self._cat_cb.addItems(self.categories)
+        self._cat_cb.currentIndexChanged.connect(self._update_checklist)
         lay.addWidget(self._cat_cb)
 
         # Buttons
         for text, cb in [
             ('🧩 Mapping WSTG ↔ OWASP Top 10', self._show_mapping_table),
-            ('💾 Salva Stato',                 self._save_status),
-            ('📂 Carica Stato',                self._load_status),
+            ('💾 Salva Stato', self._save_status),
+            ('📂 Carica Stato', self._load_status),
         ]:
-            b = QPushButton(text); b.setFixedHeight(32); b.clicked.connect(cb); lay.addWidget(b)
+            b = QPushButton(text)
+            b.setFixedHeight(32)
+            b.clicked.connect(cb)
+            lay.addWidget(b)
 
         return lay
 
@@ -744,28 +970,37 @@ class OWASPChecklistApp(QWidget):
 
     def _build_right_panel(self) -> QVBoxLayout:
         lay = QVBoxLayout()
-        self._detail_box = QTextEdit(); self._detail_box.setReadOnly(True); lay.addWidget(self._detail_box)
-        line = QFrame(); line.setFrameShape(QFrame.Shape.HLine); line.setFrameShadow(QFrame.Shadow.Sunken); lay.addWidget(line)
-        self._ref_box = QTextEdit(); self._ref_box.setReadOnly(True); lay.addWidget(self._ref_box)
+        self._detail_box = QTextEdit()
+        self._detail_box.setReadOnly(True)
+        lay.addWidget(self._detail_box)
+        line = QFrame()
+        line.setFrameShape(QFrame.Shape.HLine)
+        line.setFrameShadow(QFrame.Shadow.Sunken)
+        lay.addWidget(line)
+        self._ref_box = QTextEdit()
+        self._ref_box.setReadOnly(True)
+        lay.addWidget(self._ref_box)
         lay.addLayout(self._build_reference_tabs())
         return lay
 
     def _build_reference_tabs(self) -> QHBoxLayout:
-        lay = QHBoxLayout(); self.reference_buttons.clear()
+        lay = QHBoxLayout()
+        self.reference_buttons.clear()
         for text, section in [
-            ('📄 Summary',     'summary'),
-            ('🔍 How‑To',      'how-to'),
-            ('🛠 Tools',       'tools'),
+            ('📄 Summary', 'summary'),
+            ('🔍 How‑To', 'how-to'),
+            ('🛠 Tools', 'tools'),
             ('🛡 Remediation', 'remediation'),
         ]:
-            b = QPushButton(text); b.setFixedSize(160, 40); b.setCheckable(True); b.setEnabled(False)
+            b = QPushButton(text)
+            b.setFixedSize(160, 40)
+            b.setCheckable(True)
+            b.setEnabled(False)
+            b.setCursor(Qt.CursorShape.PointingHandCursor)
+            b.setProperty('variant', 'tab')  # <— usa lo stylesheet globale
             b.clicked.connect(lambda _chk, s=section: self._display_reference_section(s))
-            b.setStyleSheet(
-                'QPushButton{background-color:#2f3035;color:#e0e0e0;border:1px solid #555;border-radius:6px;}'
-                'QPushButton:hover{background-color:#404247;}'
-                'QPushButton:checked{background-color:#80bfff;color:#2f3035;}'
-            )
-            self.reference_buttons.append(b); lay.addWidget(b)
+            self.reference_buttons.append(b)
+            lay.addWidget(b)
         return lay
 
     # ------------------------------------------------------------------
@@ -794,7 +1029,9 @@ class OWASPChecklistApp(QWidget):
             return
         cat_data = self.data['categories'][category]
         title = QListWidgetItem(f"{category}:")
-        title.setFont(QFont('Segoe UI', 12, QFont.Weight.Bold)); title.setForeground(QColor(self._get_category_color(cat_data))); title.setFlags(Qt.ItemFlag.NoItemFlags)
+        title.setFont(QFont('Segoe UI', 12, QFont.Weight.Bold))
+        title.setForeground(QColor(self._get_category_color(cat_data)))
+        title.setFlags(Qt.ItemFlag.NoItemFlags)
         self._list.addItem(title)
         self._show_category_description(category)
         self._render_tests(cat_data, query)
@@ -802,9 +1039,16 @@ class OWASPChecklistApp(QWidget):
     # All categories
     def _render_all_categories(self, query: str) -> None:
         for category, details in self.data.get('categories', {}).items():
-            spacer = QListWidgetItem(''); spacer.setSizeHint(QSize(0, 16)); spacer.setFlags(Qt.ItemFlag.NoItemFlags); self._list.addItem(spacer)
+            spacer = QListWidgetItem('')
+            spacer.setSizeHint(QSize(0, 16))
+            spacer.setFlags(Qt.ItemFlag.NoItemFlags)
+            self._list.addItem(spacer)
             arrow = '▼' if category not in self.collapsed_sections else '▶'
-            header = QListWidgetItem(f"{arrow} {category}"); header.setSizeHint(QSize(0, 28)); header.setFont(QFont('Segoe UI', 0, QFont.Weight.Bold)); header.setData(Qt.ItemDataRole.UserRole, f"_header_{category}"); header.setForeground(QColor(self._get_category_color(details)))
+            header = QListWidgetItem(f"{arrow} {category}")
+            header.setSizeHint(QSize(0, 28))
+            header.setFont(QFont('Segoe UI', 0, QFont.Weight.Bold))
+            header.setData(Qt.ItemDataRole.UserRole, f"_header_{category}")
+            header.setForeground(QColor(self._get_category_color(details)))
             self._list.addItem(header)
             if category not in self.collapsed_sections:
                 self._render_tests(details, query)
@@ -878,6 +1122,11 @@ class OWASPChecklistApp(QWidget):
         new_lang = 'it' if self._lang_cb.currentIndex() == 0 else 'en'
         if new_lang != self.current_lang:
             self.current_lang = new_lang
+            # persist
+            try:
+                self._settings.setValue('language', self.current_lang)
+            except Exception:
+                pass
             self._load_data()
             self._update_checklist()
 
@@ -916,14 +1165,20 @@ class OWASPChecklistApp(QWidget):
     def _show_category_description(self, category: str) -> None:
         self._detail_box.clear()
         cur = self._detail_box.textCursor()
-        title_fmt = QTextCharFormat(); title_fmt.setFontWeight(QFont.Weight.Bold); title_fmt.setForeground(QColor(Config.COLORS['info']))
+        title_fmt = QTextCharFormat()
+        title_fmt.setFontWeight(QFont.Weight.Bold)
+        title_fmt.setForeground(QColor(Config.COLORS['info']))
         cur.insertText(f"📂 Category: {category}\n\n", title_fmt)
-        desc_fmt = QTextCharFormat(); desc_fmt.setForeground(QColor('#e0e0e0'))
-        cur.insertText(self.category_desc.get(category, '').strip() or 'No description available for this category.' + '\n\n', desc_fmt)
+        desc_fmt = QTextCharFormat()
+        desc_fmt.setForeground(QColor('#e0e0e0'))
+        cur.insertText(
+            self.category_desc.get(category, '').strip() or 'No description available for this category.' + '\n\n',
+            desc_fmt)
 
         self._ref_box.setHtml('<i>Seleziona un test per visualizzare i dettagli.</i>')
         for b in self.reference_buttons:
-            b.setEnabled(False); b.setChecked(False)
+            b.setEnabled(False)
+            b.setChecked(False)
 
     def _show_test_details(self, tid: str) -> None:
         res = self._find_test_by_id(tid)
@@ -932,12 +1187,15 @@ class OWASPChecklistApp(QWidget):
         test, category = res
         self._detail_box.clear()
         cur = self._detail_box.textCursor()
-        bold = QTextCharFormat(); bold.setFontWeight(QFont.Weight.Bold); bold.setForeground(QColor('#ff80ab'))
+        bold = QTextCharFormat()
+        bold.setFontWeight(QFont.Weight.Bold)
+        bold.setForeground(QColor('#ff80ab'))
         cur.insertText(f"📌 Category: {category}\n\n", bold)
         cur.insertText(f"🆔 ID: {test['id']}\n\n", bold)
         if 'objectives' in test:
             cur.insertText('🎯 Test Objectives:', bold)
-            html = '<ul style="color:#ff80ab">' + ''.join(f'<li style="margin-bottom:10px">{o}</li>' for o in test['objectives']) + '</ul><br>'
+            html = '<ul style="color:#ff80ab">' + ''.join(
+                f'<li style="margin-bottom:10px">{o}</li>' for o in test['objectives']) + '</ul><br>'
             cur.insertHtml(html)
         cur.insertText('🔗 Reference: ', bold)
         cur.insertHtml(f"<a href='{test['reference']}' style='color:#ff80ab;'>{test['reference']}</a>\n\n")
@@ -958,7 +1216,7 @@ class OWASPChecklistApp(QWidget):
 
     def _display_reference_section(self, section: str) -> None:
         for b in self.reference_buttons: b.setChecked(False)
-        idx_map = {'summary':0, 'how-to':1, 'tools':2, 'remediation':3}
+        idx_map = {'summary': 0, 'how-to': 1, 'tools': 2, 'remediation': 3}
         if section in idx_map: self.reference_buttons[idx_map[section]].setChecked(True)
         content = self.current_reference_sections.get(section, '')
         if not content or (isinstance(content, str) and not content.strip()):
@@ -980,7 +1238,8 @@ class OWASPChecklistApp(QWidget):
             if itm.isSelected():
                 tid = itm.data(Qt.ItemDataRole.UserRole)
                 if isinstance(tid, str) and not tid.startswith('_header_') and self.status_map.get(tid) != status:
-                    self.status_map[tid] = status; changed += 1
+                    self.status_map[tid] = status
+                    changed += 1
         if changed:
             self._update_checklist()
 
@@ -988,7 +1247,8 @@ class OWASPChecklistApp(QWidget):
         itm = self._list.itemAt(pos)
         if not itm:
             return
-        menu = QMenu(self); menu.setStyleSheet(StyleManager.context_menu())
+        menu = QMenu(self)
+        menu.setStyleSheet(StyleManager.context_menu())
         if self._cat_cb.currentText() == '📂 Tutte le Categorie':
             menu.addAction('▶ Collassa Tutto', lambda: self.collapse_all(True))
             menu.addAction('▼ Espandi Tutto', lambda: self.collapse_all(False))
@@ -1009,26 +1269,44 @@ class OWASPChecklistApp(QWidget):
     # SAVE / LOAD STATUS
     # ------------------------------------------------------------------
     def _save_status(self) -> None:
-        if self._fm.save_json(self.status_map, self._fm.files['temp_save']):
-            QMessageBox.information(self, '✅ Salvataggio completato', 'Stato salvato correttamente')
+        # Always ask where to save; prefill with last path or default
+        last = self._last_project_path or self._settings.value('last_project_path', '')
+        if last:
+            default_file = str(last)
+        else:
+            self._saves_dir().mkdir(parents=True, exist_ok=True)
+            default_file = str(self._saves_dir() / 'progress.json')
+
+        filename, _ = QFileDialog.getSaveFileName(self, 'Salva stato', default_file, 'JSON Files (*.json)')
+        if not filename:
+            return
+
+        ok = self._fm.save_json(self.status_map, Path(filename))
+        if ok:
+            # Remember last used file (save)
+            self._last_project_path = filename
+            self._settings.setValue('last_project_path', filename)
+            QMessageBox.information(self, '✅ Salvataggio completato', f'Stato salvato in:\n{filename}')
         else:
             QMessageBox.critical(self, '❌ Errore', 'Errore durante il salvataggio')
 
     def _load_status(self) -> None:
-        filename, _ = QFileDialog.getOpenFileName(self, 'Carica stato', '', 'JSON Files (*.json)')
+        last = self._last_project_path or self._settings.value('last_project_path', '')
+        start_dir = str(last) if last else ''
+        filename, _ = QFileDialog.getOpenFileName(self, 'Carica stato', start_dir, 'JSON Files (*.json)')
         if not filename:
             return
-        try:
-            with open(filename, 'r', encoding='utf-8') as f:
-                self.status_map = json.load(f)
-            self._update_checklist()
+        if self._load_status_from_path(filename):
+            # Remember last used file (load)
+            self._last_project_path = filename
+            self._settings.setValue('last_project_path', filename)
             QMessageBox.information(self, '✅ Caricamento completato', 'Stato caricato correttamente')
-        except Exception as ex:  # noqa: BLE001
-            QMessageBox.critical(self, '❌ Errore', f'Errore durante il caricamento: {ex}')
 
     # ------------------------------------------------------------------
     # MAPPING DIALOG
     # ------------------------------------------------------------------
     def _show_mapping_table(self) -> None:
         dlg = MappingDialog(self.owasp_top10, self)
-        dlg.show(); dlg.raise_(); dlg.activateWindow()
+        dlg.show()
+        dlg.raise_()
+        dlg.activateWindow()

@@ -1,72 +1,52 @@
 {
   "A01:2021 - Broken Access Control": {
-    "it": {
-      "description": "Le vulnerabilità di access control emergono quando i controlli basati su ruoli o autorizzazioni sono assenti, mal implementati o aggirabili tramite manipolazioni dell'input o forzature di URL/API. Questo può consentire l'elevazione di privilegi o l'accesso diretto a risorse riservate.\n\n**Esempio:** Un utente autenticato modifica il proprio ID in un parametro GET e accede ai dati di un altro utente.",
-      "link": "https://owasp.org/Top10/A01_2021-Broken_Access_Control/"
-    },
+    "description": "Access control vulnerabilities arise when role or permission-based controls are missing, poorly implemented, or can be bypassed through input manipulation or forced browsing of URLs/APIs. This can allow privilege escalation or direct access to restricted resources.\n\n**Example:** An authenticated user modifies their own ID in a GET parameter and accesses another user's data.",
+    "link": "https://owasp.org/Top10/A01_2021-Broken_Access_Control/",
     "level": "alto"
   },
   "A02:2021 - Cryptographic Failures": {
-    "it": {
-      "description": "Queste vulnerabilità derivano da algoritmi deboli, gestione errata delle chiavi, uso improprio dei certificati o assenza di protezione per i dati in transito o a riposo. L'attaccante può intercettare, alterare o decifrare dati sensibili.\n\n**Esempio:** Password utente salvate in chiaro o cifrate con MD5 senza salt.",
-      "link": "https://owasp.org/Top10/A02_2021-Cryptographic_Failures/"
-    },
+    "description": "These vulnerabilities stem from weak algorithms, improper key management, misuse of certificates, or lack of protection for data in transit or at rest. An attacker may intercept, alter, or decrypt sensitive data.\n\n**Example:** User passwords stored in cleartext or hashed with MD5 without a salt.",
+    "link": "https://owasp.org/Top10/A02_2021-Cryptographic_Failures/",
     "level": "alto"
   },
   "A03:2021 - Injection": {
-    "it": {
-      "description": "Le injection permettono all'attaccante di inviare comandi non autorizzati all'interprete tramite input controllati, portando a esecuzione di comandi, dump di database, o compromissione del sistema.\n\n**Esempio:** Form di login vulnerabile a SQLi: input `' OR '1'='1` consente accesso non autorizzato.",
-      "link": "https://owasp.org/Top10/A03_2021-Injection/"
-    },
+    "description": "Injection flaws allow an attacker to send unauthorized commands to an interpreter via crafted inputs, leading to command execution, database dumps, or system compromise.\n\n**Example:** A login form vulnerable to SQLi: input `' OR '1'='1` grants unauthorized access.",
+    "link": "https://owasp.org/Top10/A03_2021-Injection/",
     "level": "critico"
   },
   "A04:2021 - Insecure Design": {
-    "it": {
-      "description": "Un design non sicuro riflette la mancanza di modellazione delle minacce o l'assenza di misure di sicurezza nei flussi logici. Spesso porta a violazioni evitabili con una corretta architettura iniziale.\n\n**Esempio:** Un'app non prevede controlli di autorizzazione nei flussi di checkout o modifica dei profili.",
-      "link": "https://owasp.org/Top10/A04_2021-Insecure_Design/"
-    },
+    "description": "An insecure design reflects a lack of threat modeling or absence of security measures in logical flows. It often leads to breaches that would have been avoidable with proper upfront architecture.\n\n**Example:** An app does not enforce authorization checks in checkout flows or profile edits.",
+    "link": "https://owasp.org/Top10/A04_2021-Insecure_Design/",
     "level": "medio"
   },
   "A05:2021 - Security Misconfiguration": {
-    "it": {
-      "description": "Configurazioni errate o predefinite nei servizi, software o ambienti espongono dati, interfacce o funzionalità non intenzionali. Questo include debug attivo, porte aperte, errori dettagliati e servizi non necessari.\n\n**Esempio:** Server Apache espone mod_status e file di configurazione accessibili via web.",
-      "link": "https://owasp.org/Top10/A05_2021-Security_Misconfiguration/"
-    },
+    "description": "Misconfigurations or defaults in services, software, or environments expose data, interfaces, or unintended functionality. This includes enabled debugging, open ports, verbose errors, and unnecessary services.\n\n**Example:** Apache server exposes mod_status and configuration files accessible over the web.",
+    "link": "https://owasp.org/Top10/A05_2021-Security_Misconfiguration/",
     "level": "alto"
   },
   "A06:2021 - Vulnerable and Outdated Components": {
-    "it": {
-      "description": "L'uso di librerie, framework o componenti con CVE note e non aggiornate permette all'attaccante di sfruttare exploit pubblici. Queste vulnerabilità sono spesso note ma trascurate nei processi di aggiornamento.\n\n**Esempio:** WordPress con plugin noto vulnerabile che consente upload arbitrario.",
-      "link": "https://owasp.org/Top10/A06_2021-Vulnerable_and_Outdated_Components/"
-    },
+    "description": "Using libraries, frameworks, or components with known CVEs and missing updates allows attackers to exploit public vulnerabilities. These issues are often known but overlooked in patch processes.\n\n**Example:** WordPress with a known vulnerable plugin that allows arbitrary file upload.",
+    "link": "https://owasp.org/Top10/A06_2021-Vulnerable_and_Outdated_Components/",
     "level": "medio"
   },
   "A07:2021 - Identification and Authentication Failures": {
-    "it": {
-      "description": "Problemi di autenticazione includono gestione errata delle credenziali, assenza di MFA, sessioni non invalidate o prevedibili. Consentono impersonificazione, brute-force e hijacking.\n\n**Esempio:** Session ID statico o non rigenerato dopo login permette session fixation.",
-      "link": "https://owasp.org/Top10/A07_2021-Identification_and_Authentication_Failures/"
-    },
+    "description": "Authentication issues include poor credential management, absence of MFA, sessions not invalidated or predictable. They enable impersonation, brute forcing, and hijacking.\n\n**Example:** A static session ID or one not regenerated after login enables session fixation.",
+    "link": "https://owasp.org/Top10/A07_2021-Identification_and_Authentication_Failures/",
     "level": "alto"
   },
   "A08:2021 - Software and Data Integrity Failures": {
-    "it": {
-      "description": "Include uso di pacchetti non verificati, pipeline CI/CD compromesse o aggiornamenti non firmati, che possono introdurre codice malevolo all’interno di build o deployment.\n\n**Esempio:** CI/CD scarica script da repo GitHub senza checksum o firma.",
-      "link": "https://owasp.org/Top10/A08_2021-Software_and_Data_Integrity_Failures/"
-    },
+    "description": "Includes use of unverified packages, compromised CI/CD pipelines, or unsigned updates that can introduce malicious code into builds or deployments.\n\n**Example:** CI/CD fetches scripts from a GitHub repo without checksum or signature verification.",
+    "link": "https://owasp.org/Top10/A08_2021-Software_and_Data_Integrity_Failures/",
     "level": "medio"
   },
   "A09:2021 - Security Logging and Monitoring Failures": {
-    "it": {
-      "description": "La mancanza di log, allarmi o tracciamento compromette il rilevamento tempestivo degli attacchi e l'efficacia della risposta. Gli attaccanti possono agire indisturbati per lungo tempo.\n\n**Esempio:** Brute-force non rilevato poiché non vengono loggati i tentativi falliti.",
-      "link": "https://owasp.org/Top10/A09_2021-Security_Logging_and_Monitoring_Failures/"
-    },
+    "description": "The lack of logs, alerts, or tracing undermines timely attack detection and the effectiveness of the response. Attackers can operate undetected for long periods.\n\n**Example:** A brute-force attack goes unnoticed because failed attempts are not logged.",
+    "link": "https://owasp.org/Top10/A09_2021-Security_Logging_and_Monitoring_Failures/",
     "level": "basso"
   },
   "A10:2021 - Server-Side Request Forgery (SSRF)": {
-    "it": {
-      "description": "In un attacco SSRF, l'attaccante induce il server a fare richieste HTTP verso risorse interne o esterne, spesso bypassando i firewall. Questo può portare a info disclosure o movimenti laterali.\n\n**Esempio:** Input in un campo URL consente accesso a `http://localhost:8080/admin` dal server target.",
-      "link": "https://owasp.org/Top10/A10_2021-Server-Side_Request_Forgery_(SSRF)/"
-    },
+    "description": "In an SSRF attack, the attacker tricks the server into making HTTP requests to internal or external resources, often bypassing firewalls. This can lead to information disclosure or lateral movement.\n\n**Example:** Input in a URL field allows access to `http://localhost:8080/admin` from the target server.",
+    "link": "https://owasp.org/Top10/A10_2021-Server-Side_Request_Forgery_(SSRF)/",
     "level": "medio"
   }
 }
