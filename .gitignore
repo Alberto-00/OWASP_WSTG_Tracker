@@ -57,3 +57,5 @@ pylint-global.txt
 *.ini
 WSTG_Tracker*
 .idea
+
+release

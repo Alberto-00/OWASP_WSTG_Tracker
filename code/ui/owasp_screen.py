@@ -617,15 +617,14 @@ class MappingDialog(QWidget):
             text_color = "#e5e7eb"
 
         detail_widget.setStyleSheet(
-            f"background-color: {bg_color}; color: {text_color}; "
-            "font-family: 'SF Mono', 'Consolas', monospace; font-size: 13px;"
+            f"background-color: {bg_color}; color: {text_color}; font-size: 13px;"
         )
 
         return detail_widget
 
     def _build_table_html(self) -> str:
         rows = []
-        row_colors = ['rgba(38, 40, 47, 0.5)', 'rgba(30, 32, 40, 0.5)']
+        row_colors = ['rgba(38, 40, 47, 1)', 'rgba(30, 32, 40, 1)'] # imposta lo zebra color
 
         for i, (category, reference) in enumerate(self.WSTG_OWASP_MAPPING.items()):
             rows.append(
@@ -645,13 +644,13 @@ class MappingDialog(QWidget):
 
         return (
                 f"<table {table_style}>"
-                "<col style='width: 49%; text-align: left;'>"
-                "<col style='width: 2%; background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #6366f1, stop:1 #8b5cf6);'>"
-                "<col style='width: 49%;'>"
-                "<tr style='background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgba(99, 102, 241, 0.2), stop:1 rgba(139, 92, 246, 0.15));'>"
-                "<th align='left' style='color: #e5e7eb; font-size: 15px; padding: 14px 8px; font-weight: 600;'>Categoria WSTG</th>"
+                "<col style='width:49%; text-align:left;'>"
+                "<col style='width:2%; background-color:#6366f1;'>"  # barra separatrice solida
+                "<col style='width:49%;'>"
+                "<tr style='background-color:#1A1B20;'>"  # header solido scuro
+                "<th align='left' style='color:#e5e7eb; font-size:15px; padding:14px 8px; font-weight:600;'>Categoria WSTG</th>"
                 "<th></th>"
-                "<th style='color: #e5e7eb; font-size: 15px; padding: 14px 8px; font-weight: 600;'>OWASP Top 10 (2021)</th>"
+                "<th style='color:#e5e7eb; font-size:15px; padding:14px 8px; font-weight:600;'>OWASP Top 10 (2021)</th>"
                 "</tr>"
                 + ''.join(rows) +
                 "</table>"
@@ -695,7 +694,7 @@ class MappingDialog(QWidget):
 
         formatted = re.sub(
             r"`([^`]+)`",
-            r"<code style='background-color: #2f3139; padding: 3px 6px; border-radius: 6px; "
+            r"<code style='background-color: #1E1F24; padding: 3px 6px; border-radius: 6px; "
             r"font-family: \"SF Mono\", Consolas; font-size: 12px;'>\1</code>",
             formatted
         )
