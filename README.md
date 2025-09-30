@@ -1,10 +1,13 @@
 # OWASP WSTG Checklist Tracker
 
-Applicazione desktop pensata per facilitare i Web Application Penetration Test (WAPT), permettendo di visualizzare e gestire in modo interattivo l'intera checklist delle OWASP Web Security Testing Guide (WSTG). Grazie al tracciamento dello stato di ogni test e alla possibilità di filtrare e annotare, l'app semplifica l'organizzazione e la documentazione delle attività durante un assessment. Ogni test è corredato da riferimenti, strumenti consigliati e misure di remediation.
+Applicazione desktop per facilitare i Web Application Penetration Test (WAPT): visualizza e gestisce in modo interattivo la checklist della **OWASP Web Security Testing Guide (WSTG)**, con stato dei test, ricerca, dettagli offline e una mappatura rapida con l’**OWASP Top 10 (2021)**.
+Pensata per lavorare **offline**, con **salvataggi persistenti** e build **portabili** per Windows e Linux.
 
-Gli eseguibili per Windows e Linux sono disponibili nella sezione **Releases** del repository.
+> Gli eseguibili sono disponibili nella sezione **Releases** del repository. In alternativa, puoi costruirli in locale seguendo le istruzioni sotto.
 
-## Caratteristiche
+---
+
+## Caratteristiche principali
 
 * ✔️ Visualizzazione interattiva della checklist WSTG.
 * 🔎 Ricerca dinamica e filtro per categoria.
@@ -13,49 +16,96 @@ Gli eseguibili per Windows e Linux sono disponibili nella sezione **Releases** d
 * 🧩 Mappa visiva WSTG ↔ OWASP Top 10 (2021).
 * 💾 Salvataggio/caricamento stato checklist in JSON.
 
+---
+
+## Struttura del progetto
+
+```
+.
+├── main.py
+├── public
+│   ├── icon
+│   │   ├── icon_256x256.ico
+│   │   ├── logo_app_2.png
+│   │   └── logo_app.png
+│   ├── json
+│   │   ├── en
+│   │   │   ├── category_descriptions.json
+│   │   │   ├── checklist_info_data.json
+│   │   │   ├── checklist.json
+│   │   │   └── owasp_top_10.json
+│   │   ├── it
+│   │   │   ├── category_descriptions.json
+│   │   │   ├── checklist_info_data.json
+│   │   │   ├── checklist.json
+│   │   │   └── owasp_top_10.json
+│   │   └── progress.json
+│   └── saves
+└── ui
+    ├── loading_screen.py
+    └──  owasp_screen.py
+```
+
+---
+
 ## Requisiti
 
-* Python 3.8+
-* PyQt6
+* **Python 3.8+** (consigliato 3.10+)
+* **PyQt6**
 
-Installa le dipendenze con:
+Installa le dipendenze:
 
 ```bash
 pip install -r requirements.txt
+# oppure:
+pip install PyQt6
 ```
 
-## Esecuzione da terminale
+Esegui:
 
 ```bash
 python main.py
 ```
 
-La struttura del progetto è la seguente:
+---
 
-```
-.
-├── public/
-│   ├── icon/
-│   │   ├── icon_256x256.ico
-│   │   ├── logo_app.png
-│   │   └── logo_app_2.png
-│   ├── json/
-│   │   ├── category_descriptions.json
-│   │   ├── checklist.json
-│   │   ├── checklist_info_data.json
-│   │   ├── owasp_top_10.json
-│   │   └── progress.json
-│   └── saves/
-│       └── progress_temp.json
-├── ui/
-│   ├── main_window.py
-│   └── loading_screen.py
-└── main.py
+## Build degli eseguibili (Windows & Linux)
+
+La build usa **PyInstaller** e **non fa cross-compile**:
+
+* costruisci l’`.exe` **su Windows**
+* costruisci il binario **su Linux**
+
+### Comandi rapidi
+
+**Windows**
+
+```powershell
+pyinstaller --noconfirm --clean --name OWASP --noconsole --onefile `
+  --icon public\icon\icon_256x256.ico `
+  --hidden-import PyQt6 --hidden-import PyQt6.QtCore --hidden-import PyQt6.QtGui --hidden-import PyQt6.QtWidgets `
+  --add-data "public;public" --add-data "ui;ui" `
+  main.py
 ```
 
-## Salvataggio stato WSTG
+**Linux**
 
-Il file viene salvato in `saves/progress_temp.json` o in un file selezionato manualmente via GUI.
+Da linux o WSL lancia:
+
+```bash
+pyinstaller --noconfirm --clean --name OWASP --noconsole --onefile \
+  --icon public/icon/logo_app.png \
+  --hidden-import PyQt6 --hidden-import PyQt6.QtCore --hidden-import PyQt6.QtGui --hidden-import PyQt6.QtWidgets \
+  --add-data "public:public" --add-data "ui:ui" \
+  main.py
+```
+
+> Nota separatore `--add-data`: Windows usa `;`, Linux usa `:`.<br>
+> In `--onefile` puoi spostare liberamente l’eseguibile.<br>
+> In `--onedir` **devi spostare l’intera cartella** `dist/OWASP/` (exe + risorse).
+
+---
+
 
 ## Screenshot
 
