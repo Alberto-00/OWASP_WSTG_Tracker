@@ -2,79 +2,77 @@ from pathlib import Path
 from typing import Final, List, Optional
 
 from PyQt6.QtCore import QEasingCurve, QPointF, QPropertyAnimation, QTimer, Qt, pyqtSignal
-from PyQt6.QtGui import QColor, QPaintEvent, QPainter, QPainterPath, QPixmap, QRadialGradient
+from PyQt6.QtGui import QColor, QPaintEvent, QPainter, QPainterPath, QPixmap, QRadialGradient, QLinearGradient, QFont
 from PyQt6.QtCore import QRectF
 from PyQt6.QtWidgets import QLabel, QProgressBar, QVBoxLayout, QWidget
-
 
 # ---------------------------------------------------------------------------
 # CONFIGURAZIONE
 # ---------------------------------------------------------------------------
-WINDOW_W: Final = 480
-WINDOW_H: Final = 320
-CORNER_RADIUS: Final = 16
-LOGO_SIZE: Final = 140  # Ridotto per evitare problemi di memoria
+WINDOW_W: Final = 520
+WINDOW_H: Final = 360
+CORNER_RADIUS: Final = 24
+LOGO_SIZE: Final = 120
 
-# Grigio scuro pastello per dark theme - più rilassante per gli occhi
-BG_COLOR: Final = QColor(45, 47, 51, 255)  # il 255 indica la trasparenza (ora è disabilitata)
-GLOW_COLOR: Final = QColor(0, 200, 150, 50)  # Glow più tenue
+# Design moderno con gradiente
+BG_START_COLOR: Final = QColor(26, 28, 36, 255)  # Blu scuro
+BG_END_COLOR: Final = QColor(38, 42, 54, 255)  # Blu scuro più chiaro
+ACCENT_COLOR: Final = QColor(99, 102, 241)  # Indigo moderno
+GLOW_COLOR: Final = QColor(99, 102, 241, 40)  # Glow sottile
 
-FADE_IN_MS: Final = 500
-PROGRESS_DURATION_MS: Final = 2500
-FADE_OUT_MS: Final = 300
-STATUS_INTERVAL_MS: Final = 500
+FADE_IN_MS: Final = 600
+PROGRESS_DURATION_MS: Final = 2800
+FADE_OUT_MS: Final = 600
+STATUS_INTERVAL_MS: Final = 450
 
 STATUS_MESSAGES: Final[List[str]] = [
-    "Caricamento moduli…",
-    "Inizializzo interfaccia…",
-    "Connessione al database…",
-    "Verifica permessi…",
-    "Avvio servizi…",
+    "Inizializzazione...",
+    "Caricamento moduli...",
+    "Connessione database...",
+    "Verifica permessi...",
+    "Preparazione interfaccia...",
+    "Avvio servizi...",
 ]
 
 
 # ---------------------------------------------------------------------------
-# SPLASH‑SCREEN
+# MODERN SPLASH SCREEN
 # ---------------------------------------------------------------------------
 class ModernSplashScreenPNG(QWidget):
-    """Splash‑screen basato su *QWidget*."""
+    """Splash screen moderna con design glassmorphism."""
 
-    # Signal per notificare quando la splash è finita
     finished = pyqtSignal()
-
     TOTAL_DURATION_MS: Final = FADE_IN_MS + PROGRESS_DURATION_MS + FADE_OUT_MS
 
     def __init__(self, logo_path: str | Path, parent: QWidget | None = None) -> None:
         super().__init__(parent)
 
-        # Flag per evitare doppie chiamate
         self._is_closing = False
         self._animations_started = False
 
-        # Imposta flags della finestra
         self.setWindowFlags(
             Qt.WindowType.FramelessWindowHint |
             Qt.WindowType.WindowStaysOnTopHint |
-            Qt.WindowType.Tool  # Aggiunto per evitare problemi con taskbar
+            Qt.WindowType.Tool
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)  # Importante per la pulizia
+        self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
         self.setFixedSize(WINDOW_W, WINDOW_H)
 
-        # Inizializza le animazioni a None
         self.fade_in_anim: Optional[QPropertyAnimation] = None
         self.progress_anim: Optional[QPropertyAnimation] = None
         self.fade_out_anim: Optional[QPropertyAnimation] = None
         self.status_timer: Optional[QTimer] = None
+        self.logo_anim: Optional[QPropertyAnimation] = None
 
         self._setup_ui(logo_path)
         self._setup_animations()
 
     def _setup_ui(self, logo_path: str | Path) -> None:
-        """Configura l'interfaccia utente."""
+        """Configura l'interfaccia utente moderna."""
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(40, 50, 40, 40)
-        layout.setSpacing(20)
+        layout.setContentsMargins(50, 60, 50, 50)
+        layout.setSpacing(25)
 
         # --- LOGO ---
         self.logo_label = QLabel(self)
@@ -82,7 +80,6 @@ class ModernSplashScreenPNG(QWidget):
         try:
             pixmap = QPixmap(str(logo_path))
             if pixmap.isNull():
-                print(f"Avviso: Impossibile caricare il logo da: {logo_path}")
                 pixmap = self._create_placeholder_logo()
             else:
                 pixmap = pixmap.scaled(
@@ -100,59 +97,76 @@ class ModernSplashScreenPNG(QWidget):
         self.logo_label.setFixedSize(LOGO_SIZE, LOGO_SIZE)
         layout.addWidget(self.logo_label, 0, Qt.AlignmentFlag.AlignCenter)
 
-        # --- TITOLO ---
-        '''
-        title_label = QLabel("OWASP Checklist", self)
-        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        title_label.setFont(QFont("Arial", 18, QFont.Weight.Bold))
-        title_label.setStyleSheet("color: #77ffcc; margin: 10px 0;")
-        layout.addWidget(title_label)
-
-        layout.addItem(QSpacerItem(0, 20, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed))
-        '''
+        # Spazio per bilanciare il layout
+        layout.addStretch(1)
 
         # --- PROGRESS BAR ---
         self.progress = QProgressBar(self)
         self.progress.setRange(0, 100)
         self.progress.setValue(0)
-        self.progress.setFixedHeight(10)
+        self.progress.setFixedHeight(8)
         self.progress.setTextVisible(False)
-        self.progress.setStyleSheet(
-            """
+        self.progress.setStyleSheet("""
             QProgressBar {
-                background-color: rgba(255,255,255,25);
-                border-radius: 5px;
+                background-color: rgba(255, 255, 255, 0.08);
+                border-radius: 4px;
                 border: none;
             }
             QProgressBar::chunk {
-                background-color: #00c896;
-                border-radius: 5px;
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #6366f1, stop:0.5 #8b5cf6, stop:1 #a78bfa);
+                border-radius: 4px;
             }
-            """
-        )
+        """)
         layout.addWidget(self.progress)
 
         # --- STATUS LABEL ---
         self.status_label = QLabel(STATUS_MESSAGES[0], self)
         self.status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.status_label.setStyleSheet("color: #d4d4d4; margin-top: 10px;")
+        status_font = QFont("Segoe UI", 10)
+        self.status_label.setFont(status_font)
+        self.status_label.setStyleSheet("""
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 12px;
+            letter-spacing: 0.5px;
+        """)
         layout.addWidget(self.status_label)
 
-        # Status index
+        # --- VERSION LABEL ---
+        version_label = QLabel("v1.0.0", self)
+        version_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        version_font = QFont("Segoe UI", 8)
+        version_label.setFont(version_font)
+        version_label.setStyleSheet("""
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 5px;
+        """)
+        layout.addWidget(version_label)
+
         self._status_index = 0
 
     def _create_placeholder_logo(self) -> QPixmap:
-        """Crea un logo placeholder."""
+        """Crea un logo placeholder moderno."""
         pixmap = QPixmap(LOGO_SIZE, LOGO_SIZE)
         pixmap.fill(Qt.GlobalColor.transparent)
 
         painter = QPainter(pixmap)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        painter.setBrush(QColor(0, 200, 150))
-        painter.setPen(Qt.PenStyle.NoPen)
-        painter.drawEllipse(10, 10, LOGO_SIZE - 20, LOGO_SIZE - 20)
-        painter.end()
 
+        # Gradiente per il logo
+        gradient = QLinearGradient(0, 0, LOGO_SIZE, LOGO_SIZE)
+        gradient.setColorAt(0, QColor(99, 102, 241))
+        gradient.setColorAt(1, QColor(139, 92, 246))
+
+        painter.setBrush(gradient)
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.drawEllipse(15, 15, LOGO_SIZE - 30, LOGO_SIZE - 30)
+
+        # Aggiungi un simbolo interno
+        painter.setBrush(QColor(255, 255, 255, 200))
+        painter.drawEllipse(35, 35, LOGO_SIZE - 70, LOGO_SIZE - 70)
+
+        painter.end()
         return pixmap
 
     def _setup_animations(self) -> None:
@@ -162,21 +176,21 @@ class ModernSplashScreenPNG(QWidget):
         self.fade_in_anim.setDuration(FADE_IN_MS)
         self.fade_in_anim.setStartValue(0.0)
         self.fade_in_anim.setEndValue(1.0)
-        self.fade_in_anim.setEasingCurve(QEasingCurve.Type.InOutQuad)
+        self.fade_in_anim.setEasingCurve(QEasingCurve.Type.OutCubic)
 
         # Progress animation
         self.progress_anim = QPropertyAnimation(self.progress, b"value", self)
         self.progress_anim.setDuration(PROGRESS_DURATION_MS)
         self.progress_anim.setStartValue(0)
         self.progress_anim.setEndValue(100)
-        self.progress_anim.setEasingCurve(QEasingCurve.Type.OutCubic)
+        self.progress_anim.setEasingCurve(QEasingCurve.Type.InOutCubic)
 
         # Fade out
         self.fade_out_anim = QPropertyAnimation(self, b"windowOpacity", self)
         self.fade_out_anim.setDuration(FADE_OUT_MS)
         self.fade_out_anim.setStartValue(1.0)
         self.fade_out_anim.setEndValue(0.0)
-        self.fade_out_anim.setEasingCurve(QEasingCurve.Type.InOutQuad)
+        self.fade_out_anim.setEasingCurve(QEasingCurve.Type.InOutQuart)
 
         # Connessioni
         self.fade_in_anim.finished.connect(self._on_fade_in_finished)
@@ -187,7 +201,6 @@ class ModernSplashScreenPNG(QWidget):
         self.status_timer = QTimer(self)
         self.status_timer.setInterval(STATUS_INTERVAL_MS)
         self.status_timer.timeout.connect(self._advance_status)
-
 
     # ------------------------------------------------------------------
     # Public API
@@ -204,7 +217,6 @@ class ModernSplashScreenPNG(QWidget):
         self.raise_()
         self.activateWindow()
 
-        # Avvia l'animazione di fade in
         if self.fade_in_anim:
             self.fade_in_anim.start()
 
@@ -214,22 +226,17 @@ class ModernSplashScreenPNG(QWidget):
             return
 
         self._is_closing = True
-
-        # Ferma tutte le animazioni e timer
         self._stop_all_animations()
 
-        # Mostra la finestra principale
         if main_window:
             main_window.show()
             main_window.raise_()
             main_window.activateWindow()
 
-        # Chiudi la splash
         self.close()
 
     def total_duration_ms(self) -> int:
         return self.TOTAL_DURATION_MS
-
 
     # ------------------------------------------------------------------
     # Slot privati
@@ -282,7 +289,6 @@ class ModernSplashScreenPNG(QWidget):
         if self.status_timer:
             self.status_timer.stop()
 
-
     # ------------------------------------------------------------------
     # Utility
     # ------------------------------------------------------------------
@@ -302,35 +308,46 @@ class ModernSplashScreenPNG(QWidget):
         except Exception as e:
             print(f"Errore nel centrare la finestra: {e}")
 
-
     # ------------------------------------------------------------------
-    # Paint: sfondo arrotondato + glow
+    # Paint: sfondo con gradiente e effetti
     # ------------------------------------------------------------------
     def paintEvent(self, event: QPaintEvent) -> None:
-        """Disegna lo sfondo arrotondato e l'effetto glow."""
+        """Disegna lo sfondo moderno con gradiente e glow."""
         try:
             painter = QPainter(self)
             painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
-            # --- SFONDO ARROTONDATO ---
-            # Converti QRect in QRectF per compatibilità
             rect_f = QRectF(self.rect())
+
+            # --- SFONDO PRINCIPALE CON GRADIENTE ---
+            bg_gradient = QLinearGradient(0, 0, 0, self.height())
+            bg_gradient.setColorAt(0, BG_START_COLOR)
+            bg_gradient.setColorAt(1, BG_END_COLOR)
+
             rect_path = QPainterPath()
             rect_path.addRoundedRect(rect_f, CORNER_RADIUS, CORNER_RADIUS)
-            painter.fillPath(rect_path, BG_COLOR)
+            painter.fillPath(rect_path, bg_gradient)
 
-            # --- EFFETTO GLOW (semplificato) ---
-            center = QPointF(self.width() / 2, self.height() / 2 - 20)
-            radius = LOGO_SIZE * 0.6  # Ridotto per performance
-            gradient = QRadialGradient(center, radius)
+            # --- BORDO SOTTILE LUMINOSO ---
+            border_gradient = QLinearGradient(0, 0, self.width(), self.height())
+            border_gradient.setColorAt(0, QColor(99, 102, 241, 100))
+            border_gradient.setColorAt(0.5, QColor(139, 92, 246, 100))
+            border_gradient.setColorAt(1, QColor(99, 102, 241, 100))
 
-            glow_color = GLOW_COLOR
-            transparent_glow = QColor(glow_color.red(), glow_color.green(), glow_color.blue(), 0)
+            from PyQt6.QtGui import QPen
+            border_pen = QPen(border_gradient, 2)
+            painter.strokePath(rect_path, border_pen)
 
-            gradient.setColorAt(0.0, glow_color)
-            gradient.setColorAt(1.0, transparent_glow)
+            # --- EFFETTO GLOW CENTRALE ---
+            center = QPointF(self.width() / 2, self.height() / 3)
+            radius = LOGO_SIZE * 1.2
+            glow_gradient = QRadialGradient(center, radius)
 
-            painter.setBrush(gradient)
+            glow_gradient.setColorAt(0.0, GLOW_COLOR)
+            glow_gradient.setColorAt(0.5, QColor(99, 102, 241, 15))
+            glow_gradient.setColorAt(1.0, QColor(99, 102, 241, 0))
+
+            painter.setBrush(glow_gradient)
             painter.setPen(Qt.PenStyle.NoPen)
             painter.drawEllipse(center, radius, radius)
 
@@ -338,9 +355,7 @@ class ModernSplashScreenPNG(QWidget):
         except Exception as e:
             print(f"Errore nel paintEvent: {e}")
 
-        # Chiama il paintEvent del parent
         super().paintEvent(event)
-
 
     # ------------------------------------------------------------------
     # Cleanup

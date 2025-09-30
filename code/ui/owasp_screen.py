@@ -20,32 +20,49 @@ class Config:
     """Configurazione centralizzata dell'applicazione"""
 
     COLORS = {
-        'bg_primary': '#2D2F33',
-        'bg_secondary': '#373A40',
-        'bg_tertiary': '#41454D',
-        'accent_primary': '#00C896',
-        'accent_secondary': '#77FFCC',
-        'text_primary': '#E4E4E4',
-        'text_secondary': '#B4B4B4',
-        'text_muted': '#8C8C8C',
-        'success': '#2E7D57',
-        'warning': '#FF9800',
-        'error': '#FF4C4C',
-        'info': '#80BFFF',
-        'purple': '#BB86FC',
+        # Soft-dark JetBrains-like grays (più chiari degli attuali)
+        'bg_primary': '#2B2D31',  # base window
+        'bg_secondary': '#32343A',  # panels / inputs
+        'bg_tertiary': '#3A3D44',  # hovers
+        'bg_card': '#2F3136',  # cards
+        'border': '#3F444A',  # borders
+        'border_light': '#5A616B',
+
+        # Typography
+        'text_primary': '#E6E6E6',
+        'text_secondary': '#B4B8BF',
+        'text_muted': '#8A9099',
+
+        # Accents (come prima)
+        'accent_primary': '#6366f1',
+        'accent_secondary': '#8b5cf6',
+        'accent_glow': '#a78bfa',
+        'info': '#6366f1',
+        'purple': '#8b5cf6',
+
+        # Semantic (verde dalla tua palette)
+        'success': '#66BB6A',
+        'success_dark': '#2E7D32',
+        'success_light': '#A5D6A7',
+        'warning': '#f59e0b',
+        'error': '#ef4444',
+
+        'blue_main': '#4FC3F7',
+        'blue_dark': '#0277BD',
+        'blue_light': '#B3E5FC',
     }
 
     STATUS_CONFIG = {
-        'done': {'icon': '✅', 'color': COLORS['success'], 'alpha': 30},
-        'in-progress': {'icon': '⏳', 'color': COLORS['purple'], 'alpha': 30},
+        'done': {'icon': '✅', 'color': COLORS['success'], 'alpha': 18},  # prima 40
+        'in-progress': {'icon': '⏳', 'color': COLORS['purple'], 'alpha': 18},  # prima 40
         'pending': {'icon': '◻', 'color': 'transparent', 'alpha': 0},
     }
 
     LEVEL_COLORS = {
-        'critico': '#ff4c4c',
-        'alto': '#ff9800',
-        'medio': '#ffc107',
-        'basso': '#4caf50',
+        'critico': '#ef4444',
+        'alto': '#f59e0b',
+        'medio': '#fbbf24',
+        'basso': '#10b981',
     }
 
 
@@ -62,9 +79,6 @@ class FileManager:
             'progress_default': self.base_path / 'public' / 'json' / 'progress.json',
         }
 
-    # ------------------------------------------------------------------
-    # Private helpers
-    # ------------------------------------------------------------------
     @staticmethod
     def _get_base_path() -> Path:
         """Compatibile con esecuzione tramite PyInstaller"""
@@ -72,9 +86,6 @@ class FileManager:
             return Path(sys._MEIPASS)
         return Path(__file__).resolve().parent.parent
 
-    # ------------------------------------------------------------------
-    # Public API
-    # ------------------------------------------------------------------
     def load_json_from_path(self, path: Path, default: Any = None) -> Any:
         if not path.exists():
             print(f"[FileManager] File non trovato: {path}")
@@ -92,7 +103,7 @@ class FileManager:
             with open(path, 'w', encoding='utf-8') as f:
                 json.dump(data, f, indent=4, ensure_ascii=False)
             return True
-        except Exception as ex:  # noqa: BLE001
+        except Exception as ex:
             print(f"[FileManager] Errore salvataggio {path}: {ex}")
             return False
 
@@ -103,7 +114,7 @@ class StyleManager:
     @staticmethod
     def main() -> str:
         c = Config.COLORS
-        # utility per trasformare un hex in rgba con alpha (0–1)
+
         def rgba(hex_color: str, a: float) -> str:
             hex_color = hex_color.lstrip('#')
             r = int(hex_color[0:2], 16)
@@ -112,175 +123,210 @@ class StyleManager:
             return f'rgba({r},{g},{b},{a})'
 
         return f"""
-        /* base -------------------------------------------------------- */
+        /* ===== BASE STYLES ===== */
         QWidget {{
             background-color: {c['bg_primary']};
             color: {c['text_primary']};
             font-size: 13px;
-            font-family: 'Segoe UI', Arial, sans-serif;
-            selection-background-color: {rgba(c['info'], 0.25)};
+            font-family: 'Segoe UI', 'Inter', 'SF Pro Display', -apple-system, system-ui, sans-serif;
+            selection-background-color: {rgba(c['info'], 0.3)};
             selection-color: {c['text_primary']};
         }}
+
         QToolTip {{
-            background-color: {c['bg_secondary']};
+            background-color: {c['bg_tertiary']};
             color: {c['text_primary']};
-            border: 1px solid {c['bg_tertiary']};
-            padding: 4px 8px;
-            border-radius: 6px;
+            border: 1px solid {c['border_light']};
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 12px;
         }}
 
-        /* splitter + line -------------------------------------------- */
+        /* ===== SPLITTER ===== */
         QSplitter::handle {{
-            background: {c['bg_tertiary']};
-            margin: 0 2px;
+            background: #3F444A;    /* c['border'] */
+            margin: 0 1px;          /* prima 0 3px */
         }}
-        QFrame[frameShape="4"] {{ /* HLine */
-            color: {c['bg_tertiary']};
+        QSplitter::handle:hover {{
+            background: {c['border_light']};
         }}
 
-        /* inputs ------------------------------------------------------ */
+        QFrame[frameShape="4"] {{
+            color: {c['border']};
+            max-height: 1px;
+        }}
+
+        /* ===== INPUT FIELDS ===== */
         QLineEdit, QComboBox {{
             background-color: {c['bg_secondary']};
             color: {c['text_primary']};
-            border: 1px solid {c['bg_tertiary']};
-            border-radius: 8px;
-            padding: 6px 10px;
+            border: 1.5px solid {c['border']};
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 13px;
         }}
         QLineEdit:hover, QComboBox:hover {{
-            border-color: {rgba(c['accent_secondary'], 0.75)};
+            border-color: {c['border_light']};
             background-color: {c['bg_tertiary']};
         }}
         QLineEdit:focus, QComboBox:focus {{
             border-color: {c['accent_primary']};
             background-color: {c['bg_tertiary']};
+            outline: none;
         }}
-        /* popup della combo */
+
+        QComboBox::drop-down {{
+            border: none;
+            padding-right: 8px;
+        }}
+        QComboBox::down-arrow {{
+            image: none;
+            border: 2px solid {c['text_secondary']};
+            border-top: none;
+            border-right: none;
+            width: 6px;
+            height: 6px;
+            transform: rotate(-45deg);
+        }}
         QComboBox QAbstractItemView {{
             background: {c['bg_secondary']};
             color: {c['text_primary']};
-            border: 1px solid {c['bg_tertiary']};
-            selection-background-color: {rgba(c['info'], 0.20)};
+            border: 1px solid {c['border']};
+            border-radius: 8px;
+            padding: 4px;
+            selection-background-color: {rgba(c['accent_primary'], 0.25)};
+            outline: none;
         }}
 
-        /* bottoni ----------------------------------------------------- */
+        /* ===== BUTTONS ===== */
         QPushButton {{
-            background-color: {c['accent_primary']};
-            color: #232429;              /* testo scuro per contrasto */
-            border: 1px solid {rgba(c['accent_primary'], 0.35)};
-            border-radius: 8px;
-            padding: 8px 12px;
+            color: white;
+            background-color: {c['purple']};
+            border: none;
+            border-radius: 10px;
+            padding: 10px 18px;
             font-weight: 600;
+            font-size: 13px;
         }}
         QPushButton:hover {{
-            background-color: {c['accent_secondary']};
+            background-color: {c['accent_glow']};;
+            transform: translateY(-1px);
         }}
         QPushButton:pressed {{
-            background-color: {rgba(c['accent_secondary'], 0.85)};
+            background-color: {c['accent_primary']};
         }}
         QPushButton:disabled {{
-            background: {rgba(c['bg_tertiary'], 0.65)};
+            background: {c['bg_tertiary']};
             color: {c['text_muted']};
-            border-color: {c['bg_tertiary']};
         }}
 
-        /* “tab buttons” (Summary / How-To / Tools / Remediation) ------ */
+        /* ===== TAB BUTTONS ===== */
         QPushButton[variant="tab"] {{
             background: {c['bg_secondary']};
-            color: {c['text_primary']};
-            border: 1px solid {c['bg_tertiary']};
+            color: {c['text_secondary']};
+            border: 1.5px solid {c['border']};
             border-radius: 10px;
-            padding: 8px 14px;
+            padding: 10px 16px;
+            font-weight: 500;
         }}
         QPushButton[variant="tab"]:hover {{
             background: {c['bg_tertiary']};
-            border-color: {rgba(c['info'], 0.45)};
+            border-color: {c['border_light']};
+            color: {c['text_primary']};
         }}
         QPushButton[variant="tab"]:checked {{
-            background: {rgba(c['info'], 0.22)};
-            border-color: {c['info']};
-        }}
-        QPushButton[variant="tab"]:disabled {{
-            color: {c['text_muted']};
+            background: {rgba(c['accent_primary'], 0.12)};
+            border-color: {rgba(c['accent_primary'], 0.60)};
+            color: {c['accent_primary']};   /* testo colorato, non bianco */
+            font-weight: 700;
         }}
 
-        /* list -------------------------------------------------------- */
+        /* ===== LIST WIDGET ===== */
         QListWidget {{
             background-color: {c['bg_secondary']};
             color: {c['text_primary']};
-            border: 1px solid {c['bg_tertiary']};
-            border-radius: 10px;
+            border: 1.5px solid {c['border']};
+            border-radius: 12px;
             outline: none;
-            padding: 6px;
+            padding: 6px;             /* prima 8px */
         }}
         QListWidget::item {{
-            border: 1px solid transparent;
-            padding: 8px 10px;
-            margin: 2px 4px;
-            border-radius: 8px;
+            border: 1.5px solid transparent;
+            padding: 8px 10px;        /* prima 10px 12px */
+            margin: 2px 4px;          /* prima 3px 5px */
+            border-radius: 10px;
+            transition: all 0.2s ease;
         }}
         QListWidget::item:hover {{
-            background-color: {rgba(c['info'], 0.10)};
-            border-color: {rgba(c['info'], 0.20)};
+            background-color: {rgba(c['blue_main'], 0.16)};
+            border-color: {rgba(c['blue_dark'], 0.60)};
         }}
+        
         QListWidget::item:selected {{
-            background-color: {rgba(c['info'], 0.22)};
-            border-color: {c['info']};
+            background-color: {rgba(c['blue_main'], 0.24)}; 
+            border-color: {rgba(c['blue_dark'], 0.80)};
         }}
 
-        /* editors ----------------------------------------------------- */
+        /* ===== TEXT EDITORS ===== */
         QTextEdit {{
-            background-color: {c['bg_tertiary']};
+            background-color: {c['bg_card']};
             color: {c['text_primary']};
-            border: 1px solid {c['bg_tertiary']};
-            border-radius: 10px;
-            padding: 10px;
+            border: 1.5px solid {c['border']};
+            border-radius: 12px;
+            padding: 8px;             /* prima 12px */
+            selection-background-color: {rgba(c['accent_primary'], 0.3)};
         }}
 
-        /* scrollbar unify -------------------------------------------- */
+        /* ===== SCROLLBARS ===== */
         QScrollBar:vertical, QScrollBar:horizontal {{
             background: {c['bg_secondary']};
             border: none;
-            margin: 2px;
+            margin: 3px;
         }}
-        QScrollBar:vertical {{ width: 10px; }}
-        QScrollBar:horizontal {{ height: 10px; }}
+        QScrollBar:vertical {{ width: 12px; }}
+        QScrollBar:horizontal {{ height: 12px; }}
         QScrollBar::handle {{
             background: {c['bg_tertiary']};
             border-radius: 6px;
-            min-height: 24px;
-            min-width: 24px;
+            min-height: 30px;
+            min-width: 30px;
         }}
         QScrollBar::handle:hover {{
-            background: {rgba(c['accent_primary'], 0.65)};
+            background: {c['border_light']};
+        }}
+        QScrollBar::handle:pressed {{
+            background: {c['accent_primary']};
         }}
         QScrollBar::add-line, QScrollBar::sub-line {{
             background: transparent;
             border: none;
         }}
+        QScrollBar::add-page, QScrollBar::sub-page {{
+            background: transparent;
+        }}
         """
-
 
     @staticmethod
     def progress_bar() -> str:
         c = Config.COLORS
-        # Bordo & background con palette, chunk a gradiente dalla palette
         return f"""
         QProgressBar {{
-            border: 1px solid {c['bg_tertiary']};
-            border-radius: 10px;
+            border: 1.5px solid {c['border']};
+            border-radius: 12px;
             background-color: {c['bg_secondary']};
             color: {c['text_primary']};
             text-align: center;
-            padding: 2px;
+            padding: 3px;
             font-weight: 600;
+            font-size: 13px;
         }}
         QProgressBar::chunk {{
-            border-radius: 8px;
-            margin: 1px;
-            background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
-                stop:0   {c['accent_primary']},
+            border-radius: 10px;
+            margin: 2px;
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                stop:0 {c['accent_primary']},
                 stop:0.5 {c['accent_secondary']},
-                stop:1   {c['accent_primary']}
+                stop:1 {c['accent_glow']}
             );
         }}
         """
@@ -288,12 +334,30 @@ class StyleManager:
     @staticmethod
     def context_menu() -> str:
         c = Config.COLORS
-        return (
-            f"QMenu {{ background-color:{c['bg_secondary']}; color:{c['text_primary']}; "
-            f"border:1px solid {c['bg_tertiary']}; padding:4px; border-radius:8px; }}"
-            f"QMenu::item {{ padding:8px 14px; border-radius:6px; }}"
-            f"QMenu::item:selected {{ background-color:rgba(128,191,255,0.20); color:#232429; }}"
-        )
+        return f"""
+        QMenu {{
+            background-color: {c['bg_secondary']};
+            color: {c['text_primary']};
+            border: 1.5px solid {c['border']};
+            padding: 6px;
+            border-radius: 10px;
+        }}
+        QMenu::item {{
+            padding: 10px 16px;
+            border-radius: 8px;
+            margin: 2px;
+        }}
+        QMenu::item:selected {{
+            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                stop:0 {c['accent_primary']}, stop:1 {c['accent_secondary']});
+            color: white;
+        }}
+        QMenu::separator {{
+            height: 1px;
+            background: {c['border']};
+            margin: 4px 8px;
+        }}
+        """
 
 
 class ProgressBarManager:
@@ -303,24 +367,18 @@ class ProgressBarManager:
         self._bar = bar
         self._setup()
 
-    # ------------------------------------------------------------------
-    # Private helpers
-    # ------------------------------------------------------------------
     def _setup(self) -> None:
         self._bar.setMinimum(0)
         self._bar.setMaximum(100)
         self._bar.setValue(0)
         self._bar.setTextVisible(True)
-        self._bar.setFixedHeight(28)
+        self._bar.setFixedHeight(32)
         self._bar.setStyleSheet(StyleManager.progress_bar())
 
         self._anim = QPropertyAnimation(self._bar, b"value")
-        self._anim.setDuration(500)
+        self._anim.setDuration(600)
         self._anim.setEasingCurve(QEasingCurve.Type.OutCubic)
 
-    # ------------------------------------------------------------------
-    # Public API
-    # ------------------------------------------------------------------
     def update(self, current: int, total: int, *, animate: bool = True) -> None:
         pct = 0 if total == 0 else round((current / total) * 100, 1)
         if animate:
@@ -334,27 +392,24 @@ class ProgressBarManager:
         self._bar.setFormat(f"{current}/{total} completati ({pct}%)")
         self._update_chunk_color(pct)
 
-    # ------------------------------------------------------------------
-    # Color helpers
-    # ------------------------------------------------------------------
     def _update_chunk_color(self, pct: float) -> None:
         c = Config.COLORS
         if pct == 100:
-            start, mid = c['success'], '#4CAF50'
+            start, mid, end = c['success'], c['success_dark'], c['success']
         elif pct >= 75:
-            start, mid = '#00A884', '#00C896'
+            start, mid, end = c['accent_primary'], c['accent_secondary'], c['accent_glow']
         elif pct >= 50:
-            start, mid = '#00796B', '#26A69A'
+            start, mid, end = '#3b82f6', '#6366f1', '#8b5cf6'
         elif pct >= 25:
-            start, mid = c['warning'], '#FFB74D'
+            start, mid, end = c['warning'], '#fb923c', c['warning']
         else:
-            start, mid = c['error'], '#FF7043'
+            start, mid, end = c['error'], '#f87171', c['error']
 
         chunk = (
             "QProgressBar::chunk { "
             "background: qlineargradient(x1:0,y1:0,x2:1,y2:0,"
-            f"stop:0 {start}, stop:0.5 {mid}, stop:1 {start});"
-            "border-radius:6px; margin:1px; }"
+            f"stop:0 {start}, stop:0.5 {mid}, stop:1 {end});"
+            "border-radius:10px; margin:2px; }"
         )
         base = re.sub(r"QProgressBar::chunk\s*\{[^}]+}", '', self._bar.styleSheet())
         self._bar.setStyleSheet(base + chunk)
@@ -365,21 +420,28 @@ class ColorPreservingDelegate(QStyledItemDelegate):
         fg = index.data(Qt.ItemDataRole.ForegroundRole)
         bg = index.data(Qt.ItemDataRole.BackgroundRole)
         border_color = index.data(Qt.ItemDataRole.UserRole + 1)
+        border_width = index.data(Qt.ItemDataRole.UserRole + 2) or 2
 
         painter.save()
 
+        # 1) background (solo quello dell'item: pending/done/in-progress)
         if bg:
             painter.fillRect(option.rect, bg)
 
+        # 2) disegno standard (testo ecc.)
         super().paint(painter, option, index)
 
+        # 3) bordo personalizzato (colore + spessore)
         if border_color and border_color != "transparent":
             pen = painter.pen()
             pen.setColor(QColor(border_color))
-            pen.setWidth(2)
+            try:
+                pen.setWidth(int(border_width))
+            except Exception:
+                pen.setWidth(2)
             painter.setPen(pen)
             r = option.rect.adjusted(1, 1, -2, -2)
-            painter.drawRoundedRect(r, 4, 4)
+            painter.drawRoundedRect(r, 8, 8)
 
         painter.restore()
 
@@ -391,7 +453,6 @@ class ColorPreservingDelegate(QStyledItemDelegate):
 class MappingDialog(QWidget):
     """Finestra per la visualizzazione del mapping WSTG ↔ OWASP Top-10"""
 
-    # Mapping statico WSTG -> OWASP Top 10
     WSTG_OWASP_MAPPING = {
         'Information Gathering': 'A01, A05, A06',
         'Configuration and Deployment Management Testing': 'A05, A06',
@@ -410,12 +471,11 @@ class MappingDialog(QWidget):
     def __init__(self, owasp_data: Dict[str, Any], parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
 
-        # Lingua corrente (fallback: 'it')
         try:
             self._lang = getattr(parent, 'current_lang', 'it')
         except Exception:
             self._lang = 'it'
-        # Verifica che owasp_data sia valido
+
         if not isinstance(owasp_data, dict):
             raise ValueError("owasp_data deve essere un dizionario")
 
@@ -426,19 +486,13 @@ class MappingDialog(QWidget):
         self._setup_ui()
 
     def _extract_fields(self, entry: dict) -> tuple[str, str, str]:
-        """Estrae (description, link, level) da un record OWASP sia *flat* sia *multilingua*.
-        - Preferisce la lingua corrente (self._lang), con fallback 'it' -> 'en'.
-        - Accetta anche file legacy con 'description'/'link' al top-level.
-        - 'level' viene letto dal top-level, con fallback alla sezione locale.
-        """
         if not isinstance(entry, dict):
             return ("Descrizione non trovata.", "", "medio")
 
-        # Se multilingua
         if 'it' in entry or 'en' in entry:
             sec = entry.get(self._lang) or entry.get('it') or entry.get('en') or {}
         else:
-            sec = entry  # struttura flat
+            sec = entry
 
         if not isinstance(sec, dict):
             sec = {}
@@ -449,7 +503,6 @@ class MappingDialog(QWidget):
         return (description, link, level)
 
     def _setup_ui(self) -> None:
-        """Configura l'interfaccia utente."""
         try:
             self._configure_window()
             self._create_layout()
@@ -459,52 +512,44 @@ class MappingDialog(QWidget):
             raise
 
     def _configure_window(self) -> None:
-        """Configura le proprietà base della finestra."""
         self.setWindowTitle("Mapping WSTG ↔ OWASP Top 10")
-        self.resize(1300, 580)  # Usa resize invece di setGeometry
+        self.resize(1400, 650)
 
-        # Imposta i flag della finestra per avere controlli standard
         self.setWindowFlags(
-            Qt.WindowType.Window |  # Finestra normale
-            Qt.WindowType.WindowTitleHint |  # Barra del titolo
-            Qt.WindowType.WindowSystemMenuHint |  # Menu di sistema
-            Qt.WindowType.WindowMinimizeButtonHint |  # Pulsante minimizza
-            Qt.WindowType.WindowMaximizeButtonHint |  # Pulsante massimizza
-            Qt.WindowType.WindowCloseButtonHint  # Pulsante chiudi
+            Qt.WindowType.Window |
+            Qt.WindowType.WindowTitleHint |
+            Qt.WindowType.WindowSystemMenuHint |
+            Qt.WindowType.WindowMinimizeButtonHint |
+            Qt.WindowType.WindowMaximizeButtonHint |
+            Qt.WindowType.WindowCloseButtonHint
         )
 
-        # Controlla se Config è disponibile prima di usarlo
         try:
             bg_color = Config.COLORS['bg_primary']
         except (NameError, KeyError):
-            bg_color = "#2e3137"  # Fallback color
+            bg_color = "#1a1c24"
 
         self.setStyleSheet(f"background-color: {bg_color};")
 
     def _create_layout(self) -> None:
-        """Crea il layout principale con i componenti."""
         layout = QHBoxLayout(self)
+        layout.setContentsMargins(12, 10, 12, 12)   # prima 16,16,16,16
+        layout.setSpacing(8)                        # prima 12
+
         splitter = QSplitter(Qt.Orientation.Horizontal)
+        splitter.setHandleWidth(6)  # più sottile
 
-        # Tabella HTML
         html_widget = self._create_html_table()
-
-        # Lista OWASP
         self._list = self._create_owasp_list()
-
-        # Dettagli OWASP
         self._detail = self._create_detail_widget()
 
-        # Connetti eventi
         if self._list:
             self._list.currentItemChanged.connect(self._show_detail)
 
-        # Aggiungi widget al splitter
         splitter.addWidget(html_widget)
         splitter.addWidget(self._list)
         splitter.addWidget(self._detail)
 
-        # Configura proporzioni
         splitter.setStretchFactor(0, 3)
         splitter.setStretchFactor(1, 2)
         splitter.setStretchFactor(2, 5)
@@ -512,18 +557,17 @@ class MappingDialog(QWidget):
         layout.addWidget(splitter)
 
     def _create_html_table(self) -> QTextEdit:
-        """Crea il widget per la tabella HTML."""
         html_box = QTextEdit()
         html_box.setReadOnly(True)
         html_box.setHtml(self._build_table_html())
-        html_box.setMinimumWidth(475)
+        html_box.setMinimumWidth(500)
 
         try:
             bg_color = Config.COLORS['bg_secondary']
             text_color = Config.COLORS['text_primary']
         except (NameError, KeyError):
-            bg_color = "#3a3b40"
-            text_color = "#ffffff"
+            bg_color = "#26282f"
+            text_color = "#e5e7eb"
 
         html_box.setStyleSheet(
             f"background-color: {bg_color}; color: {text_color};"
@@ -532,96 +576,88 @@ class MappingDialog(QWidget):
         return html_box
 
     def _create_owasp_list(self) -> QListWidget:
-        """Crea la lista degli elementi OWASP."""
         list_widget = QListWidget()
-        list_widget.setMinimumWidth(340)
+        list_widget.setMinimumWidth(360)
+        list_widget.setMouseTracking(True)
+        list_widget.setItemDelegate(ColorPreservingDelegate(list_widget))
 
         try:
             bg_color = Config.COLORS['bg_secondary']
             text_color = Config.COLORS['text_primary']
         except (NameError, KeyError):
-            bg_color = "#3a3b40"
-            text_color = "#ffffff"
+            bg_color = "#26282f"
+            text_color = "#e5e7eb"
 
         list_widget.setStyleSheet(
             f"background-color: {bg_color}; color: {text_color};"
         )
 
-        # Popola la lista
         for code, entry in self._owasp.items():
             item = QListWidgetItem(code)
             _, _, level = self._extract_fields(entry)
             try:
-                color = Config.LEVEL_COLORS.get(level, '#ffffff')
+                color = Config.LEVEL_COLORS.get(level, '#e5e7eb')
             except (NameError, AttributeError):
-                color = '#ffffff'
+                color = '#e5e7eb'
             item.setForeground(QColor(color))
-            item.setSizeHint(QSize(0, 34))
+            item.setSizeHint(QSize(0, 38))
             list_widget.addItem(item)
 
         return list_widget
 
     def _create_detail_widget(self) -> QTextEdit:
-        """Crea il widget per i dettagli."""
         detail_widget = QTextEdit()
         detail_widget.setReadOnly(True)
 
         try:
-            bg_color = Config.COLORS['bg_tertiary']
+            bg_color = Config.COLORS['bg_card']
             text_color = Config.COLORS['text_primary']
         except (NameError, KeyError):
-            bg_color = "#262932"
-            text_color = "#ffffff"
+            bg_color = "#1e2028"
+            text_color = "#e5e7eb"
 
         detail_widget.setStyleSheet(
             f"background-color: {bg_color}; color: {text_color}; "
-            "font-family: Consolas; font-size: 13px;"
+            "font-family: 'SF Mono', 'Consolas', monospace; font-size: 13px;"
         )
 
         return detail_widget
 
     def _build_table_html(self) -> str:
-        """Costruisce l'HTML per la tabella di mapping."""
         rows = []
-        row_colors = ['rgba(46,49,55,0.7)', 'rgba(38,40,45,0.7)']
+        row_colors = ['rgba(38, 40, 47, 0.5)', 'rgba(30, 32, 40, 0.5)']
 
         for i, (category, reference) in enumerate(self.WSTG_OWASP_MAPPING.items()):
             rows.append(
                 f"<tr style='background-color: {row_colors[i % 2]};'>"
-                f"<td style='padding: 10px 8px; color: #dceaf7;'>{self._escape_html(category)}</td>"
+                f"<td style='padding: 12px 10px; color: #e5e7eb;'>{self._escape_html(category)}</td>"
                 f"<td></td>"
-                f"<td style='padding: 10px 8px; color: #e6f2ff;'>{self._escape_html(reference)}</td>"
+                f"<td style='padding: 12px 10px; color: #a78bfa;'>{self._escape_html(reference)}</td>"
                 "</tr>"
             )
 
         table_style = (
-            "border: 0; cellspacing: 0; cellpadding: 6; "
+            "border: 0; cellspacing: 0; cellpadding: 8; "
             "style='border-collapse: collapse; table-layout: fixed; width: 100%; "
-            "background-color: rgba(33,34,38,0.95); border: 1px solid #3a3b40; "
-            "box-shadow: 0 0 15px rgba(128,191,255,0.3); border-radius: 6px;'"
+            "background-color: rgba(26, 28, 36, 0.95); border: 1.5px solid #374151; "
+            "box-shadow: 0 4px 20px rgba(99, 102, 241, 0.15); border-radius: 12px;'"
         )
 
         return (
                 f"<table {table_style}>"
                 "<col style='width: 49%; text-align: left;'>"
-                "<col style='width: 2%; background-color: rgba(90,170,255,0.2);'>"
+                "<col style='width: 2%; background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #6366f1, stop:1 #8b5cf6);'>"
                 "<col style='width: 49%;'>"
-                "<tr style='background-color: rgba(128,191,255,0.12);'>"
-                "<th align='left' style='color: #d2eaff; font-size: 15px; padding: 10px 6px;'>Categoria WSTG</th>"
+                "<tr style='background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgba(99, 102, 241, 0.2), stop:1 rgba(139, 92, 246, 0.15));'>"
+                "<th align='left' style='color: #e5e7eb; font-size: 15px; padding: 14px 8px; font-weight: 600;'>Categoria WSTG</th>"
                 "<th></th>"
-                "<th style='color: #d2eaff; font-size: 15px; padding: 10px 6px;'>OWASP Top 10 (2021)</th>"
+                "<th style='color: #e5e7eb; font-size: 15px; padding: 14px 8px; font-weight: 600;'>OWASP Top 10 (2021)</th>"
                 "</tr>"
                 + ''.join(rows) +
                 "</table>"
         )
 
     def _show_detail(self, item: Optional[QListWidgetItem]) -> None:
-        """
-        Mostra i dettagli dell'elemento selezionato.
-
-        Args:
-            item: Elemento selezionato nella lista
-        """
         if not item or not self._detail:
             return
 
@@ -630,84 +666,54 @@ class MappingDialog(QWidget):
             entry = self._owasp.get(code, {})
 
             if not isinstance(entry, dict):
-                self._detail.setHtml(f"<p style='color: #ff6b6b;'>Errore: dati non validi per {code}</p>")
+                self._detail.setHtml(f"<p style='color: #ef4444;'>Errore: dati non validi per {code}</p>")
                 return
 
-            # Estrai campi in modo robusto (multilingua o flat)
             description, link, _level = self._extract_fields(entry)
-
-            # Formatta la descrizione
             formatted_desc = self._format_description(description)
-
-            # Estrai link in modo sicuro
-            link = link
-
-            # Costruisci HTML
             html_content = self._build_detail_html(code, formatted_desc, link)
             self._detail.setHtml(html_content)
 
         except Exception as e:
             if self._detail:
-                self._detail.setHtml(f"<p style='color: #ff6b6b;'>Errore nel caricamento dettagli: {e}</p>")
+                self._detail.setHtml(f"<p style='color: #ef4444;'>Errore nel caricamento dettagli: {e}</p>")
 
     def _format_description(self, description: str) -> str:
-        """
-        Formatta la descrizione per l'HTML.
-
-        Args:
-            description: Descrizione raw da formattare
-
-        Returns:
-            Stringa HTML formattata
-        """
         import html, re
 
         if not isinstance(description, str):
             return "Descrizione non valida."
 
-        # Escaping prima, così evitiamo HTML indesiderato
         formatted = html.escape(description)
 
-        # Bold per **Esempio:** e **Example:**
         formatted = (
             formatted
-            .replace('**Esempio:**', '<b style="color: #dddddd;">Esempio:</b><br>')
-            .replace('**Example:**', '<b style="color: #dddddd;">Example:</b><br>')
+            .replace('**Esempio:**', '<b style="color: #e5e7eb;">Esempio:</b><br>')
+            .replace('**Example:**', '<b style="color: #e5e7eb;">Example:</b><br>')
             .replace('\n', '<br>')
         )
 
-        # Regex per codice inline
         formatted = re.sub(
             r"`([^`]+)`",
-            r"<code style='background-color: #333; padding: 2px 4px; border-radius: 4px; "
-            r"font-family: Consolas; font-size: 12px;'>\1</code>",
+            r"<code style='background-color: #2f3139; padding: 3px 6px; border-radius: 6px; "
+            r"font-family: \"SF Mono\", Consolas; font-size: 12px;'>\1</code>",
             formatted
         )
 
         return formatted
 
     def _build_detail_html(self, code: str, description: str, link: str) -> str:
-        """
-        Costruisce l'HTML per i dettagli.
-
-        Args:
-            code: Codice OWASP
-            description: Descrizione formattata
-            link: Link di riferimento
-
-        Returns:
-            Stringa HTML completa
-        """
         try:
             info_color = Config.COLORS['info']
-            purple_color = Config.COLORS['purple']
+            purple_color = Config.COLORS['accent_glow']
         except (NameError, KeyError):
-            info_color = "#5dade2"
-            purple_color = "#bb86fc"
+            info_color = "#6366f1"
+            purple_color = "#a78bfa"
 
         html_parts = [
-            f"<h3 style='color: {info_color};'>{self._escape_html(code)}</h3>",
-            f"<p style='color: #dddddd;'>{description}</p>"
+            f"<h3 style='color: {info_color}; font-weight: 600; "
+            f"margin: 2px 0 6px 0;'>{self._escape_html(code)}</h3>",
+            f"<p style='color: #e5e7eb; margin: 0 0 6px 0;'>{description}</p>"
         ]
 
         if link:
@@ -719,40 +725,22 @@ class MappingDialog(QWidget):
         return ''.join(html_parts)
 
     def _center_window(self) -> None:
-        """Centra la finestra sullo schermo."""
         try:
-            # Ottieni la geometria dello schermo
             screen = QApplication.primaryScreen()
             if screen:
                 screen_geometry = screen.availableGeometry()
-
-                # Calcola la posizione centrata
                 window_geometry = self.frameGeometry()
                 center_point = screen_geometry.center()
                 window_geometry.moveCenter(center_point)
-
-                # Sposta la finestra
                 self.move(window_geometry.topLeft())
             else:
-                # Fallback: centra manualmente
                 self.move(300, 200)
-
         except Exception as e:
             print(f"Impossibile centrare la finestra: {e}")
-            # Fallback sicuro
             self.move(300, 200)
 
     @staticmethod
     def _escape_html(text: str) -> str:
-        """
-        Escape dei caratteri HTML speciali.
-
-        Args:
-            text: Testo da escapare
-
-        Returns:
-            Testo con caratteri HTML escapati
-        """
         if not isinstance(text, str):
             return str(text)
 
@@ -763,7 +751,6 @@ class MappingDialog(QWidget):
             .replace('"', '&quot;')
             .replace("'", '&#x27;')
         )
-
 
 # -----------------------------------------------------------------------------
 # 3. MAIN APPLICATION
@@ -1062,31 +1049,38 @@ class OWASPChecklistApp(QWidget):
     def _add_test_item(self, test: Dict[str, Any]) -> None:
         tid = test['id']
         status = self.status_map.get(tid, 'pending')
-        conf = Config.STATUS_CONFIG[status]
-        title = f"{conf['icon']} {tid} - {test['name']}"
+        conf = Config.STATUS_CONFIG.get(status, {'color': 'transparent', 'alpha': 0})
+        alpha_pct = conf.get('alpha', 0)
+
+        title = f"{conf.get('icon', '◻')} {tid} - {test['name']}"
         item = QListWidgetItem(title)
 
         if status == 'done':
-            # ✅ Completato
-            fg = QColor(Config.COLORS['accent_primary'])
+            # ✅ Completato → TESTO VERDE (palette) + bg verde tenue
+            fg = QColor(Config.COLORS['success'])  # #66BB6A
             bg = QColor(Config.COLORS['success'])
-            bg.setAlpha(30)
             border = Config.COLORS['success']
+            border_w = 1  # <-- più sottile
         elif status == 'in-progress':
-            # ⏳ In Corso
-            fg = QColor(Config.COLORS['purple'])
-            bg = QColor(Config.COLORS['purple'])
-            bg.setAlpha(30)
+            # ⏳ In Corso → TESTO VIOLA PIÙ CHIARO + bg viola tenue
+            fg = QColor(Config.COLORS['accent_glow'])  # #a78bfa (più chiaro)
+            bg = QColor(Config.COLORS['purple'])  # #8b5cf6
             border = Config.COLORS['purple']
+            border_w = 1  # <-- più sottile
         else:
-            # ◻ Pending (trasparente)
+            # ◻ Pending → testo default, nessun bg
             fg = QColor(Config.COLORS['text_primary'])
             bg = QColor(0, 0, 0, 0)
             border = 'transparent'
+            border_w = 2
+
+        if bg.alpha() != 0:
+            bg.setAlpha(int(255 * (alpha_pct / 100.0)))
 
         item.setForeground(fg)
         item.setBackground(bg)
         item.setData(Qt.ItemDataRole.UserRole + 1, border)
+        item.setData(Qt.ItemDataRole.UserRole + 2, border_w)
         item.setData(Qt.ItemDataRole.UserRole, tid)
         item.setSizeHint(QSize(0, 28))
         self._list.addItem(item)
@@ -1097,10 +1091,10 @@ class OWASPChecklistApp(QWidget):
     def _get_category_color(self, cat_data: Dict[str, Any]) -> str:
         statuses = [self.status_map.get(t['id'], 'pending') for t in cat_data.get('tests', [])]
         if any(s == 'in-progress' for s in statuses):
-            return Config.COLORS['purple']
+            return Config.COLORS['accent_glow']  # viola più chiaro per visibilità
         if any(s == 'done' for s in statuses):
-            return Config.COLORS['accent_primary']
-        return Config.COLORS['info']
+            return Config.COLORS['success']  # verde della palette
+        return Config.COLORS['blue_main']
 
     def _count_completed(self) -> int:
         return sum(1 for s in self.status_map.values() if s == 'done')
