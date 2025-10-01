@@ -843,7 +843,7 @@ class OWASPChecklistApp(QWidget):
         lang = self.current_lang
         base = self._fm.base_path / 'public' / 'json' / lang
         self.data = self._fm.load_json_from_path(base / 'checklist.json', {})
-        self.categories = sorted(self.data.get('categories', {}).keys())
+        self.categories = self.data.get('categories', {}).keys()
         self.category_desc = self._fm.load_json_from_path(base / 'category_descriptions.json', {})
         self.offline_ref = self._fm.load_json_from_path(base / 'checklist_info_data.json', {})
         self.owasp_top10 = self._fm.load_json_from_path(base / 'owasp_top_10.json', {})
