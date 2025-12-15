@@ -20,8 +20,8 @@ class Config:
     """Configurazione centralizzata dell'applicazione"""
 
     COLORS = {
-        # Soft-dark JetBrains-like grays (più chiari degli attuali)
-        'bg_primary': '#2B2D31',  # base window
+        # Soft-dark JetBrains-like grays
+        'bg_primary': '#212121',  # base window
         'bg_secondary': '#32343A',  # panels / inputs
         'bg_tertiary': '#3A3D44',  # hovers
         'bg_card': '#2F3136',  # cards
@@ -33,14 +33,14 @@ class Config:
         'text_secondary': '#B4B8BF',
         'text_muted': '#8A9099',
 
-        # Accents (come prima)
+        # Accents
         'accent_primary': '#6366f1',
         'accent_secondary': '#8b5cf6',
         'accent_glow': '#a78bfa',
         'info': '#6366f1',
         'purple': '#8b5cf6',
 
-        # Semantic (verde dalla tua palette)
+        # Semantic
         'success': '#66BB6A',
         'success_dark': '#2E7D32',
         'success_light': '#A5D6A7',
