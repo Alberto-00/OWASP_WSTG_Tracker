@@ -1,5 +1,6 @@
 {
-    "WSTG-INFO-01": "in-progress",
+    "status": {
+        "WSTG-INFO-01": "in-progress",
     "WSTG-INFO-02": "in-progress",
     "WSTG-INFO-03": "in-progress",
     "WSTG-INFO-04": "pending",
@@ -108,4 +109,6 @@
     "WSTG-APIT-01": "pending",
     "WSTG-APIT-02": "pending",
     "WSTG-APIT-99": "pending"
+    },
+    "notes": {}
 }

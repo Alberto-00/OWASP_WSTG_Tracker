@@ -75,7 +75,7 @@
                 "id":"WSTG-INFO-09",
                 "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/01-Information_Gathering/09-Fingerprint_Web_Application",
                 "objectives":[
-                    ""
+                    "Identify the web application in use and its version to determine known vulnerabilities."
                   ]
                 }
                 ,{
@@ -158,7 +158,7 @@
                 "id":"WSTG-CONF-08",
                 "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/02-Configuration_and_Deployment_Management_Testing/08-Test_RIA_Cross_Domain_Policy",
                 "objectives":[
-                    ""
+                    "Review and analyze cross-domain policy files (crossdomain.xml, clientaccesspolicy.xml) to identify overly permissive configurations that could allow unauthorized access."
                   ]
                 }
                 ,{
@@ -272,7 +272,7 @@
                 "id":"WSTG-ATHN-01",
                 "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/04-Authentication_Testing/01-Testing_for_Credentials_Transported_over_an_Encrypted_Channel",
                 "objectives":[
-                    ""
+                    "Assess whether credentials are transmitted only over encrypted channels such as HTTPS/TLS."
                   ]
                 }
                 ,{
@@ -540,7 +540,7 @@
                 "id":"WSTG-INPV-03",
                 "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/07-Input_Validation_Testing/03-Testing_for_HTTP_Verb_Tampering",
                 "objectives":[
-                    ""
+                    "Identify if the application is vulnerable to HTTP Verb Tampering by using non-standard or alternative HTTP methods to bypass security controls."
                   ]
                 }
                 ,{
@@ -716,7 +716,7 @@
                 "id":"WSTG-ERRH-02",
                 "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/08-Testing_for_Error_Handling/02-Testing_for_Stack_Traces",
                 "objectives":[
-                    ""
+                    "Identify exposed stack traces in error responses that could reveal sensitive information about the technology, architecture, and internal structure of the application."
                   ]
                 }
             ]
@@ -989,7 +989,8 @@
                 "id":"WSTG-CLNT-14",
                 "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/11-Client-side_Testing/14-Testing_for_Reverse_Tabnabbing",
                 "objectives":[
-                    ""
+                    "Verify that links with target='_blank' include rel='noopener noreferrer' attributes to prevent reverse tabnabbing attacks.",
+                    "Assess the risk of an external page manipulating the original page via window.opener."
                   ]
                 }
             ]

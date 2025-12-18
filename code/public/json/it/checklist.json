@@ -75,7 +75,7 @@
                "id":"WSTG-INFO-09",
                "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/01-Information_Gathering/09-Fingerprint_Web_Application",
                "objectives":[
-                  ""
+                  "Identificare l'applicazione web in uso e la relativa versione per determinare eventuali vulnerabilità note."
                ]
             },
             {
@@ -158,7 +158,7 @@
                "id":"WSTG-CONF-08",
                "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/02-Configuration_and_Deployment_Management_Testing/08-Test_RIA_Cross_Domain_Policy",
                "objectives":[
-                  ""
+                  "Analizzare i file di policy cross-domain (crossdomain.xml, clientaccesspolicy.xml) per verificare configurazioni permissive che potrebbero consentire accessi non autorizzati."
                ]
             },
             {
@@ -540,7 +540,7 @@
                "id":"WSTG-INPV-03",
                "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/07-Input_Validation_Testing/03-Testing_for_HTTP_Verb_Tampering",
                "objectives":[
-                  ""
+                  "Verificare se l'applicazione è vulnerabile a HTTP Verb Tampering attraverso l'uso di metodi HTTP non standard o alternativi per aggirare i controlli di sicurezza."
                ]
             },
             {
@@ -716,7 +716,7 @@
                "id":"WSTG-ERRH-02",
                "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/08-Testing_for_Error_Handling/02-Testing_for_Stack_Traces",
                "objectives":[
-                  ""
+                  "Identificare stack trace esposte nelle risposte di errore che potrebbero rivelare informazioni sensibili sulla tecnologia, l'architettura e la struttura interna dell'applicazione."
                ]
             }
          ]
@@ -989,7 +989,8 @@
                "id":"WSTG-CLNT-14",
                "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/11-Client-side_Testing/14-Testing_for_Reverse_Tabnabbing",
                "objectives":[
-                  ""
+                  "Verificare se i link con target='_blank' includono gli attributi rel='noopener noreferrer' per prevenire attacchi di reverse tabnabbing.",
+                  "Valutare il rischio che una pagina esterna possa manipolare la pagina originale tramite window.opener."
                ]
             }
          ]

@@ -6,64 +6,28 @@ from pathlib import Path
 from typing import Dict, Any, Optional, List
 
 from PyQt6.QtCore import Qt, QSize, QPropertyAnimation, QEasingCurve, QSettings
-from PyQt6.QtGui import QColor, QTextCharFormat, QFont
+from PyQt6.QtGui import QColor, QTextCharFormat, QFont, QShortcut, QKeySequence, QCloseEvent, QPainter
 from PyQt6.QtWidgets import (QVBoxLayout, QComboBox, QLineEdit, QPushButton,
-                             QFileDialog, QMenu, QFrame, QLabel, QProgressBar, QMessageBox,
+                             QFileDialog, QMenu, QFrame, QLabel, QProgressBar,
                              QWidget, QHBoxLayout, QSplitter, QTextEdit,
-                             QListWidget, QListWidgetItem, QApplication, QStyledItemDelegate)
+                             QListWidget, QListWidgetItem, QApplication, QStyledItemDelegate,
+                             QStyleOptionViewItem, QStyle)
+
+from ui.custom_message_box import CustomMessageBox
+from css.theme import Theme
+from css.styles import Styles
 
 # -----------------------------------------------------------------------------
-# 1. CONFIGURATION & HELPERS
+# VERSION
+# -----------------------------------------------------------------------------
+__version__ = "1.1.0"
+
+# -----------------------------------------------------------------------------
+# 1. CONFIGURATION & HELPERS (usa Theme dal design system)
 # -----------------------------------------------------------------------------
 
-class Config:
-    """Configurazione centralizzata dell'applicazione"""
-
-    COLORS = {
-        # Soft-dark JetBrains-like grays
-        'bg_primary': '#212121',  # base window
-        'bg_secondary': '#32343A',  # panels / inputs
-        'bg_tertiary': '#3A3D44',  # hovers
-        'bg_card': '#2F3136',  # cards
-        'border': '#3F444A',  # borders
-        'border_light': '#5A616B',
-
-        # Typography
-        'text_primary': '#E6E6E6',
-        'text_secondary': '#B4B8BF',
-        'text_muted': '#8A9099',
-
-        # Accents
-        'accent_primary': '#6366f1',
-        'accent_secondary': '#8b5cf6',
-        'accent_glow': '#a78bfa',
-        'info': '#6366f1',
-        'purple': '#8b5cf6',
-
-        # Semantic
-        'success': '#66BB6A',
-        'success_dark': '#2E7D32',
-        'success_light': '#A5D6A7',
-        'warning': '#f59e0b',
-        'error': '#ef4444',
-
-        'blue_main': '#4FC3F7',
-        'blue_dark': '#0277BD',
-        'blue_light': '#B3E5FC',
-    }
-
-    STATUS_CONFIG = {
-        'done': {'icon': '✅', 'color': COLORS['success'], 'alpha': 18},  # prima 40
-        'in-progress': {'icon': '⏳', 'color': COLORS['purple'], 'alpha': 18},  # prima 40
-        'pending': {'icon': '◻', 'color': 'transparent', 'alpha': 0},
-    }
-
-    LEVEL_COLORS = {
-        'critico': '#ef4444',
-        'alto': '#f59e0b',
-        'medio': '#fbbf24',
-        'basso': '#10b981',
-    }
+# Alias per compatibilita con codice esistente
+Config = Theme
 
 
 class FileManager:
@@ -108,256 +72,7 @@ class FileManager:
             return False
 
 
-class StyleManager:
-    """Raggruppa gli stylesheet più lunghi per tenere il codice ordinato"""
-
-    @staticmethod
-    def main() -> str:
-        c = Config.COLORS
-
-        def rgba(hex_color: str, a: float) -> str:
-            hex_color = hex_color.lstrip('#')
-            r = int(hex_color[0:2], 16)
-            g = int(hex_color[2:4], 16)
-            b = int(hex_color[4:6], 16)
-            return f'rgba({r},{g},{b},{a})'
-
-        return f"""
-        /* ===== BASE STYLES ===== */
-        QWidget {{
-            background-color: {c['bg_primary']};
-            color: {c['text_primary']};
-            font-size: 13px;
-            font-family: 'Segoe UI', 'Inter', 'SF Pro Display', -apple-system, system-ui, sans-serif;
-            selection-background-color: {rgba(c['info'], 0.3)};
-            selection-color: {c['text_primary']};
-        }}
-
-        QToolTip {{
-            background-color: {c['bg_tertiary']};
-            color: {c['text_primary']};
-            border: 1px solid {c['border_light']};
-            padding: 6px 10px;
-            border-radius: 8px;
-            font-size: 12px;
-        }}
-
-        /* ===== SPLITTER ===== */
-        QSplitter::handle {{
-            background: #3F444A;    /* c['border'] */
-            margin: 0 1px;          /* prima 0 3px */
-        }}
-        QSplitter::handle:hover {{
-            background: {c['border_light']};
-        }}
-
-        QFrame[frameShape="4"] {{
-            color: {c['border']};
-            max-height: 1px;
-        }}
-
-        /* ===== INPUT FIELDS ===== */
-        QLineEdit, QComboBox {{
-            background-color: {c['bg_secondary']};
-            color: {c['text_primary']};
-            border: 1.5px solid {c['border']};
-            border-radius: 10px;
-            padding: 10px 14px;
-            font-size: 13px;
-        }}
-        QLineEdit:hover, QComboBox:hover {{
-            border-color: {c['border_light']};
-            background-color: {c['bg_tertiary']};
-        }}
-        QLineEdit:focus, QComboBox:focus {{
-            border-color: {c['accent_primary']};
-            background-color: {c['bg_tertiary']};
-            outline: none;
-        }}
-
-        QComboBox::drop-down {{
-            border: none;
-            padding-right: 8px;
-        }}
-        QComboBox::down-arrow {{
-            image: none;
-            border: 2px solid {c['text_secondary']};
-            border-top: none;
-            border-right: none;
-            width: 6px;
-            height: 6px;
-            transform: rotate(-45deg);
-        }}
-        QComboBox QAbstractItemView {{
-            background: {c['bg_secondary']};
-            color: {c['text_primary']};
-            border: 1px solid {c['border']};
-            border-radius: 8px;
-            padding: 4px;
-            selection-background-color: {rgba(c['accent_primary'], 0.25)};
-            outline: none;
-        }}
-
-        /* ===== BUTTONS ===== */
-        QPushButton {{
-            color: white;
-            background-color: {c['purple']};
-            border: none;
-            border-radius: 10px;
-            padding: 10px 18px;
-            font-weight: 600;
-            font-size: 13px;
-        }}
-        QPushButton:hover {{
-            background-color: {c['accent_glow']};;
-            transform: translateY(-1px);
-        }}
-        QPushButton:pressed {{
-            background-color: {c['accent_primary']};
-        }}
-        QPushButton:disabled {{
-            background: {c['bg_tertiary']};
-            color: {c['text_muted']};
-        }}
-
-        /* ===== TAB BUTTONS ===== */
-        QPushButton[variant="tab"] {{
-            background: {c['bg_secondary']};
-            color: {c['text_secondary']};
-            border: 1.5px solid {c['border']};
-            border-radius: 10px;
-            padding: 10px 16px;
-            font-weight: 500;
-        }}
-        QPushButton[variant="tab"]:hover {{
-            background: {c['bg_tertiary']};
-            border-color: {c['border_light']};
-            color: {c['text_primary']};
-        }}
-        QPushButton[variant="tab"]:checked {{
-            background: {rgba(c['accent_primary'], 0.12)};
-            border-color: {rgba(c['accent_primary'], 0.60)};
-            color: {c['accent_primary']};   /* testo colorato, non bianco */
-            font-weight: 700;
-        }}
-
-        /* ===== LIST WIDGET ===== */
-        QListWidget {{
-            background-color: {c['bg_secondary']};
-            color: {c['text_primary']};
-            border: 1.5px solid {c['border']};
-            border-radius: 12px;
-            outline: none;
-            padding: 6px;             /* prima 8px */
-        }}
-        QListWidget::item {{
-            border: 1.5px solid transparent;
-            padding: 8px 10px;        /* prima 10px 12px */
-            margin: 2px 4px;          /* prima 3px 5px */
-            border-radius: 10px;
-            transition: all 0.2s ease;
-        }}
-        QListWidget::item:hover {{
-            background-color: {rgba(c['blue_main'], 0.16)};
-            border-color: {rgba(c['blue_dark'], 0.60)};
-        }}
-        
-        QListWidget::item:selected {{
-            background-color: {rgba(c['blue_main'], 0.24)}; 
-            border-color: {rgba(c['blue_dark'], 0.80)};
-        }}
-
-        /* ===== TEXT EDITORS ===== */
-        QTextEdit {{
-            background-color: {c['bg_card']};
-            color: {c['text_primary']};
-            border: 1.5px solid {c['border']};
-            border-radius: 12px;
-            padding: 8px;             /* prima 12px */
-            selection-background-color: {rgba(c['accent_primary'], 0.3)};
-        }}
-
-        /* ===== SCROLLBARS ===== */
-        QScrollBar:vertical, QScrollBar:horizontal {{
-            background: {c['bg_secondary']};
-            border: none;
-            margin: 3px;
-        }}
-        QScrollBar:vertical {{ width: 12px; }}
-        QScrollBar:horizontal {{ height: 12px; }}
-        QScrollBar::handle {{
-            background: {c['bg_tertiary']};
-            border-radius: 6px;
-            min-height: 30px;
-            min-width: 30px;
-        }}
-        QScrollBar::handle:hover {{
-            background: {c['border_light']};
-        }}
-        QScrollBar::handle:pressed {{
-            background: {c['accent_primary']};
-        }}
-        QScrollBar::add-line, QScrollBar::sub-line {{
-            background: transparent;
-            border: none;
-        }}
-        QScrollBar::add-page, QScrollBar::sub-page {{
-            background: transparent;
-        }}
-        """
-
-    @staticmethod
-    def progress_bar() -> str:
-        c = Config.COLORS
-        return f"""
-        QProgressBar {{
-            border: 1.5px solid {c['border']};
-            border-radius: 12px;
-            background-color: {c['bg_secondary']};
-            color: {c['text_primary']};
-            text-align: center;
-            padding: 3px;
-            font-weight: 600;
-            font-size: 13px;
-        }}
-        QProgressBar::chunk {{
-            border-radius: 10px;
-            margin: 2px;
-            background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                stop:0 {c['accent_primary']},
-                stop:0.5 {c['accent_secondary']},
-                stop:1 {c['accent_glow']}
-            );
-        }}
-        """
-
-    @staticmethod
-    def context_menu() -> str:
-        c = Config.COLORS
-        return f"""
-        QMenu {{
-            background-color: {c['bg_secondary']};
-            color: {c['text_primary']};
-            border: 1.5px solid {c['border']};
-            padding: 6px;
-            border-radius: 10px;
-        }}
-        QMenu::item {{
-            padding: 10px 16px;
-            border-radius: 8px;
-            margin: 2px;
-        }}
-        QMenu::item:selected {{
-            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                stop:0 {c['accent_primary']}, stop:1 {c['accent_secondary']});
-            color: white;
-        }}
-        QMenu::separator {{
-            height: 1px;
-            background: {c['border']};
-            margin: 4px 8px;
-        }}
-        """
+StyleManager = Styles
 
 
 class ProgressBarManager:
@@ -372,11 +87,11 @@ class ProgressBarManager:
         self._bar.setMaximum(100)
         self._bar.setValue(0)
         self._bar.setTextVisible(True)
-        self._bar.setFixedHeight(32)
+        self._bar.setFixedHeight(32)  # Era 28
         self._bar.setStyleSheet(StyleManager.progress_bar())
 
         self._anim = QPropertyAnimation(self._bar, b"value")
-        self._anim.setDuration(600)
+        self._anim.setDuration(600)  # Era 500
         self._anim.setEasingCurve(QEasingCurve.Type.OutCubic)
 
     def update(self, current: int, total: int, *, animate: bool = True) -> None:
@@ -409,7 +124,7 @@ class ProgressBarManager:
             "QProgressBar::chunk { "
             "background: qlineargradient(x1:0,y1:0,x2:1,y2:0,"
             f"stop:0 {start}, stop:0.5 {mid}, stop:1 {end});"
-            "border-radius:10px; margin:2px; }"
+            "border-radius:10px; margin:2px; }"  # Era 6px e 1px
         )
         base = re.sub(r"QProgressBar::chunk\s*\{[^}]+}", '', self._bar.styleSheet())
         self._bar.setStyleSheet(base + chunk)
@@ -417,31 +132,74 @@ class ProgressBarManager:
 
 class ColorPreservingDelegate(QStyledItemDelegate):
     def paint(self, painter, option, index):
-        fg = index.data(Qt.ItemDataRole.ForegroundRole)
-        bg = index.data(Qt.ItemDataRole.BackgroundRole)
-        border_color = index.data(Qt.ItemDataRole.UserRole + 1)
-        border_width = index.data(Qt.ItemDataRole.UserRole + 2) or 2
-
         painter.save()
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
-        # 1) background (solo quello dell'item: pending/done/in-progress)
-        if bg:
-            painter.fillRect(option.rect, bg)
+        # Stati dell'item
+        is_selected = option.state & QStyle.StateFlag.State_Selected
+        is_hovered = option.state & QStyle.StateFlag.State_MouseOver
 
-        # 2) disegno standard (testo ecc.)
-        super().paint(painter, option, index)
+        # Recupera TUTTI i dati dall'item
+        fg = index.data(Qt.ItemDataRole.ForegroundRole)
+        bg_default = index.data(Qt.ItemDataRole.BackgroundRole)
+        border_default = index.data(Qt.ItemDataRole.UserRole + 1)
+        border_w_default = index.data(Qt.ItemDataRole.UserRole + 2) or 0
 
-        # 3) bordo personalizzato (colore + spessore)
-        if border_color and border_color != "transparent":
+        # Dati per selezionato/hover
+        bg_selected = index.data(Qt.ItemDataRole.UserRole + 3)
+        border_selected = index.data(Qt.ItemDataRole.UserRole + 4)
+        border_w_selected = index.data(Qt.ItemDataRole.UserRole + 5)
+
+        # Decidi quale usare
+        use_bg = bg_default
+        use_border = border_default
+        use_border_w = border_w_default
+
+        if is_selected or is_hovered:
+            # Usa i colori di selezione se disponibili
+            if bg_selected:
+                use_bg = QColor(bg_selected)
+
+                if is_selected and is_hovered:
+                    # Più intenso
+                    alpha = use_bg.alpha()
+                    use_bg.setAlpha(min(255, int(alpha * 1.6)))
+                elif is_hovered:
+                    # Medio
+                    alpha = use_bg.alpha()
+                    use_bg.setAlpha(min(255, int(alpha * 0.8)))
+
+            if border_selected:
+                use_border = border_selected
+
+            if border_w_selected is not None:
+                use_border_w = border_w_selected
+
+        # Geometria
+        radius = 8
+        rect = option.rect.adjusted(2, 2, -2, -2)
+
+        # 1) BACKGROUND
+        if use_bg:
+            if isinstance(use_bg, QColor) and use_bg.alpha() > 0:
+                painter.setPen(Qt.PenStyle.NoPen)
+                painter.setBrush(use_bg)
+                painter.drawRoundedRect(rect, radius, radius)
+
+        # 2) TESTO (disegno standard)
+        opt = QStyleOptionViewItem(option)
+        opt.state &= ~QStyle.StateFlag.State_Selected  # Rimuovi highlight
+        super().paint(painter, opt, index)
+
+        # 3) BORDO (SEMPRE ALLA FINE, SOPRA TUTTO)
+        if use_border and use_border != "transparent" and use_border_w > 0:
             pen = painter.pen()
-            pen.setColor(QColor(border_color))
-            try:
-                pen.setWidth(int(border_width))
-            except Exception:
-                pen.setWidth(2)
+            pen.setColor(QColor(use_border))
+            pen.setWidth(int(use_border_w))
+            pen.setStyle(Qt.PenStyle.SolidLine)
             painter.setPen(pen)
-            r = option.rect.adjusted(1, 1, -2, -2)
-            painter.drawRoundedRect(r, 8, 8)
+            painter.setBrush(Qt.BrushStyle.NoBrush)
+            painter.drawRoundedRect(rect, radius, radius)
 
         painter.restore()
 
@@ -487,7 +245,7 @@ class MappingDialog(QWidget):
 
     def _extract_fields(self, entry: dict) -> tuple[str, str, str]:
         if not isinstance(entry, dict):
-            return ("Descrizione non trovata.", "", "medio")
+            return "Descrizione non trovata.", "", "medio"
 
         if 'it' in entry or 'en' in entry:
             sec = entry.get(self._lang) or entry.get('it') or entry.get('en') or {}
@@ -500,7 +258,7 @@ class MappingDialog(QWidget):
         description = sec.get('description') or entry.get('description') or "Descrizione non trovata."
         link = sec.get('link') or entry.get('link') or ""
         level = entry.get('level') or sec.get('level') or "medio"
-        return (description, link, level)
+        return description, link, level
 
     def _setup_ui(self) -> None:
         try:
@@ -514,6 +272,7 @@ class MappingDialog(QWidget):
     def _configure_window(self) -> None:
         self.setWindowTitle("Mapping WSTG ↔ OWASP Top 10")
         self.resize(1400, 650)
+        self.setObjectName("mappingDialog")
 
         self.setWindowFlags(
             Qt.WindowType.Window |
@@ -524,20 +283,15 @@ class MappingDialog(QWidget):
             Qt.WindowType.WindowCloseButtonHint
         )
 
-        try:
-            bg_color = Config.COLORS['bg_primary']
-        except (NameError, KeyError):
-            bg_color = "#1a1c24"
-
-        self.setStyleSheet(f"background-color: {bg_color};")
+        self.setStyleSheet(StyleManager.mapping_dialog())
 
     def _create_layout(self) -> None:
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(12, 10, 12, 12)   # prima 16,16,16,16
-        layout.setSpacing(8)                        # prima 12
+        layout.setContentsMargins(16, 16, 16, 16)
+        layout.setSpacing(12)
 
         splitter = QSplitter(Qt.Orientation.Horizontal)
-        splitter.setHandleWidth(6)  # più sottile
+        splitter.setHandleWidth(6)
 
         html_widget = self._create_html_table()
         self._list = self._create_owasp_list()
@@ -558,48 +312,43 @@ class MappingDialog(QWidget):
 
     def _create_html_table(self) -> QTextEdit:
         html_box = QTextEdit()
+        html_box.setObjectName("mappingHtmlBox")
         html_box.setReadOnly(True)
         html_box.setHtml(self._build_table_html())
-        html_box.setMinimumWidth(500)
-
-        try:
-            bg_color = Config.COLORS['bg_secondary']
-            text_color = Config.COLORS['text_primary']
-        except (NameError, KeyError):
-            bg_color = "#26282f"
-            text_color = "#e5e7eb"
-
-        html_box.setStyleSheet(
-            f"background-color: {bg_color}; color: {text_color};"
-        )
-
+        html_box.setMinimumWidth(550)
         return html_box
 
     def _create_owasp_list(self) -> QListWidget:
         list_widget = QListWidget()
+        list_widget.setObjectName("mappingOwaspList")
         list_widget.setMinimumWidth(360)
-        list_widget.setMouseTracking(True)
         list_widget.setItemDelegate(ColorPreservingDelegate(list_widget))
-
-        try:
-            bg_color = Config.COLORS['bg_secondary']
-            text_color = Config.COLORS['text_primary']
-        except (NameError, KeyError):
-            bg_color = "#26282f"
-            text_color = "#e5e7eb"
-
-        list_widget.setStyleSheet(
-            f"background-color: {bg_color}; color: {text_color};"
-        )
 
         for code, entry in self._owasp.items():
             item = QListWidgetItem(code)
             _, _, level = self._extract_fields(entry)
+
+            # Ottieni colore severity
             try:
-                color = Config.LEVEL_COLORS.get(level, '#e5e7eb')
+                severity_color = Config.LEVEL_COLORS.get(level, '#e5e7eb')
             except (NameError, AttributeError):
-                color = '#e5e7eb'
-            item.setForeground(QColor(color))
+                severity_color = '#e5e7eb'
+
+            # TESTO COLORATO
+            item.setForeground(QColor(severity_color))
+
+            # BACKGROUND normale (trasparente)
+            item.setBackground(QColor(0, 0, 0, 0))
+            item.setData(Qt.ItemDataRole.UserRole + 1, 'transparent')
+            item.setData(Qt.ItemDataRole.UserRole + 2, 0)
+
+            # BACKGROUND e BORDO per hover/selected (basati su severity)
+            selected_bg = QColor(severity_color)
+            selected_bg.setAlpha(int(255 * 0.18))  # 18% opacità
+            item.setData(Qt.ItemDataRole.UserRole + 3, selected_bg)
+            item.setData(Qt.ItemDataRole.UserRole + 4, severity_color)  # Bordo colorato
+            item.setData(Qt.ItemDataRole.UserRole + 5, 2)  # Spessore bordo
+
             item.setSizeHint(QSize(0, 38))
             list_widget.addItem(item)
 
@@ -607,24 +356,14 @@ class MappingDialog(QWidget):
 
     def _create_detail_widget(self) -> QTextEdit:
         detail_widget = QTextEdit()
+        detail_widget.setObjectName("mappingDetailBox")
         detail_widget.setReadOnly(True)
-
-        try:
-            bg_color = Config.COLORS['bg_card']
-            text_color = Config.COLORS['text_primary']
-        except (NameError, KeyError):
-            bg_color = "#1e2028"
-            text_color = "#e5e7eb"
-
-        detail_widget.setStyleSheet(
-            f"background-color: {bg_color}; color: {text_color}; font-size: 13px;"
-        )
-
+        detail_widget.setMinimumWidth(400)
         return detail_widget
 
     def _build_table_html(self) -> str:
         rows = []
-        row_colors = ['rgba(38, 40, 47, 1)', 'rgba(30, 32, 40, 1)'] # imposta lo zebra color
+        row_colors = ['rgba(38, 40, 47, 1)', 'rgba(30, 32, 40, 1)']  # imposta lo zebra color
 
         for i, (category, reference) in enumerate(self.WSTG_OWASP_MAPPING.items()):
             rows.append(
@@ -751,6 +490,7 @@ class MappingDialog(QWidget):
             .replace("'", '&#x27;')
         )
 
+
 # -----------------------------------------------------------------------------
 # 3. MAIN APPLICATION
 # -----------------------------------------------------------------------------
@@ -771,7 +511,17 @@ class OWASPChecklistApp(QWidget):
             if not p.exists():
                 raise FileNotFoundError(str(p))
             with open(p, 'r', encoding='utf-8') as f:
-                self.status_map = json.load(f)
+                data = json.load(f)
+
+            # Carica solo il nuovo formato (status + notes)
+            if not isinstance(data, dict) or 'status' not in data:
+                raise ValueError("Formato file non valido. Il file deve contenere 'status' e 'notes'.")
+
+            self.status_map = data.get('status', {})
+            self.notes_map = data.get('notes', {})
+
+            self._saved_status_snapshot = dict(self.status_map)
+            self._dirty = False
             self._update_checklist()
             self._progress.update(self._count_completed(), len(self.status_map))
             # Remember last project
@@ -779,7 +529,12 @@ class OWASPChecklistApp(QWidget):
             self._settings.setValue('last_project_path', self._last_project_path)
             return True
         except Exception as ex:  # noqa: BLE001
-            QMessageBox.critical(self, '❌ Errore', f'Errore durante il caricamento: {ex}')
+            CustomMessageBox.danger(
+                self,
+                '❌ Errore',
+                f'Errore durante il caricamento:\n{ex}',
+                confirm_text='OK'
+            )
             return False
 
     def _auto_open_last_or_default(self) -> None:
@@ -819,12 +574,12 @@ class OWASPChecklistApp(QWidget):
         self._last_project_path = self._settings.value('last_project_path', '')
         # Runtime state
         self.status_map: Dict[str, str] = {}
+        self.notes_map: Dict[str, str] = {}  # Note per ogni test
         self.collapsed_sections: set[str] = set()
         self.current_reference_sections: Dict[str, Any] = {}
         self.reference_buttons: List[QPushButton] = []
-
-        # Lingua
-        self.current_lang = 'it'  # default
+        self._dirty = False  # Flag per modifiche non salvate
+        self._saved_status_snapshot: Dict[str, str] = {}  # Snapshot per confronto
 
         # Data
         self._load_data()
@@ -852,19 +607,19 @@ class OWASPChecklistApp(QWidget):
     # UI BUILD
     # ------------------------------------------------------------------
     def _init_ui(self) -> None:
-        self.setWindowTitle('OWASP WSTG Checklist')
-        self.setGeometry(100, 100, 1300, 700)
+        self.setWindowTitle(f'OWASP WSTG Checklist v{__version__}')
+        self.setGeometry(100, 100, 1300, 750)
         self.setStyleSheet(StyleManager.main())
 
         root = QVBoxLayout(self)
-        root.setContentsMargins(16, 16, 16, 12)
-        root.setSpacing(10)
+        root.setContentsMargins(16, 16, 16, 16)
+        root.setSpacing(12)
 
         # -- Progress ---------------------------------------------------
         prog_layout = QHBoxLayout()
         prog_layout.setSpacing(8)
         label = QLabel('📊 Progresso Complessivo:')
-        label.setStyleSheet(f"color:{Config.COLORS['text_secondary']};font-weight:bold;font-size:14px;")
+        label.setObjectName("progressLabel")
         prog_layout.addWidget(label)
         self._bar = QProgressBar()
         self._progress = ProgressBarManager(self._bar)
@@ -877,11 +632,32 @@ class OWASPChecklistApp(QWidget):
         root.addLayout(top)
 
         # -- Main content ----------------------------------------------
-        main = QHBoxLayout()
-        main.setSpacing(10)
-        main.addWidget(self._build_checklist_widget())
-        main.addLayout(self._build_right_panel())
-        root.addLayout(main)
+        main_splitter = QSplitter(Qt.Orientation.Horizontal)
+        main_splitter.setHandleWidth(1)
+
+        # PANNELLO SINISTRO: Lista WSTG
+        left_widget = self._build_checklist_widget()
+        left_widget.setMinimumWidth(620)
+
+        # PANNELLO DESTRO: Dettagli e riferimenti
+        right_widget = QWidget()
+        right_layout = self._build_right_panel()
+        right_layout.setContentsMargins(10, 0, 0, 0) # SEPARAZIONE pannelli sinistra e destra
+        right_widget.setLayout(right_layout)
+        right_widget.setMinimumWidth(700)
+
+        # Aggiungi al splitter
+        main_splitter.addWidget(left_widget)
+        main_splitter.addWidget(right_widget)
+
+        # PROPORZIONI INIZIALI: 60% sinistra, 40% destra
+        main_splitter.setStretchFactor(0, 60)
+        main_splitter.setStretchFactor(1, 40)
+
+        # Abilita ridimensionamento live (opzionale, default è True)
+        main_splitter.setOpaqueResize(True)
+
+        root.addWidget(main_splitter)
 
         # -- Footer -----------------------------------------------------
         footer_layout = QHBoxLayout()
@@ -889,8 +665,15 @@ class OWASPChecklistApp(QWidget):
 
         # Etichetta di stato
         self._footer = QLabel()
-        self._footer.setStyleSheet(f"color:{Config.COLORS['text_muted']};font-size:12px;padding-top:6px;")
+        self._footer.setObjectName("footerLabel")
         footer_layout.addWidget(self._footer)
+
+        # Shortcut hint
+        shortcut_hint = QLabel('⌨ Ctrl+S Salva | Ctrl+O Carica | Ctrl+F Cerca | Space Cambia stato')
+        shortcut_hint.setObjectName("shortcutHint")
+        footer_layout.addWidget(shortcut_hint)
+
+        footer_layout.addStretch()
 
         # Selettore lingua
         self._lang_cb = QComboBox()
@@ -910,6 +693,46 @@ class OWASPChecklistApp(QWidget):
 
         root.addLayout(footer_layout)
 
+        # -- Keyboard shortcuts -----------------------------------------
+        self._setup_shortcuts()
+
+    def _setup_shortcuts(self) -> None:
+        """Configura le shortcut da tastiera"""
+        # Ctrl+S → Salva
+        QShortcut(QKeySequence("Ctrl+S"), self, self._save_status)
+        # Ctrl+O → Carica
+        QShortcut(QKeySequence("Ctrl+O"), self, self._load_status)
+        # Ctrl+F → Focus su ricerca
+        QShortcut(QKeySequence("Ctrl+F"), self, lambda: self._search.setFocus())
+        # Ctrl+E → Espandi tutto
+        QShortcut(QKeySequence("Ctrl+E"), self, lambda: self.collapse_all(False))
+        # Ctrl+W → Collassa tutto
+        QShortcut(QKeySequence("Ctrl+W"), self, lambda: self.collapse_all(True))
+        # Space → Toggle stato test selezionato
+        QShortcut(QKeySequence("Space"), self, self._toggle_selected_status)
+
+    def _toggle_selected_status(self) -> None:
+        """Cicla lo stato del test selezionato: pending → in-progress → done → pending"""
+        items = self._list.selectedItems()
+        if not items:
+            return
+        status_cycle = ['pending', 'in-progress', 'done']
+        changed = False
+        for item in items:
+            tid = item.data(Qt.ItemDataRole.UserRole)
+            if isinstance(tid, str) and not tid.startswith('_header_'):
+                current = self.status_map.get(tid, 'pending')
+                try:
+                    idx = status_cycle.index(current)
+                    new_status = status_cycle[(idx + 1) % 3]
+                except ValueError:
+                    new_status = 'pending'
+                self.status_map[tid] = new_status
+                changed = True
+        if changed:
+            self._dirty = True
+        self._update_checklist()
+
     # ------------------------------------------------------------------
     # UI sub‑builders
     # ------------------------------------------------------------------
@@ -918,9 +741,10 @@ class OWASPChecklistApp(QWidget):
         lay.setContentsMargins(0, 0, 0, 0)
         lay.setSpacing(8)
 
-        # Search bar
+        # Search bar (più larga)
         self._search = QLineEdit()
-        self._search.setPlaceholderText('🔍 Cerca test…')
+        self._search.setPlaceholderText('🔍 Cerca WSTG…')
+        self._search.setMinimumWidth(280)
         self._search.textChanged.connect(self._update_checklist)
         lay.addWidget(self._search)
 
@@ -931,68 +755,119 @@ class OWASPChecklistApp(QWidget):
         self._cat_cb.currentIndexChanged.connect(self._update_checklist)
         lay.addWidget(self._cat_cb)
 
-        # Buttons
+        # Buttons (più alti e larghi per evitare testo tagliato)
         for text, cb in [
             ('🧩 Mapping WSTG ↔ OWASP Top 10', self._show_mapping_table),
             ('💾 Salva Stato', self._save_status),
             ('📂 Carica Stato', self._load_status),
         ]:
             b = QPushButton(text)
-            b.setFixedHeight(32)
+            b.setFixedHeight(32)  # Altezza uniforme con altri controlli
             b.clicked.connect(cb)
             lay.addWidget(b)
 
         return lay
 
-    def _build_checklist_widget(self) -> QListWidget:
+    def _build_checklist_widget(self) -> QWidget:
+        # Container con bordo
+        container = QWidget()
+        container.setObjectName("wstgListContainer")
+        container_layout = QVBoxLayout(container)
+        container_layout.setContentsMargins(0, 0, 0, 0)
+        container_layout.setSpacing(0)
+
+        # Lista WSTG senza bordo (il bordo è sul container)
         self._list = QListWidget()
+        self._list.setObjectName("wstgList")
+        self._list.setMinimumWidth(520)
+        self._list.setMouseTracking(True)
         self._list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self._list.customContextMenuRequested.connect(self._show_context_menu)
         self._list.itemClicked.connect(self._handle_list_click)
         self._list.currentRowChanged.connect(self._handle_arrow_navigation)
         self._list.setSelectionMode(QListWidget.SelectionMode.ExtendedSelection)
-        self._list.setItemDelegate(ColorPreservingDelegate())  # << aggiunto qui
-        return self._list
+        self._list.setItemDelegate(ColorPreservingDelegate(self._list))
+
+        container_layout.addWidget(self._list)
+        return container
 
     def _build_right_panel(self) -> QVBoxLayout:
         lay = QVBoxLayout()
+
+        # Container per detailBox
+        detail_container = QWidget()
+        detail_container.setObjectName("detailBoxContainer")
+        detail_layout = QVBoxLayout(detail_container)
+        detail_layout.setContentsMargins(0, 0, 0, 0)
+        detail_layout.setSpacing(0)
+
         self._detail_box = QTextEdit()
+        self._detail_box.setObjectName("detailBox")
         self._detail_box.setReadOnly(True)
-        lay.addWidget(self._detail_box)
+        detail_layout.addWidget(self._detail_box)
+        lay.addWidget(detail_container)
+
         line = QFrame()
         line.setFrameShape(QFrame.Shape.HLine)
         line.setFrameShadow(QFrame.Shadow.Sunken)
         lay.addWidget(line)
+
+        # Container per refBox
+        ref_container = QWidget()
+        ref_container.setObjectName("refBoxContainer")
+        ref_layout = QVBoxLayout(ref_container)
+        ref_layout.setContentsMargins(0, 0, 0, 0)
+        ref_layout.setSpacing(0)
+
         self._ref_box = QTextEdit()
+        self._ref_box.setObjectName("refBox")
         self._ref_box.setReadOnly(True)
-        lay.addWidget(self._ref_box)
+        ref_layout.addWidget(self._ref_box)
+        lay.addWidget(ref_container)
+
         lay.addLayout(self._build_reference_tabs())
+
+        # --- Note per test ---
+        self._current_test_id: Optional[str] = None  # Traccia test selezionato per note
+
         return lay
 
     def _build_reference_tabs(self) -> QHBoxLayout:
         lay = QHBoxLayout()
+
         self.reference_buttons.clear()
         for text, section in [
             ('📄 Summary', 'summary'),
             ('🔍 How‑To', 'how-to'),
             ('🛠 Tools', 'tools'),
             ('🛡 Remediation', 'remediation'),
+            ('📋 Note', 'notes'),
         ]:
             b = QPushButton(text)
-            b.setFixedSize(160, 40)
+            b.setFixedSize(130, 40)
             b.setCheckable(True)
             b.setEnabled(False)
             b.setCursor(Qt.CursorShape.PointingHandCursor)
-            b.setProperty('variant', 'tab')  # <— usa lo stylesheet globale
+            b.setProperty('variant', 'tab')
             b.clicked.connect(lambda _chk, s=section: self._display_reference_section(s))
             self.reference_buttons.append(b)
             lay.addWidget(b)
+
         return lay
 
     # ------------------------------------------------------------------
     # CHECKLIST RENDERING
     # ------------------------------------------------------------------
     def _update_checklist(self) -> None:
+        # SALVA TUTTE LE SELEZIONI CORRENTI
+        selected_tids = []
+        for i in range(self._list.count()):
+            item = self._list.item(i)
+            if item.isSelected():
+                tid = item.data(Qt.ItemDataRole.UserRole)
+                if tid and not tid.startswith('_header_'):
+                    selected_tids.append(tid)
+
         # Ensure every test has a status
         for cat, details in self.data.get('categories', {}).items():
             for test in details.get('tests', []):
@@ -1009,6 +884,43 @@ class OWASPChecklistApp(QWidget):
 
         self._update_footer_status()
 
+        # RIPRISTINA SELEZIONI se c'erano
+        if selected_tids:
+            self._restore_multiple_selection(selected_tids)
+
+    def _restore_selection(self, tid: str) -> None:
+        """Ripristina la selezione su un test ID specifico"""
+        for i in range(self._list.count()):
+            item = self._list.item(i)
+            item_tid = item.data(Qt.ItemDataRole.UserRole)
+            if item_tid == tid:
+                self._list.setCurrentItem(item)
+                item.setSelected(True)
+                self._list.scrollToItem(item)
+                self._show_test_details(tid)
+                break
+
+    def _restore_multiple_selection(self, tids: list[str]) -> None:
+        """Ripristina la selezione su multipli test ID"""
+        if not tids:
+            return
+
+        last_item = None
+        for i in range(self._list.count()):
+            item = self._list.item(i)
+            item_tid = item.data(Qt.ItemDataRole.UserRole)
+            if item_tid in tids:
+                item.setSelected(True)  # SELEZIONA
+                last_item = item  # Salva per mostrare dettagli
+
+        # Mostra dettagli dell'ultimo e scrolla
+        if last_item:
+            self._list.setCurrentItem(last_item)
+            self._list.scrollToItem(last_item)
+            last_tid = last_item.data(Qt.ItemDataRole.UserRole)
+            if last_tid and not last_tid.startswith('_header_'):
+                self._show_test_details(last_tid)
+
     # Single category
     def _render_single_category(self, category: str, query: str) -> None:
         if category not in self.data.get('categories', {}):
@@ -1022,6 +934,13 @@ class OWASPChecklistApp(QWidget):
         self._show_category_description(category)
         self._render_tests(cat_data, query)
 
+    def _get_category_progress(self, cat_data: Dict[str, Any]) -> tuple[int, int]:
+        """Calcola il progresso di una categoria (completati, totale)"""
+        tests = cat_data.get('tests', [])
+        total = len(tests)
+        completed = sum(1 for t in tests if self.status_map.get(t['id']) == 'done')
+        return completed, total
+
     # All categories
     def _render_all_categories(self, query: str) -> None:
         for category, details in self.data.get('categories', {}).items():
@@ -1029,8 +948,15 @@ class OWASPChecklistApp(QWidget):
             spacer.setSizeHint(QSize(0, 16))
             spacer.setFlags(Qt.ItemFlag.NoItemFlags)
             self._list.addItem(spacer)
+
+            # Calcola progresso categoria
+            completed, total = self._get_category_progress(details)
+            pct = int((completed / total) * 100) if total > 0 else 0
+
             arrow = '▼' if category not in self.collapsed_sections else '▶'
-            header = QListWidgetItem(f"{arrow} {category}")
+            # Mostra progresso nel header
+            header_text = f"{arrow} {category}  [{completed}/{total}] {pct}%"
+            header = QListWidgetItem(header_text)
             header.setSizeHint(QSize(0, 28))
             header.setFont(QFont('Segoe UI', 0, QFont.Weight.Bold))
             header.setData(Qt.ItemDataRole.UserRole, f"_header_{category}")
@@ -1042,8 +968,10 @@ class OWASPChecklistApp(QWidget):
     # Tests inside a category
     def _render_tests(self, cat_data: Dict[str, Any], query: str) -> None:
         for test in cat_data.get('tests', []):
-            if not query or query in test['name'].lower() or query in test['id'].lower():
-                self._add_test_item(test)
+            # Filtro solo per testo
+            if query and query not in test['name'].lower() and query not in test['id'].lower():
+                continue
+            self._add_test_item(test)
 
     def _add_test_item(self, test: Dict[str, Any]) -> None:
         tid = test['id']
@@ -1055,31 +983,59 @@ class OWASPChecklistApp(QWidget):
         item = QListWidgetItem(title)
 
         if status == 'done':
-            # ✅ Completato → TESTO VERDE (palette) + bg verde tenue
-            fg = QColor(Config.COLORS['success'])  # #66BB6A
-            bg = QColor(Config.COLORS['success'])
-            border = Config.COLORS['success']
-            border_w = 1  # <-- più sottile
-        elif status == 'in-progress':
-            # ⏳ In Corso → TESTO VIOLA PIÙ CHIARO + bg viola tenue
-            fg = QColor(Config.COLORS['accent_glow'])  # #a78bfa (più chiaro)
-            bg = QColor(Config.COLORS['purple'])  # #8b5cf6
-            border = Config.COLORS['purple']
-            border_w = 1  # <-- più sottile
-        else:
-            # ◻ Pending → testo default, nessun bg
-            fg = QColor(Config.COLORS['text_primary'])
+            # ✅ Completato → TESTO VERDE + GRASSETTO
+            fg = QColor(Config.COLORS['success'])
             bg = QColor(0, 0, 0, 0)
             border = 'transparent'
-            border_w = 2
+            border_w = 0
+            # Colori per quando SELEZIONATO
+            selected_bg = QColor(Config.COLORS['success'])
+            selected_bg.setAlpha(int(255 * 0.18))
+            selected_border = Config.COLORS['success']
+            selected_border_w = 2  # VERIFICA CHE SIA 2
+            font_bold = True
+        elif status == 'in-progress':
+            # ⏳ In Corso → TESTO VIOLA + GRASSETTO
+            fg = QColor(Config.COLORS['accent_glow'])
+            bg = QColor(0, 0, 0, 0)
+            border = 'transparent'
+            border_w = 0
+            # Colori per quando SELEZIONATO
+            selected_bg = QColor(Config.COLORS['purple'])
+            selected_bg.setAlpha(int(255 * 0.18))
+            selected_border = Config.COLORS['purple']
+            selected_border_w = 2  # VERIFICA CHE SIA 2
+            font_bold = True
+        else:
+            # ◻ Pending → testo default, nessun grassetto
+            fg = QColor(Config.COLORS['text_primary'])
+            bg = QColor(0, 0, 0, 0)  # Trasparente quando NON selezionato
+            border = 'transparent'
+            border_w = 0
+            # Colori per quando SELEZIONATO/HOVER
+            selected_bg = QColor(Config.COLORS['bg_card'])  # Usa bg_card invece di bg_tertiary
+            selected_bg.setAlpha(int(255 * 0.25))  # Aumenta opacità per visibilità
+            selected_border = Config.COLORS['border_light']
+            selected_border_w = 2
+            font_bold = False
 
-        if bg.alpha() != 0:
-            bg.setAlpha(int(255 * (alpha_pct / 100.0)))
+        # Applica font
+        font = QFont('Segoe UI', 10)
+        if font_bold:
+            font.setWeight(QFont.Weight.Bold)
+        item.setFont(font)
 
+        # Salva dati normali
         item.setForeground(fg)
         item.setBackground(bg)
         item.setData(Qt.ItemDataRole.UserRole + 1, border)
         item.setData(Qt.ItemDataRole.UserRole + 2, border_w)
+
+        # SALVA COLORI PER SELEZIONE (UserRole + 3, 4, 5)
+        item.setData(Qt.ItemDataRole.UserRole + 3, selected_bg)
+        item.setData(Qt.ItemDataRole.UserRole + 4, selected_border)
+        item.setData(Qt.ItemDataRole.UserRole + 5, selected_border_w)
+
         item.setData(Qt.ItemDataRole.UserRole, tid)
         item.setSizeHint(QSize(0, 28))
         self._list.addItem(item)
@@ -1173,6 +1129,15 @@ class OWASPChecklistApp(QWidget):
             b.setEnabled(False)
             b.setChecked(False)
 
+        # Pulisci note quando si seleziona una categoria
+        self._current_test_id = None
+
+    def _on_notes_changed_from_ref(self) -> None:
+        """Salva le note quando vengono modificate nel ref_box"""
+        if self._current_test_id:
+            self.notes_map[self._current_test_id] = self._ref_box.toPlainText()
+            self._dirty = True
+
     def _show_test_details(self, tid: str) -> None:
         res = self._find_test_by_id(tid)
         if not res:
@@ -1200,6 +1165,9 @@ class OWASPChecklistApp(QWidget):
         self.reference_buttons[0].setChecked(True)
         self._display_reference_section('summary')
 
+        # Imposta test corrente per note
+        self._current_test_id = tid
+
     def _find_test_by_id(self, tid: str) -> List[Any] | None:
         for cat, details in self.data.get('categories', {}).items():
             for test in details.get('tests', []):
@@ -1209,8 +1177,31 @@ class OWASPChecklistApp(QWidget):
 
     def _display_reference_section(self, section: str) -> None:
         for b in self.reference_buttons: b.setChecked(False)
-        idx_map = {'summary': 0, 'how-to': 1, 'tools': 2, 'remediation': 3}
+        idx_map = {'summary': 0, 'how-to': 1, 'tools': 2, 'remediation': 3, 'notes': 4}
         if section in idx_map: self.reference_buttons[idx_map[section]].setChecked(True)
+
+        # Gestione sezione Note
+        if section == 'notes':
+            self._ref_box.setReadOnly(False)
+            self._ref_box.setPlaceholderText('Inserisci note, findings, evidenze per questo test...')
+            self._ref_box.blockSignals(True)
+            self._ref_box.setPlainText(self.notes_map.get(self._current_test_id, ''))
+            self._ref_box.blockSignals(False)
+            # Collega evento per salvare note
+            try:
+                self._ref_box.textChanged.disconnect()
+            except:
+                pass
+            self._ref_box.textChanged.connect(self._on_notes_changed_from_ref)
+            return
+
+        # Ripristina readonly per altre sezioni
+        self._ref_box.setReadOnly(True)
+        try:
+            self._ref_box.textChanged.disconnect()
+        except:
+            pass
+
         content = self.current_reference_sections.get(section, '')
         if not content or (isinstance(content, str) and not content.strip()):
             self._ref_box.setHtml('<i>Sezione vuota o non disponibile.</i>')
@@ -1226,15 +1217,25 @@ class OWASPChecklistApp(QWidget):
     # ------------------------------------------------------------------
     def set_status_batch(self, status: str) -> None:
         changed = 0
+        selected_tids = []  # SALVA TUTTI I SELEZIONATI
+
         for i in range(self._list.count()):
             itm = self._list.item(i)
             if itm.isSelected():
                 tid = itm.data(Qt.ItemDataRole.UserRole)
-                if isinstance(tid, str) and not tid.startswith('_header_') and self.status_map.get(tid) != status:
-                    self.status_map[tid] = status
-                    changed += 1
+                if isinstance(tid, str) and not tid.startswith('_header_'):
+                    selected_tids.append(tid)  # AGGIUNGI ALLA LISTA
+                    if self.status_map.get(tid) != status:
+                        self.status_map[tid] = status
+                        changed += 1
+
         if changed:
+            self._dirty = True
             self._update_checklist()
+
+            # RIPRISTINA SELEZIONE su TUTTI gli item
+            if selected_tids:
+                self._restore_multiple_selection(selected_tids)
 
     def _show_context_menu(self, pos) -> None:
         itm = self._list.itemAt(pos)
@@ -1274,14 +1275,31 @@ class OWASPChecklistApp(QWidget):
         if not filename:
             return
 
-        ok = self._fm.save_json(self.status_map, Path(filename))
+        # Salva status e note insieme
+        save_data = {
+            'status': self.status_map,
+            'notes': self.notes_map
+        }
+        ok = self._fm.save_json(save_data, Path(filename))
         if ok:
             # Remember last used file (save)
             self._last_project_path = filename
             self._settings.setValue('last_project_path', filename)
-            QMessageBox.information(self, '✅ Salvataggio completato', f'Stato salvato in:\n{filename}')
+            self._saved_status_snapshot = dict(self.status_map)
+            self._dirty = False
+            CustomMessageBox.success(
+                self,
+                '✅ Salvataggio completato',
+                f'Stato salvato in:\n{filename}',
+                confirm_text='OK'
+            )
         else:
-            QMessageBox.critical(self, '❌ Errore', 'Errore durante il salvataggio')
+            CustomMessageBox.danger(
+                self,
+                '❌ Errore',
+                'Errore durante il salvataggio',
+                confirm_text='OK'
+            )
 
     def _load_status(self) -> None:
         last = self._last_project_path or self._settings.value('last_project_path', '')
@@ -1293,7 +1311,12 @@ class OWASPChecklistApp(QWidget):
             # Remember last used file (load)
             self._last_project_path = filename
             self._settings.setValue('last_project_path', filename)
-            QMessageBox.information(self, '✅ Caricamento completato', 'Stato caricato correttamente')
+            CustomMessageBox.success(
+                self,
+                'Caricamento completato',
+                'Stato caricato correttamente',
+                confirm_text='OK'
+            )
 
     # ------------------------------------------------------------------
     # MAPPING DIALOG
@@ -1303,3 +1326,32 @@ class OWASPChecklistApp(QWidget):
         dlg.show()
         dlg.raise_()
         dlg.activateWindow()
+
+    # ------------------------------------------------------------------
+    # CLOSE EVENT - Conferma chiusura
+    # ------------------------------------------------------------------
+    def closeEvent(self, event: QCloseEvent) -> None:
+        """Chiede conferma se ci sono modifiche non salvate"""
+        if self._dirty:
+            # Usa CustomMessageBox.warning con conferma/annulla
+            result = CustomMessageBox.warning(
+                self,
+                '⚠️ Modifiche non salvate',
+                'Ci sono modifiche non salvate.\nVuoi salvare prima di uscire?',
+                confirm_text='Salva e chiudi',
+                on_confirm=None
+            )
+
+            if result:
+                # User clicked "Salva e chiudi"
+                self._save_status()
+                # Se l'utente ha annullato il salvataggio, non chiudere
+                if self._dirty:
+                    event.ignore()
+                    return
+                event.accept()
+            else:
+                # User clicked "Annulla" (discard) - chiudi senza salvare
+                event.accept()
+        else:
+            event.accept()

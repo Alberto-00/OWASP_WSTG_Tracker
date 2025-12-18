@@ -94,9 +94,9 @@ def main() -> None:
             splash.start()
             QTimer.singleShot(splash.total_duration_ms(), show_main)
         else:
-            # Se la splash fallisce chiude
-            print("Splash screen non disponibile")
-            exit(1)
+            # Fallback: avvia direttamente la finestra principale
+            print("Splash screen non disponibile, avvio diretto")
+            show_main()
 
         # Event loop
         exit_code = app.exec()

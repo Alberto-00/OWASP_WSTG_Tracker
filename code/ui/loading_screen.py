@@ -6,6 +6,8 @@ from PyQt6.QtGui import QColor, QPaintEvent, QPainter, QPainterPath, QPixmap, QR
 from PyQt6.QtCore import QRectF
 from PyQt6.QtWidgets import QLabel, QProgressBar, QVBoxLayout, QWidget
 
+from ui.owasp_screen import __version__
+
 # ---------------------------------------------------------------------------
 # CONFIGURAZIONE
 # ---------------------------------------------------------------------------
@@ -14,11 +16,11 @@ WINDOW_H: Final = 360
 CORNER_RADIUS: Final = 24
 LOGO_SIZE: Final = 120
 
-# Design moderno con gradiente
+# Design moderno con gradiente (colori dal documento)
 BG_START_COLOR: Final = QColor(26, 28, 36, 255)  # Blu scuro
-BG_END_COLOR: Final = QColor(38, 42, 54, 255)  # Blu scuro più chiaro
-ACCENT_COLOR: Final = QColor(99, 102, 241)  # Indigo moderno
-GLOW_COLOR: Final = QColor(99, 102, 241, 40)  # Glow sottile
+BG_END_COLOR: Final = QColor(38, 42, 54, 255)    # Blu scuro più chiaro
+ACCENT_COLOR: Final = QColor(99, 102, 241)       # Indigo moderno
+GLOW_COLOR: Final = QColor(99, 102, 241, 40)     # Glow sottile
 
 FADE_IN_MS: Final = 600
 PROGRESS_DURATION_MS: Final = 2800
@@ -133,7 +135,7 @@ class ModernSplashScreenPNG(QWidget):
         layout.addWidget(self.status_label)
 
         # --- VERSION LABEL ---
-        version_label = QLabel("v1.0.0", self)
+        version_label = QLabel(f"v{__version__}", self)
         version_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         version_font = QFont("Segoe UI", 8)
         version_label.setFont(version_font)
