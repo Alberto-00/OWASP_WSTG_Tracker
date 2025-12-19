@@ -129,52 +129,6 @@ class Styles:
             color: {C['text_muted']};
         }}
 
-        /* ===== COMBOBOX (Dropdown) ===== */
-        QComboBox {{
-            background-color: {C['bg_input']};
-            color: {C['text_primary']};
-            border: 1.5px solid {C['border_light']};
-            border-radius: {R['md']}px;
-            padding: 10px 14px;
-            padding-right: 30px;
-            font-size: {T['font_size_md']}px;
-            min-height: 20px;
-        }}
-        QComboBox:hover {{
-            border-color: {C['border_hover']};
-            background-color: {C['bg_input_hover']};
-        }}
-        QComboBox:focus {{
-            border-color: {C['border_focus']};
-            outline: none;
-        }}
-        QComboBox::drop-down {{
-            border: none;
-            padding-right: 8px;
-        }}
-        QComboBox::down-arrow {{
-            image: none;
-            border: 2px solid {C['text_secondary']};
-            border-top: none;
-            border-right: none;
-            width: 6px;
-            height: 6px;
-            margin-right: 10px;
-            margin-bottom: 2px;
-        }}
-        QComboBox::down-arrow:hover {{
-            border-color: {C['purple_light']};
-        }}
-        QComboBox QAbstractItemView {{
-            background: {C['bg_secondary']};
-            color: {C['text_primary']};
-            border: 1px solid {C['border']};
-            border-radius: 8px;
-            padding: 4px;
-            selection-background-color: {_rgba(C['accent_primary'], 0.25)};
-            outline: none;
-        }}
-
         /* ===== BUTTONS ===== */
         QPushButton {{
             color: {C['text_white']};
@@ -297,33 +251,45 @@ class Styles:
     def mapping_dialog() -> str:
         """Stylesheet per MappingDialog"""
         return Styles.base() + f"""
-        /* ===== MAPPING CONTAINER ===== */
+        /* ===== MAPPING DIALOG ===== */
         QWidget#mappingDialog {{
             background-color: {C['bg_primary']};
         }}
 
         /* ===== SPLITTER ===== */
         QSplitter::handle {{
-            background: {C['border_primary']};
+            background: transparent;  
+            width: 13px;
+            margin: 0;
         }}
 
-        /* ===== HTML BOX ===== */
-        QTextEdit#mappingHtmlBox {{
+        /* ===== CONTAINERS CON BORDI ARROTONDATI ===== */
+        QWidget#mappingHtmlContainer,
+        QWidget#mappingListContainer,
+        QWidget#mappingDetailContainer {{
             background-color: {C['bg_secondary']};
-            color: {C['text_primary']};
             border: 1.5px solid {C['border_primary']};
             border-radius: 12px;
-            padding: 8px;
+            padding: 2px;
+        }}
+
+        /* ===== HTML BOX (senza bordo, dentro container) ===== */
+        QTextEdit#mappingHtmlBox {{
+            background-color: transparent;
+            color: {C['text_primary']};
+            border: none;
+            padding: 6px;
+            border-radius: 10px;
             font-size: 13px;
         }}
 
-        /* ===== OWASP LIST ===== */
+        /* ===== OWASP LIST (senza bordo, dentro container) ===== */
         QListWidget#mappingOwaspList {{
-            background-color: {C['bg_secondary']};
+            background-color: transparent;
             color: {C['text_primary']};
-            border: 1.5px solid {C['border_primary']};
-            border-radius: 12px;
-            padding: 8px;
+            border: none;
+            padding: 4px;
+            border-radius: 10px;
             outline: none;
         }}
         QListWidget#mappingOwaspList::item {{
@@ -333,13 +299,13 @@ class Styles:
             border: none;
         }}
 
-        /* ===== DETAIL BOX ===== */
+        /* ===== DETAIL BOX (senza bordo, dentro container) ===== */
         QTextEdit#mappingDetailBox {{
-            background-color: {C['bg_secondary']};
+            background-color: transparent;
             color: {C['text_primary']};
-            border: 1.5px solid {C['border_primary']};
-            border-radius: 12px;
-            padding: 8px;
+            border: none;
+            padding: 6px;
+            border-radius: 10px;
             font-size: 13px;
         }}
         """

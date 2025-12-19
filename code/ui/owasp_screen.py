@@ -149,6 +149,7 @@ class ColorPreservingDelegate(QStyledItemDelegate):
         bg_selected = index.data(Qt.ItemDataRole.UserRole + 3)
         border_selected = index.data(Qt.ItemDataRole.UserRole + 4)
         border_w_selected = index.data(Qt.ItemDataRole.UserRole + 5)
+        bold_when_selected = index.data(Qt.ItemDataRole.UserRole + 6)
 
         # Decidi quale usare
         use_bg = bg_default
@@ -186,9 +187,16 @@ class ColorPreservingDelegate(QStyledItemDelegate):
                 painter.setBrush(use_bg)
                 painter.drawRoundedRect(rect, radius, radius)
 
-        # 2) TESTO (disegno standard)
+        # 2) TESTO (disegno standard) - applica grassetto se selezionato e richiesto
         opt = QStyleOptionViewItem(option)
         opt.state &= ~QStyle.StateFlag.State_Selected  # Rimuovi highlight
+
+        # Applica grassetto quando selezionato se il flag e' True
+        if is_selected and bold_when_selected:
+            font = opt.font
+            font.setWeight(QFont.Weight.Bold)
+            opt.font = font
+
         super().paint(painter, opt, index)
 
         # 3) BORDO (SEMPRE ALLA FINE, SOPRA TUTTO)
@@ -202,6 +210,99 @@ class ColorPreservingDelegate(QStyledItemDelegate):
             painter.drawRoundedRect(rect, radius, radius)
 
         painter.restore()
+
+
+class StyledComboBox(QComboBox):
+    """QComboBox con freccia che cambia colore in hover"""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setMouseTracking(True)
+        self._is_hovering = False
+        self._update_style()
+
+    def enterEvent(self, event):
+        self._is_hovering = True
+        self._update_style()
+        super().enterEvent(event)
+
+    def leaveEvent(self, event):
+        self._is_hovering = False
+        self._update_style()
+        super().leaveEvent(event)
+
+    def paintEvent(self, event):
+        super().paintEvent(event)
+
+        # Disegna la freccia manualmente
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+        # Colore della freccia
+        c = Config.COLORS
+        arrow_color = QColor(c['purple_light'] if self._is_hovering else c['text_secondary'])
+
+        # Posizione della freccia (angolo destro)
+        arrow_x = self.width() - 18
+        arrow_y = self.height() // 2
+
+        # Disegna triangolo
+        from PyQt6.QtGui import QPolygon
+        from PyQt6.QtCore import QPoint
+
+        triangle = QPolygon([
+            QPoint(arrow_x, arrow_y - 3),  # Punta sinistra
+            QPoint(arrow_x + 8, arrow_y - 3),  # Punta destra
+            QPoint(arrow_x + 4, arrow_y + 2)  # Punta basso (centro)
+        ])
+
+        painter.setBrush(arrow_color)
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.drawPolygon(triangle)
+        painter.end()
+
+    def _update_style(self):
+        c = Config.COLORS
+
+        if self._is_hovering:
+            border_color = c['purple']
+            text_color = c['purple_light']
+            bg_color = c['bg_input_hover']
+        else:
+            border_color = c['border_light']
+            text_color = c['text_primary']
+            bg_color = c['bg_input']
+
+        self.setStyleSheet(f"""
+            QComboBox {{
+                background-color: {bg_color};
+                color: {text_color};
+                border: 1.5px solid {border_color};
+                border-radius: 10px;
+                padding: 10px 14px;
+                padding-right: 30px;
+                font-size: 13px;
+                min-height: 20px;
+            }}
+            QComboBox::drop-down {{
+                border: none;
+                width: 20px;
+            }}
+            QComboBox::down-arrow {{
+                image: none;
+                border: none;
+                width: 0;
+                height: 0;
+            }}
+            QComboBox QAbstractItemView {{
+                background: {c['bg_primary']};
+                color: {c['text_primary']};
+                border: 1.5px solid {c['purple']};
+                border-radius: 8px;
+                padding: 4px;
+                selection-background-color: rgba(99, 102, 241, 0.25);
+            }}
+        """)
 
 
 # -----------------------------------------------------------------------------
@@ -291,18 +392,38 @@ class MappingDialog(QWidget):
         layout.setSpacing(12)
 
         splitter = QSplitter(Qt.Orientation.Horizontal)
-        splitter.setHandleWidth(6)
+        splitter.setHandleWidth(10)
 
+        # CONTAINER 1: HTML Table
+        html_container = QWidget()
+        html_container.setObjectName("mappingHtmlContainer")
+        html_container_layout = QVBoxLayout(html_container)
+        html_container_layout.setContentsMargins(0, 0, 0, 0)
         html_widget = self._create_html_table()
+        html_container_layout.addWidget(html_widget)
+
+        # CONTAINER 2: OWASP List
+        list_container = QWidget()
+        list_container.setObjectName("mappingListContainer")
+        list_container_layout = QVBoxLayout(list_container)
+        list_container_layout.setContentsMargins(0, 0, 0, 0)
         self._list = self._create_owasp_list()
+        list_container_layout.addWidget(self._list)
+
+        # CONTAINER 3: Detail Box
+        detail_container = QWidget()
+        detail_container.setObjectName("mappingDetailContainer")
+        detail_container_layout = QVBoxLayout(detail_container)
+        detail_container_layout.setContentsMargins(0, 0, 0, 0)
         self._detail = self._create_detail_widget()
+        detail_container_layout.addWidget(self._detail)
 
         if self._list:
             self._list.currentItemChanged.connect(self._show_detail)
 
-        splitter.addWidget(html_widget)
-        splitter.addWidget(self._list)
-        splitter.addWidget(self._detail)
+        splitter.addWidget(html_container)
+        splitter.addWidget(list_container)
+        splitter.addWidget(detail_container)
 
         splitter.setStretchFactor(0, 3)
         splitter.setStretchFactor(1, 2)
@@ -315,7 +436,7 @@ class MappingDialog(QWidget):
         html_box.setObjectName("mappingHtmlBox")
         html_box.setReadOnly(True)
         html_box.setHtml(self._build_table_html())
-        html_box.setMinimumWidth(550)
+        html_box.setMinimumWidth(510)
         return html_box
 
     def _create_owasp_list(self) -> QListWidget:
@@ -642,7 +763,7 @@ class OWASPChecklistApp(QWidget):
         # PANNELLO DESTRO: Dettagli e riferimenti
         right_widget = QWidget()
         right_layout = self._build_right_panel()
-        right_layout.setContentsMargins(10, 0, 0, 0) # SEPARAZIONE pannelli sinistra e destra
+        right_layout.setContentsMargins(10, 0, 0, 0)  # SEPARAZIONE pannelli sinistra e destra
         right_widget.setLayout(right_layout)
         right_widget.setMinimumWidth(700)
 
@@ -676,12 +797,11 @@ class OWASPChecklistApp(QWidget):
         footer_layout.addStretch()
 
         # Selettore lingua
-        self._lang_cb = QComboBox()
+        self._lang_cb = StyledComboBox()
         self._lang_cb.addItems(['🇮🇹 Italiano', '🇬🇧 English'])
         self._lang_cb.setFixedWidth(150)
         self._lang_cb.currentIndexChanged.connect(self._change_language)
         footer_layout.addWidget(self._lang_cb)
-        # Ensure UI reflects saved language (default Italian)
         try:
             idx = 1 if self.current_lang == 'en' else 0
             # Block signal to avoid double reload during init
@@ -749,7 +869,7 @@ class OWASPChecklistApp(QWidget):
         lay.addWidget(self._search)
 
         # Category dropdown
-        self._cat_cb = QComboBox()
+        self._cat_cb = StyledComboBox()
         self._cat_cb.addItem('📂 Tutte le Categorie')
         self._cat_cb.addItems(self.categories)
         self._cat_cb.currentIndexChanged.connect(self._update_checklist)
@@ -958,7 +1078,7 @@ class OWASPChecklistApp(QWidget):
             header_text = f"{arrow} {category}  [{completed}/{total}] {pct}%"
             header = QListWidgetItem(header_text)
             header.setSizeHint(QSize(0, 28))
-            header.setFont(QFont('Segoe UI', 0, QFont.Weight.Bold))
+            header.setFont(QFont('Segoe UI', 11, QFont.Weight.Bold))  # 11pt per i titoli collassabili
             header.setData(Qt.ItemDataRole.UserRole, f"_header_{category}")
             header.setForeground(QColor(self._get_category_color(details)))
             self._list.addItem(header)
@@ -982,8 +1102,11 @@ class OWASPChecklistApp(QWidget):
         title = f"{conf.get('icon', '◻')} {tid} - {test['name']}"
         item = QListWidgetItem(title)
 
+        # Flag per grassetto quando selezionato (solo per stati done/in-progress)
+        bold_when_selected = False
+
         if status == 'done':
-            # ✅ Completato → TESTO VERDE + GRASSETTO
+            # ✅ Completato → TESTO VERDE (grassetto solo quando selezionato)
             fg = QColor(Config.COLORS['success'])
             bg = QColor(0, 0, 0, 0)
             border = 'transparent'
@@ -992,10 +1115,10 @@ class OWASPChecklistApp(QWidget):
             selected_bg = QColor(Config.COLORS['success'])
             selected_bg.setAlpha(int(255 * 0.18))
             selected_border = Config.COLORS['success']
-            selected_border_w = 2  # VERIFICA CHE SIA 2
-            font_bold = True
+            selected_border_w = 2
+            bold_when_selected = True
         elif status == 'in-progress':
-            # ⏳ In Corso → TESTO VIOLA + GRASSETTO
+            # ⏳ In Corso → TESTO VIOLA (grassetto solo quando selezionato)
             fg = QColor(Config.COLORS['accent_glow'])
             bg = QColor(0, 0, 0, 0)
             border = 'transparent'
@@ -1004,8 +1127,8 @@ class OWASPChecklistApp(QWidget):
             selected_bg = QColor(Config.COLORS['purple'])
             selected_bg.setAlpha(int(255 * 0.18))
             selected_border = Config.COLORS['purple']
-            selected_border_w = 2  # VERIFICA CHE SIA 2
-            font_bold = True
+            selected_border_w = 2
+            bold_when_selected = True
         else:
             # ◻ Pending → testo default, nessun grassetto
             fg = QColor(Config.COLORS['text_primary'])
@@ -1017,12 +1140,10 @@ class OWASPChecklistApp(QWidget):
             selected_bg.setAlpha(int(255 * 0.25))  # Aumenta opacità per visibilità
             selected_border = Config.COLORS['border_light']
             selected_border_w = 2
-            font_bold = False
+            bold_when_selected = True
 
-        # Applica font
+        # Applica font (sempre normale, grassetto gestito dal delegate quando selezionato)
         font = QFont('Segoe UI', 10)
-        if font_bold:
-            font.setWeight(QFont.Weight.Bold)
         item.setFont(font)
 
         # Salva dati normali
@@ -1035,6 +1156,8 @@ class OWASPChecklistApp(QWidget):
         item.setData(Qt.ItemDataRole.UserRole + 3, selected_bg)
         item.setData(Qt.ItemDataRole.UserRole + 4, selected_border)
         item.setData(Qt.ItemDataRole.UserRole + 5, selected_border_w)
+        # Flag per grassetto quando selezionato (UserRole + 6)
+        item.setData(Qt.ItemDataRole.UserRole + 6, bold_when_selected)
 
         item.setData(Qt.ItemDataRole.UserRole, tid)
         item.setSizeHint(QSize(0, 28))
@@ -1289,14 +1412,14 @@ class OWASPChecklistApp(QWidget):
             self._dirty = False
             CustomMessageBox.success(
                 self,
-                '✅ Salvataggio completato',
+                'Salvataggio completato',
                 f'Stato salvato in:\n{filename}',
                 confirm_text='OK'
             )
         else:
             CustomMessageBox.danger(
                 self,
-                '❌ Errore',
+                'Errore',
                 'Errore durante il salvataggio',
                 confirm_text='OK'
             )
@@ -1336,7 +1459,7 @@ class OWASPChecklistApp(QWidget):
             # Usa CustomMessageBox.warning con conferma/annulla
             result = CustomMessageBox.warning(
                 self,
-                '⚠️ Modifiche non salvate',
+                'Modifiche non salvate',
                 'Ci sono modifiche non salvate.\nVuoi salvare prima di uscire?',
                 confirm_text='Salva e chiudi',
                 on_confirm=None
