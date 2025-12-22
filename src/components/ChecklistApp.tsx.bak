@@ -1,0 +1,434 @@
+import { useState, useMemo } from 'react';
+import { Search, Save, FolderOpen, ChevronRight, Shield, ExternalLink, FileText, Lightbulb, Wrench, ShieldCheck, Sparkles, Target, Globe, StickyNote, Circle, CheckCircle, Clock } from 'lucide-react';
+import { useLanguage } from '@/hooks/useLanguage';
+import { useChecklist } from '@/hooks/useChecklist';
+import { useMessageModal } from '@/hooks/useMessageModal';
+import { MessageModal } from '@/components/MessageModal';
+import { WSTGTest, WSTGCategory, TestStatus } from '@/types/checklist';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu';
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
+import { cn } from '@/lib/utils';
+
+const owaspMapping: Record<string, string> = {
+  'Information Gathering': 'A01, A05, A06',
+  'Configuration and Deployment Management Testing': 'A05, A06',
+  'Identity Management Testing': 'A07',
+  'Authentication Testing': 'A07',
+  'Authorization Testing': 'A01',
+  'Session Management Testing': 'A07',
+  'Input Validation Testing': 'A03, A10',
+  'Testing for Error Handling': 'A05',
+  'Testing for Weak Cryptography': 'A02, A08',
+  'Business Logic Testing': 'A04, A08',
+  'Client-side Testing': 'A03, A05',
+  'API Testing': 'A01, A03, A05, A06, A10',
+};
+
+type DetailTab = 'summary' | 'howto' | 'tools' | 'remediation' | 'notes';
+
+export const ChecklistApp = () => {
+  const { language, setLanguage, t } = useLanguage();
+  const { categories, categoryDescriptions, testInfoData, owaspTop10, getStatus, cycleStatus, setMultipleStatus, toggleCategory, isCategoryCollapsed, getCategoryStatus, getCompletedCount, getInProgressCount, getNote, setNote, exportState, importState } = useChecklist();
+  const modal = useMessageModal();
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedTest, setSelectedTest] = useState<WSTGTest | null>(null);
+  const [selectedCategoryInfo, setSelectedCategoryInfo] = useState<WSTGCategory | null>(null);
+  const [showCategoryDescription, setShowCategoryDescription] = useState(false);
+  const [activeTab, setActiveTab] = useState<DetailTab>('summary');
+  const [showMappingModal, setShowMappingModal] = useState(false);
+  const [selectedTests, setSelectedTests] = useState<Set<string>>(new Set());
+  const [selectedOwaspItem, setSelectedOwaspItem] = useState<string | null>(null);
+
+  const filteredCategories = useMemo(() => {
+    let cats = categories;
+    if (selectedCategory !== 'all') cats = cats.filter(c => c.id === selectedCategory);
+    if (!searchQuery.trim()) return cats;
+    const q = searchQuery.toLowerCase();
+    return cats.map(c => ({ ...c, tests: c.tests.filter(t => t.id.toLowerCase().includes(q) || t.name.toLowerCase().includes(q)) })).filter(c => c.tests.length > 0);
+  }, [categories, selectedCategory, searchQuery]);
+
+  const allTestIds = useMemo(() => categories.flatMap(c => c.tests.map(t => t.id)), [categories]);
+  const totalCompleted = getCompletedCount(allTestIds);
+  const totalTests = allTestIds.length;
+  const percentage = totalTests > 0 ? (totalCompleted / totalTests) * 100 : 0;
+
+  const handleTestClick = (test: WSTGTest, cat: WSTGCategory, e: React.MouseEvent) => {
+    if (e.ctrlKey || e.metaKey) {
+      setSelectedTests(prev => { const n = new Set(prev); n.has(test.id) ? n.delete(test.id) : n.add(test.id); return n; });
+    } else if (e.shiftKey && selectedTest) {
+      const allTests = categories.flatMap(c => c.tests);
+      const startIdx = allTests.findIndex(t => t.id === selectedTest.id);
+      const endIdx = allTests.findIndex(t => t.id === test.id);
+      const [from, to] = startIdx < endIdx ? [startIdx, endIdx] : [endIdx, startIdx];
+      setSelectedTests(new Set(allTests.slice(from, to + 1).map(t => t.id)));
+    } else {
+      setSelectedTests(new Set());
+      setSelectedTest(test);
+      setSelectedCategoryInfo(cat);
+      setShowCategoryDescription(false);
+    }
+  };
+
+  const handleCategoryClick = (cat: WSTGCategory) => {
+    toggleCategory(cat.id);
+    setSelectedCategoryInfo(cat);
+    setSelectedTest(null);
+    setShowCategoryDescription(true);
+  };
+
+  const handleSetStatus = (status: TestStatus) => {
+    if (selectedTests.size > 0) {
+      setMultipleStatus(Array.from(selectedTests), status);
+      const count = selectedTests.size;
+      setSelectedTests(new Set());
+      modal.success('Aggiornamento Completato', `${count} test aggiornati a "<strong>${status}</strong>"`);
+    }
+  };
+
+  const handleSave = () => {
+    const data = exportState();
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `wstg-progress-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    modal.success('Salvataggio Completato', 'Lo stato è stato salvato con successo!');
+  };
+
+  const handleLoad = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          try {
+            importState(JSON.parse(ev.target?.result as string));
+            modal.success('Caricamento Completato', 'Lo stato è stato caricato con successo!');
+          }
+          catch {
+            modal.danger('Errore di Caricamento', 'Il file selezionato non è valido o è corrotto.');
+          }
+        };
+        reader.readAsText(file);
+      }
+    };
+    input.click();
+  };
+
+  const getStatusIcon = (status: TestStatus) => {
+    if (status === 'done') return <CheckCircle className="w-4 h-4 text-[hsl(var(--status-done))]" />;
+    if (status === 'in-progress') return <Clock className="w-4 h-4 text-[hsl(var(--status-progress))]" />;
+    return <Circle className="w-4 h-4 text-[hsl(var(--status-pending))]" />;
+  };
+
+  const getStatusColor = (status: TestStatus) => status === 'done' ? 'text-done' : status === 'in-progress' ? 'text-progress' : 'text-foreground';
+  const getCatStatusColor = (catId: string) => { const s = getCategoryStatus(catId); return s === 'done' ? 'text-done' : s === 'progress' ? 'text-progress' : 'text-pending'; };
+  const getCatBgColor = (catId: string) => { const s = getCategoryStatus(catId); return s === 'done' ? 'bg-done' : s === 'progress' ? 'bg-progress' : 'bg-pending'; };
+
+  const getLevelColor = (level: string) => {
+    switch (level) {
+      case 'critico': return 'hsl(var(--level-critical))';
+      case 'alto': return 'hsl(var(--level-high))';
+      case 'medio': return 'hsl(var(--level-medium))';
+      case 'basso': return 'hsl(var(--level-low))';
+      default: return 'hsl(var(--cyan))';
+    }
+  };
+
+  const tabs = [
+    { id: 'summary' as const, label: t('summary'), icon: FileText, color: 'bg-cyan-600 hover:bg-cyan-700' },
+    { id: 'howto' as const, label: t('howTo'), icon: Lightbulb, color: 'bg-amber-600 hover:bg-amber-700' },
+    { id: 'tools' as const, label: t('tools'), icon: Wrench, color: 'bg-purple-600 hover:bg-purple-700' },
+    { id: 'remediation' as const, label: t('remediation'), icon: ShieldCheck, color: 'bg-emerald-600 hover:bg-emerald-700' },
+    { id: 'notes' as const, label: t('notes'), icon: StickyNote, color: 'bg-pink-600 hover:bg-pink-700' },
+  ];
+
+  const testInfo = selectedTest ? testInfoData[selectedTest.id] : null;
+  const selectedOwaspData = selectedOwaspItem ? owaspTop10[selectedOwaspItem] : null;
+
+  return (
+    <div className="h-screen flex flex-col bg-background overflow-hidden">
+      {/* Header */}
+      <header className="flex-shrink-0 bg-card/80 backdrop-blur-xl border-b border-border">
+        <div className="px-4 py-3 flex items-center gap-4 border-b border-border/50">
+          <div className="flex items-center gap-2">
+            <Shield className="w-5 h-5 text-primary" />
+            <span className="font-semibold text-sm">{t('overallProgress')}:</span>
+          </div>
+          <div className="flex-1 h-2.5 bg-secondary rounded-full overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-primary to-accent rounded-full transition-all" style={{ width: `${percentage}%` }} />
+          </div>
+          <span className="text-sm text-muted-foreground">{totalCompleted}/{totalTests} {t('completed')} ({percentage.toFixed(1)}%)</span>
+        </div>
+        <div className="px-4 py-2 flex items-center gap-3">
+          <div className="relative w-80">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input placeholder={t('search')} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-8 h-8 text-sm bg-secondary/50" />
+          </div>
+          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <SelectTrigger className="w-48 h-8 text-sm bg-secondary/50"><SelectValue placeholder={t('allCategories')} /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('allCategories')}</SelectItem>
+              {categories.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <div className="flex-1" />
+          <Button size="sm" onClick={() => setShowMappingModal(true)} className="h-8 gap-1.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-sm">
+            <Sparkles className="w-3.5 h-3.5" />{t('mapping')}
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleSave} className="h-8 gap-1.5 text-sm border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10"><Save className="w-3.5 h-3.5" />{t('saveState')}</Button>
+          <Button variant="outline" size="sm" onClick={handleLoad} className="h-8 gap-1.5 text-sm border-orange-500/50 text-orange-400 hover:bg-orange-500/10"><FolderOpen className="w-3.5 h-3.5" />{t('loadState')}</Button>
+        </div>
+      </header>
+
+      {/* Main */}
+      <div className="flex-1 overflow-hidden m-2">
+        <ResizablePanelGroup direction="horizontal" className="h-full">
+          {/* Left Panel */}
+          <ResizablePanel defaultSize={48} minSize={48} maxSize={70}>
+            <aside className="h-full flex flex-col bg-sidebar-background rounded-lg border border-border overflow-hidden">
+              <ScrollArea className="flex-1">
+                <div className="p-2 space-y-4">
+                  {filteredCategories.map((cat, ci) => {
+                    const collapsed = isCategoryCollapsed(cat.id);
+                    return (
+                      <div key={cat.id} className="animate-fade-in" style={{ animationDelay: `${ci * 30}ms` }}>
+                        <button onClick={() => handleCategoryClick(cat)} className={cn('w-full flex items-center gap-2 p-2.5 rounded-lg transition-all', getCatBgColor(cat.id), 'hover:opacity-90')}>
+                          <ChevronRight className={cn('w-4 h-4 flex-shrink-0 transition-transform', getCatStatusColor(cat.id), !collapsed && 'rotate-90')} />
+                          <span className={cn('flex-1 text-left font-semibold text-sm', getCatStatusColor(cat.id))}>{cat.name}</span>
+                          <span className={cn('text-sm font-medium flex-shrink-0', getCatStatusColor(cat.id))}>{getCompletedCount(cat.tests.map(t => t.id))}/{cat.tests.length}</span>
+                        </button>
+                        {!collapsed && (
+                          <ContextMenu>
+                            <ContextMenuTrigger>
+                              <div className="mt-1 space-y-0.5">
+                                {cat.tests.map((test, ti) => {
+                                  const status = getStatus(test.id);
+                                  const isSelected = selectedTest?.id === test.id || selectedTests.has(test.id);
+                                  return (
+                                    <button key={test.id} onClick={(e) => handleTestClick(test, cat, e)} className={cn('w-full flex items-center gap-2 px-2.5 py-2 rounded-md transition-all text-left animate-fade-in', isSelected ? 'bg-primary/20 border-l-2 border-primary' : 'hover:bg-secondary/50 border-l-2 border-transparent')} style={{ animationDelay: `${(ci * 30) + (ti * 15)}ms` }}>
+                                      <button onClick={(e) => { e.stopPropagation(); cycleStatus(test.id); }} className="flex-shrink-0">
+                                        {getStatusIcon(status)}
+                                      </button>
+                                      <span className={cn('flex-1 text-[13px]', getStatusColor(status))}>{test.id} - {test.name}</span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </ContextMenuTrigger>
+                            <ContextMenuContent>
+                              <ContextMenuItem onClick={() => handleSetStatus('pending')}>{t('pending')}</ContextMenuItem>
+                              <ContextMenuItem onClick={() => handleSetStatus('in-progress')}>{t('inProgress')}</ContextMenuItem>
+                              <ContextMenuItem onClick={() => handleSetStatus('done')}>{t('done')}</ContextMenuItem>
+                            </ContextMenuContent>
+                          </ContextMenu>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </ScrollArea>
+            </aside>
+          </ResizablePanel>
+
+          <ResizableHandle withHandle className="mx-1" />
+
+          {/* Right Panel */}
+          <ResizablePanel defaultSize={65}>
+            <div className="h-full flex flex-col gap-2">
+              {/* Top Section: Test Info or Category Description */}
+              <div className="flex-1 rounded-lg border border-border bg-card/30 overflow-hidden flex flex-col">
+                {showCategoryDescription && selectedCategoryInfo ? (
+                  <div className="p-4 animate-fade-in">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Target className="w-5 h-5 text-cyan-400" />
+                      <span className="text-sm font-semibold text-cyan-400">{t('categoryDescription')}</span>
+                    </div>
+                    <h3 className="text-base font-semibold text-foreground mb-2">{selectedCategoryInfo.name}</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{categoryDescriptions[selectedCategoryInfo.name] || 'No description available.'}</p>
+                  </div>
+                ) : selectedTest ? (
+                  <div className="p-4 animate-fade-in">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Shield className="w-5 h-5 text-pink-400" />
+                      <span className="text-sm font-semibold text-pink-400">{selectedTest.id}</span>
+                    </div>
+                    <h3 className="text-base font-semibold text-foreground mb-3">{selectedTest.name}</h3>
+                    <div className="space-y-2">
+                      <span className="text-xs text-muted-foreground font-medium">{t('testObjectives')}:</span>
+                      <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                        {selectedTest.objectives.map((o, i) => <li key={i}>{o}</li>)}
+                      </ul>
+                    </div>
+                    <a href={selectedTest.reference} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm text-cyan-400 hover:underline mt-3">
+                      <ExternalLink className="w-3.5 h-3.5" />{t('reference')}
+                    </a>
+                  </div>
+                ) : (
+                  <div className="flex-1 flex items-center justify-center">
+                    <div className="text-center">
+                      <Shield className="w-12 h-12 mx-auto text-muted-foreground/50 mb-3" />
+                      <p className="text-sm text-muted-foreground">{t('selectTest')}</p>
+                      <p className="text-xs text-muted-foreground/70">{t('selectTestDesc')}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Bottom Section: Tab Content */}
+              <div className="flex-1 rounded-lg border border-border bg-card/30 overflow-hidden flex flex-col">
+                {selectedTest ? (
+                  <>
+                    <div className="flex-shrink-0 p-3 border-b border-border bg-card/50 flex flex-wrap gap-2">
+                      {tabs.map(tab => (
+                        <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={cn('flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all text-white', activeTab === tab.id ? tab.color : 'bg-secondary/50 text-muted-foreground hover:bg-secondary')}>
+                          <tab.icon className="w-3.5 h-3.5" />{tab.label}
+                        </button>
+                      ))}
+                    </div>
+                    <ScrollArea className="flex-1 p-4">
+                      {activeTab === 'summary' && testInfo?.summary && <div className="text-sm text-muted-foreground prose prose-invert prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: testInfo.summary }} />}
+                      {activeTab === 'howto' && testInfo?.['how-to'] && <div className="text-sm text-muted-foreground prose prose-invert prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: testInfo['how-to'] }} />}
+                      {activeTab === 'tools' && testInfo?.tools && <div className="text-sm text-muted-foreground prose prose-invert prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: testInfo.tools }} />}
+                      {activeTab === 'remediation' && testInfo?.remediation && <div className="text-sm text-muted-foreground prose prose-invert prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: testInfo.remediation }} />}
+                      {activeTab === 'notes' && (
+                        <div>
+                          <div className="flex gap-1 mb-2">
+                            <Button variant="outline" size="sm" className="h-6 px-2 text-xs font-bold" onClick={() => document.execCommand('bold')}>B</Button>
+                            <Button variant="outline" size="sm" className="h-6 px-2 text-xs italic" onClick={() => document.execCommand('italic')}>I</Button>
+                            <Button variant="outline" size="sm" className="h-6 px-2 text-xs underline" onClick={() => document.execCommand('underline')}>U</Button>
+                          </div>
+                          <div contentEditable className="min-h-[120px] p-3 rounded-lg border border-border bg-secondary/30 text-sm focus:outline-none focus:ring-1 focus:ring-primary" onBlur={(e) => setNote(selectedTest.id, e.currentTarget.innerHTML)} dangerouslySetInnerHTML={{ __html: getNote(selectedTest.id) }} />
+                        </div>
+                      )}
+                      {!testInfo && activeTab !== 'notes' && <p className="text-sm text-muted-foreground">Nessuna informazione disponibile per questo test.</p>}
+                    </ScrollArea>
+                  </>
+                ) : (
+                  <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
+                    Seleziona un test per vedere i dettagli
+                  </div>
+                )}
+              </div>
+            </div>
+          </ResizablePanel>
+        </ResizablePanelGroup>
+      </div>
+
+      {/* Footer */}
+      <footer className="flex-shrink-0 border-t border-border px-4 py-2 flex items-center justify-between bg-card/50">
+        <div className="flex items-center gap-4 text-xs">
+          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-[hsl(var(--status-pending))]" />{t('pending')}: {allTestIds.length - totalCompleted - getInProgressCount(allTestIds)}</span>
+          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-[hsl(var(--status-progress))]" />{t('inProgress')}: {getInProgressCount(allTestIds)}</span>
+          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-[hsl(var(--status-done))]" />{t('done')}: {totalCompleted}</span>
+        </div>
+        <Select value={language} onValueChange={(v) => setLanguage(v as 'en' | 'it')}>
+          <SelectTrigger className="w-36 h-9 text-sm font-medium bg-gradient-to-r from-primary/10 to-accent/10 border-primary/30 hover:border-primary/50 transition-all">
+            <Globe className="w-4 h-4 mr-2 text-primary" />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="it" className="text-sm">🇮🇹 Italiano</SelectItem>
+            <SelectItem value="en" className="text-sm">🇬🇧 English</SelectItem>
+          </SelectContent>
+        </Select>
+      </footer>
+
+      {/* Mapping Modal */}
+      <Dialog open={showMappingModal} onOpenChange={setShowMappingModal}>
+        <DialogContent className="max-w-6xl h-[85vh] p-0 gap-0 bg-background border-border overflow-hidden">
+          <DialogHeader className="px-4 py-2.5 border-b border-border">
+            <DialogTitle className="flex items-center gap-2 text-base"><Sparkles className="w-4 h-4 text-amber-400" />Mapping WSTG ↔ OWASP Top 10</DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 flex overflow-hidden gap-2 p-2">
+            {/* Left: Table */}
+            <div className="w-[400px] overflow-auto flex-shrink-0 rounded-lg border border-border bg-card/30">
+              <table className="w-full text-sm">
+                <thead className="sticky top-0 bg-card">
+                  <tr><th className="text-left p-3 font-semibold border-b border-border">Categoria WSTG</th><th className="text-left p-3 font-semibold border-b border-border">OWASP Top 10</th></tr>
+                </thead>
+                <tbody>
+                  {categories.map((cat, i) => (
+                    <tr key={cat.id} className="border-b border-border/50 hover:bg-secondary/30 animate-fade-in" style={{ animationDelay: `${i * 40}ms` }}>
+                      <td className="p-3 text-cyan-400">{cat.name}</td>
+                      <td className="p-3 text-purple-400">{owaspMapping[cat.name] || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {/* Center: OWASP List */}
+            <div className="w-[320px] p-3 overflow-auto flex-shrink-0 rounded-lg border border-border bg-card/30">
+              <div className="space-y-1.5">
+                {Object.entries(owaspTop10).map(([key, item], i) => (
+                  <button
+                    key={key}
+                    onClick={() => setSelectedOwaspItem(key)}
+                    className={cn(
+                      'w-full p-2.5 rounded-lg text-left transition-all animate-fade-in',
+                      selectedOwaspItem === key && 'ring-2'
+                    )}
+                    style={{
+                      animationDelay: `${i * 50}ms`,
+                      backgroundColor: selectedOwaspItem === key ? `${getLevelColor(item.level)}30` : `${getLevelColor(item.level)}10`,
+                      border: `2px solid ${selectedOwaspItem === key ? getLevelColor(item.level) : 'transparent'}`,
+                      ...(selectedOwaspItem !== key && {
+                        ':hover': {
+                          backgroundColor: `${getLevelColor(item.level)}20`,
+                          borderColor: `${getLevelColor(item.level)}50`
+                        }
+                      })
+                    }}
+                    onMouseEnter={(e) => {
+                      if (selectedOwaspItem !== key) {
+                        e.currentTarget.style.backgroundColor = `${getLevelColor(item.level)}20`;
+                        e.currentTarget.style.borderColor = `${getLevelColor(item.level)}80`;
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (selectedOwaspItem !== key) {
+                        e.currentTarget.style.backgroundColor = `${getLevelColor(item.level)}10`;
+                        e.currentTarget.style.borderColor = 'transparent';
+                      }
+                    }}
+                  >
+                    <span className="text-sm font-semibold" style={{ color: getLevelColor(item.level) }}>{key}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+            {/* Right: Description */}
+            <div className="flex-1 p-4 overflow-auto rounded-lg border border-border bg-card/30">
+              {selectedOwaspData ? (
+                <div className="animate-fade-in">
+                  <h3 className="text-lg font-semibold mb-3" style={{ color: getLevelColor(selectedOwaspData.level) }}>{selectedOwaspItem}</h3>
+                  <div className="text-sm text-muted-foreground leading-relaxed mb-4" dangerouslySetInnerHTML={{ __html: selectedOwaspData.description }} />
+                  {selectedOwaspData.link && (
+                    <a href={selectedOwaspData.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm text-cyan-400 hover:underline">
+                      <ExternalLink className="w-3.5 h-3.5" />{selectedOwaspData.link}
+                    </a>
+                  )}
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+                  Seleziona un elemento OWASP Top 10 per vedere la descrizione
+                </div>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
