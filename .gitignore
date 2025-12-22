@@ -60,8 +60,7 @@ pylint-global.txt
 WSTG_Tracker*
 .idea
 
-release
-code/public/saves
+public/saves
 
 # Logs
 logs
