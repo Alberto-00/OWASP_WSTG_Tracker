@@ -31,7 +31,6 @@ env/
 *.egg
 *.egg-info/
 dist/
-build/
 *.manifest
 *.spec
 

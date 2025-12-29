@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { Search, Save, FolderOpen, ChevronRight, Shield, ExternalLink, FileText, Lightbulb, Wrench, ShieldCheck, Sparkles, Target, Globe, StickyNote, Circle, CheckCircle, Clock, ChevronsDownUp, ChevronsUpDown, ChevronUp, ChevronDown } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useChecklist } from '@/hooks/useChecklist';
@@ -33,7 +33,7 @@ type DetailTab = 'summary' | 'howto' | 'tools' | 'remediation' | 'notes';
 
 export const ChecklistApp = () => {
   const { language, setLanguage, t } = useLanguage();
-  const { categories, categoryDescriptions, testInfoData, owaspTop10, getStatus, cycleStatus, setMultipleStatus, toggleCategory, isCategoryCollapsed, collapseAll, expandAll, getCompletedCount, getInProgressCount, getNote, setNote, exportState, importState } = useChecklist();
+  const { categories, categoryDescriptions, testInfoData, owaspTop10, getStatus, cycleStatus, setMultipleStatus, toggleCategory, isCategoryCollapsed, collapseAll, expandAll, getCompletedCount, getInProgressCount, getNote, setNote, exportState, importState, loadedFileName, setLoadedFileName, isInitialLoadComplete } = useChecklist();
   const modal = useMessageModal();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -47,6 +47,122 @@ export const ChecklistApp = () => {
   const [selectedTests, setSelectedTests] = useState<Set<string>>(new Set());
   const [selectedOwaspItem, setSelectedOwaspItem] = useState<string | null>(null);
   const [isTopSectionCollapsed, setIsTopSectionCollapsed] = useState(false);
+
+  // Tracking modifiche non salvate
+  const initialStateRef = useRef<string>('');
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  // Calcola lo stato corrente come stringa
+  const currentStateString = useMemo(() => {
+    return JSON.stringify(exportState());
+  }, [exportState]);
+
+  // Memorizza lo stato iniziale SOLO dopo che il caricamento iniziale è completo
+  useEffect(() => {
+    if (isInitialLoadComplete && initialStateRef.current === '') {
+      initialStateRef.current = currentStateString;
+    }
+  }, [isInitialLoadComplete, currentStateString]);
+
+  // Controlla se ci sono modifiche non salvate
+  useEffect(() => {
+    if (!isInitialLoadComplete || initialStateRef.current === '') return;
+
+    const hasChanges = currentStateString !== initialStateRef.current;
+    setHasUnsavedChanges(hasChanges);
+
+    if (window.electron) {
+      window.electron.setUnsavedChanges(hasChanges);
+    }
+  }, [currentStateString, isInitialLoadComplete]);
+
+  // Funzione per salvare con dialog nativo
+  const saveWithPrompt = useCallback(async (onSuccess?: () => void) => {
+    const defaultFilename = `wstg-progress-${new Date().toISOString().split('T')[0]}.json`;
+    const data = exportState();
+
+    if (window.electron) {
+      // Mostra dialog di salvataggio nativo
+      const dialogResult = await window.electron.showSaveDialog(defaultFilename);
+
+      // Se l'utente ha annullato
+      if (dialogResult.canceled || !dialogResult.filePath) {
+        return false;
+      }
+
+      // Estrai solo il nome del file dal percorso completo
+      const filename = dialogResult.filePath.split(/[\\/]/).pop() || defaultFilename;
+
+      // Salva il file
+      const result = await window.electron.saveFile(filename, data);
+      if (result.success) {
+        setLoadedFileName(filename);
+        initialStateRef.current = JSON.stringify(data);
+        setHasUnsavedChanges(false);
+        // Mostra messaggio di successo con percorso
+        modal.success('Salvataggio Completato', `File salvato con successo!`);
+        if (onSuccess) {
+          setTimeout(onSuccess, 2000);
+        }
+        return true;
+      } else {
+        modal.danger('Errore', `Impossibile salvare: ${result.error}`);
+        return false;
+      }
+    }
+    return false;
+  }, [exportState, modal, setLoadedFileName]);
+
+  // Handler per dialog modifiche non salvate
+  const handleUnsavedChangesDialog = useCallback(() => {
+    modal.show({
+      type: 'warning',
+      title: 'Modifiche non salvate',
+      message: 'Ci sono modifiche non salvate. Vuoi salvare prima di uscire?',
+      confirmText: 'Sì, Salva',
+      cancelText: 'No',
+      showCancel: true,
+      closeOnOverlayClick: false,
+      onConfirm: async () => {
+        // Chiudi il modal per mostrare il prompt
+        modal.hide();
+        await new Promise(resolve => setTimeout(resolve, 300));
+
+        // Salva con prompt per il nome file
+        await saveWithPrompt(() => {
+          window.electron?.forceQuit();
+        });
+      },
+      onCancel: () => {
+        // Prima chiudi il modal corrente, poi mostra il secondo
+        modal.hide();
+        setTimeout(() => {
+          modal.show({
+            type: 'danger',
+            title: 'Conferma Uscita',
+            message: 'Sei sicuro di voler uscire senza salvare? Tutte le modifiche andranno perse.',
+            confirmText: 'Esci senza Salvare',
+            cancelText: 'Annulla',
+            showCancel: true,
+            closeOnOverlayClick: false,
+            onConfirm: () => {
+              // Esci senza salvare
+              if (window.electron) {
+                window.electron.quitWithoutSaving();
+              }
+            }
+            // onCancel non definito = chiude il modal e torna all'app
+          });
+        }, 350); // Delay maggiore per permettere l'animazione di chiusura
+      }
+    });
+  }, [modal, exportState]);
+
+  useEffect(() => {
+    if (window.electron) {
+      window.electron.onShowUnsavedChangesDialog(handleUnsavedChangesDialog);
+    }
+  }, [handleUnsavedChangesDialog]);
 
   const filteredCategories = useMemo(() => {
     let cats = categories;
@@ -87,7 +203,11 @@ export const ChecklistApp = () => {
       setSelectedTests(prev => {
         const n = new Set(prev);
         if (selectedTest && !prev.has(selectedTest.id)) n.add(selectedTest.id);
-        n.has(test.id) ? n.delete(test.id) : n.add(test.id);
+        if (n.has(test.id)) {
+          n.delete(test.id);
+        } else {
+          n.add(test.id);
+        }
         return n;
       });
       setSelectedTest(test);
@@ -113,15 +233,27 @@ export const ChecklistApp = () => {
     setShowCategoryDescription(true);
   };
 
-  const handleSave = () => {
-    const data = exportState();
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `wstg-progress-${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
-    modal.success('Salvataggio Completato', 'Lo stato è stato salvato con successo!');
+  const handleSave = async () => {
+    if (window.electron) {
+      // Salvataggio tramite Electron con prompt per il nome
+      await saveWithPrompt();
+    } else {
+      // Fallback browser: download tradizionale
+      const data = exportState();
+      const filename = `wstg-progress-${new Date().toISOString().split('T')[0]}.json`;
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+      // Resetta il tracking modifiche
+      initialStateRef.current = JSON.stringify(data);
+      setHasUnsavedChanges(false);
+      setLoadedFileName(filename);
+      modal.success('Salvataggio Completato', 'Lo stato è stato salvato con successo!');
+    }
   };
 
   const handleLoad = () => {
@@ -134,8 +266,12 @@ export const ChecklistApp = () => {
         const reader = new FileReader();
         reader.onload = (ev) => {
           try {
-            importState(JSON.parse(ev.target?.result as string));
-            modal.success('Caricamento Completato', 'Lo stato è stato caricato con successo!');
+            const loadedData = JSON.parse(ev.target?.result as string);
+            importState(loadedData, file.name);
+            // Resetta il tracking modifiche dopo caricamento riuscito
+            initialStateRef.current = JSON.stringify(loadedData);
+            setHasUnsavedChanges(false);
+            modal.success('Caricamento Completato', `File "${file.name}" caricato con successo!`);
           }
           catch {
             modal.danger('Errore di Caricamento', 'Il file selezionato non è valido o è corrotto.');
@@ -222,6 +358,15 @@ export const ChecklistApp = () => {
               <span className="text-sm font-semibold text-foreground">{totalCompleted}/{totalTests}</span>
               <span className="text-xs text-muted-foreground">({percentage.toFixed(1)}%)</span>
             </div>
+          </div>
+
+          {/* Currently Loaded File Indicator */}
+          <div className="flex items-center gap-2 bg-primary/10 px-3 py-1.5 rounded-lg border border-primary/20">
+            <FileText className="w-3.5 h-3.5 text-primary" />
+            <span className="text-xs text-muted-foreground">File:</span>
+            <span className="text-xs font-medium text-cyan-400 max-w-[200px] truncate" title={loadedFileName}>
+              {loadedFileName}
+            </span>
           </div>
         </div>
 

@@ -11,7 +11,10 @@ export const useChecklist = () => {
   const [status, setStatus] = useState<Record<string, TestStatus>>({});
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
+  const [loadedFileName, setLoadedFileName] = useState<string>('progress.json');
+  const [isInitialLoadComplete, setIsInitialLoadComplete] = useState(false);
 
+  // Caricamento automatico all'avvio
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -26,7 +29,7 @@ export const useChecklist = () => {
         const info = await infoRes.json();
         const owasp = await owaspRes.json();
 
-        const cats: WSTGCategory[] = Object.entries(checklist.categories).map(([name, data]: [string, any]) => ({
+        const cats: WSTGCategory[] = Object.entries(checklist.categories).map(([name, data]: [string, { id: string; tests: WSTGTest[] }]) => ({
           id: data.id,
           name,
           tests: data.tests,
@@ -35,10 +38,46 @@ export const useChecklist = () => {
         setCategoryDescriptions(catDesc);
         setTestInfoData(info);
         setOwaspTop10(owasp);
-      } catch (e) { 
-        console.error('Failed to load data:', e);
-        console.error('Attempted language:', language);
-        console.error('Current location:', window.location.href);
+
+        // Carica automaticamente l'ultimo salvataggio o progress.json
+        if (window.electron) {
+          try {
+            // Prima prova a caricare l'ultimo file salvato dalla cartella saves
+            const lastSave = await window.electron.getLastSaveFile();
+            if (lastSave.success && lastSave.filename) {
+              const result = await window.electron.loadFile(lastSave.filename);
+              if (result.success && result.data) {
+                const progressData = result.data as ProgressData;
+                if (progressData.status) setStatus(progressData.status);
+                if (progressData.notes) setNotes(progressData.notes);
+                setLoadedFileName(lastSave.filename);
+                return;
+              }
+            }
+          } catch (e) {
+            // Nessun ultimo salvataggio trovato, carico progress.json
+          }
+        }
+
+        // Se non c'è ultimo salvataggio, carica progress.json dalla cartella json
+        try {
+          const progressRes = await fetch('./json/progress.json');
+          if (progressRes.ok) {
+            const progressData = await progressRes.json() as ProgressData;
+            if (progressData.status) setStatus(progressData.status);
+            if (progressData.notes) setNotes(progressData.notes);
+            setLoadedFileName('json/progress.json');
+          }
+        } catch (e) {
+          // progress.json non trovato, inizio con stato vuoto
+          setLoadedFileName('(nessun file)');
+        }
+
+        // Segnala che il caricamento iniziale è completo
+        setIsInitialLoadComplete(true);
+      } catch (e) {
+        // Failed to load data
+        setIsInitialLoadComplete(true); // Anche in caso di errore
       }
     };
     loadData();
@@ -102,10 +141,11 @@ export const useChecklist = () => {
   const getNote = useCallback((testId: string) => notes[testId] || '', [notes]);
 
   const exportState = useCallback(() => ({ status, notes }), [status, notes]);
-  
-  const importState = useCallback((data: ProgressData) => {
+
+  const importState = useCallback((data: ProgressData, filename?: string) => {
     if (data.status) setStatus(data.status);
     if (data.notes) setNotes(data.notes);
+    if (filename) setLoadedFileName(filename);
   }, []);
 
   return {
@@ -114,5 +154,7 @@ export const useChecklist = () => {
     toggleCategory, isCategoryCollapsed, collapseAll, expandAll, getCategoryStatus,
     getCompletedCount, getInProgressCount,
     getNote, setNote, exportState, importState,
+    loadedFileName, setLoadedFileName,
+    isInitialLoadComplete,
   };
 };

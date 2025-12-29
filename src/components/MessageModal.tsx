@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { cn } from '@/lib/utils';
-import { AlertTriangle, CheckCircle2, Info, XCircle } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Info } from 'lucide-react';
 
 export type ModalType = 'danger' | 'warning' | 'success' | 'info';
 
@@ -10,7 +10,7 @@ export interface MessageModalConfig {
   message?: string;
   confirmText?: string;
   cancelText?: string;
-  onConfirm?: () => void | boolean;
+  onConfirm?: () => void | boolean | Promise<void>;
   onCancel?: () => void;
   showCancel?: boolean;
   closeOnOverlayClick?: boolean;
@@ -56,6 +56,11 @@ export const MessageModal: React.FC<MessageModalProps> = ({ isOpen, config, onCl
     closeOnOverlayClick = true
   } = config;
 
+  const handleCancel = useCallback(() => {
+    if (onCancel) onCancel();
+    onClose();
+  }, [onCancel, onClose]);
+
   useEffect(() => {
     if (!isOpen) return;
 
@@ -72,18 +77,19 @@ export const MessageModal: React.FC<MessageModalProps> = ({ isOpen, config, onCl
       document.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = '';
     };
-  }, [isOpen]);
+  }, [isOpen, handleCancel]);
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (onConfirm) {
       const result = onConfirm();
+      // Se la funzione restituisce false, non chiudere
       if (result === false) return;
+      // Se restituisce una Promise, aspetta che finisca
+      if (result instanceof Promise) {
+        await result;
+        return; // Non chiudere automaticamente - la funzione async gestirà la chiusura
+      }
     }
-    onClose();
-  };
-
-  const handleCancel = () => {
-    if (onCancel) onCancel();
     onClose();
   };
 
