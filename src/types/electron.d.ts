@@ -11,9 +11,9 @@ export interface ElectronAPI {
 
   // File system operations
   showSaveDialog: (defaultFilename: string) => Promise<{ success: boolean; filePath?: string; canceled?: boolean; error?: string }>;
-  saveFile: (filename: string, data: unknown) => Promise<{ success: boolean; path?: string; error?: string }>;
-  loadFile: (filename: string) => Promise<{ success: boolean; data?: unknown; error?: string }>;
-  getLastSaveFile: () => Promise<{ success: boolean; filename?: string }>;
+  saveFile: (filePathOrName: string, data: unknown) => Promise<{ success: boolean; path?: string; filename?: string; error?: string }>;
+  loadFile: (filePathOrName: string) => Promise<{ success: boolean; data?: unknown; filePath?: string; error?: string }>;
+  getLastSaveFile: () => Promise<{ success: boolean; filename?: string; filePath?: string }>;
   listSaveFiles: () => Promise<{ success: boolean; files?: SaveFileInfo[]; error?: string }>;
   fileExists: (filename: string) => Promise<boolean>;
 

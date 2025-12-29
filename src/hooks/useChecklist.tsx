@@ -42,15 +42,18 @@ export const useChecklist = () => {
         // Carica automaticamente l'ultimo salvataggio o progress.json
         if (window.electron) {
           try {
-            // Prima prova a caricare l'ultimo file salvato dalla cartella saves
+            // Prima prova a caricare l'ultimo file salvato
             const lastSave = await window.electron.getLastSaveFile();
-            if (lastSave.success && lastSave.filename) {
-              const result = await window.electron.loadFile(lastSave.filename);
+            if (lastSave.success && (lastSave.filePath || lastSave.filename)) {
+              // Usa il percorso completo se disponibile, altrimenti il filename
+              const fileToLoad = lastSave.filePath || lastSave.filename!;
+              const result = await window.electron.loadFile(fileToLoad);
               if (result.success && result.data) {
                 const progressData = result.data as ProgressData;
                 if (progressData.status) setStatus(progressData.status);
                 if (progressData.notes) setNotes(progressData.notes);
-                setLoadedFileName(lastSave.filename);
+                setLoadedFileName(lastSave.filename || 'progress.json');
+                setIsInitialLoadComplete(true);
                 return;
               }
             }

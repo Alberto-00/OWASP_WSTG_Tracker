@@ -40,26 +40,58 @@ ipcMain.handle('show-save-dialog', async (event, defaultFilename) => {
   }
 });
 
-ipcMain.handle('save-file', async (event, filename, data) => {
+ipcMain.handle('save-file', async (event, filePathOrName, data) => {
   try {
-    await ensureSavesDir();
-    const filePath = path.join(savesDir, filename);
+    let filePath;
+    let filename;
+
+    // Controlla se è un percorso completo o solo un nome file
+    if (path.isAbsolute(filePathOrName)) {
+      filePath = filePathOrName;
+      filename = path.basename(filePathOrName);
+    } else {
+      await ensureSavesDir();
+      filePath = path.join(savesDir, filePathOrName);
+      filename = filePathOrName;
+    }
+
+    // Assicurati che la directory esista
+    const dir = path.dirname(filePath);
+    try {
+      await fs.access(dir);
+    } catch {
+      await fs.mkdir(dir, { recursive: true });
+    }
+
     await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf-8');
-    await fs.writeFile(lastSaveFilePath, filename, 'utf-8');
+
+    // Salva il percorso completo in last-save.txt
+    await ensureSavesDir();
+    await fs.writeFile(lastSaveFilePath, filePath, 'utf-8');
     hasUnsavedChanges = false;
-    return { success: true, path: filePath };
+    return { success: true, path: filePath, filename };
   } catch (error) {
     return { success: false, error: error.message };
   }
 });
 
-ipcMain.handle('load-file', async (event, filename) => {
+ipcMain.handle('load-file', async (event, filePathOrName) => {
   try {
-    const filePath = path.join(savesDir, filename);
+    let filePath;
+
+    // Controlla se è un percorso completo o solo un nome file
+    if (path.isAbsolute(filePathOrName)) {
+      filePath = filePathOrName;
+    } else {
+      filePath = path.join(savesDir, filePathOrName);
+    }
+
     const data = await fs.readFile(filePath, 'utf-8');
-    // Aggiorna last-save.txt anche quando si carica un file
-    await fs.writeFile(lastSaveFilePath, filename, 'utf-8');
-    return { success: true, data: JSON.parse(data) };
+
+    // Aggiorna last-save.txt con il percorso completo
+    await ensureSavesDir();
+    await fs.writeFile(lastSaveFilePath, filePath, 'utf-8');
+    return { success: true, data: JSON.parse(data), filePath };
   } catch (error) {
     return { success: false, error: error.message };
   }
@@ -67,10 +99,14 @@ ipcMain.handle('load-file', async (event, filename) => {
 
 ipcMain.handle('get-last-save-file', async () => {
   try {
-    const filename = await fs.readFile(lastSaveFilePath, 'utf-8');
-    const filePath = path.join(savesDir, filename.trim());
+    const savedPath = await fs.readFile(lastSaveFilePath, 'utf-8');
+    const filePath = savedPath.trim();
+
+    // Verifica se il file esiste
     await fs.access(filePath);
-    return { success: true, filename: filename.trim() };
+
+    const filename = path.basename(filePath);
+    return { success: true, filename, filePath };
   } catch {
     return { success: false };
   }

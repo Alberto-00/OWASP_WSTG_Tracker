@@ -91,16 +91,18 @@ export const ChecklistApp = () => {
         return false;
       }
 
-      // Estrai solo il nome del file dal percorso completo
-      const filename = dialogResult.filePath.split(/[\\/]/).pop() || defaultFilename;
+      // Usa il percorso completo dalla dialog
+      const filePath = dialogResult.filePath;
 
-      // Salva il file
-      const result = await window.electron.saveFile(filename, data);
+      // Salva il file usando il percorso completo
+      const result = await window.electron.saveFile(filePath, data);
       if (result.success) {
+        // Usa il filename restituito dal backend
+        const filename = result.filename || filePath.split(/[\\/]/).pop() || defaultFilename;
         setLoadedFileName(filename);
         initialStateRef.current = JSON.stringify(data);
         setHasUnsavedChanges(false);
-        // Mostra messaggio di successo con percorso
+        // Mostra messaggio di successo
         modal.success('Salvataggio Completato', `File salvato con successo!`);
         if (onSuccess) {
           setTimeout(onSuccess, 2000);
