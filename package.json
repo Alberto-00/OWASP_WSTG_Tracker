@@ -155,7 +155,7 @@
           ]
         }
       ],
-      "icon": "public/icon/logo_app.ico",
+      "icon": "public/icon/logo_app.png",
       "category": "Development",
       "artifactName": "${productName}-${version}.${ext}"
     }
