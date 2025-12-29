@@ -18,8 +18,6 @@ L'applicazione organizza i test in 11 categorie principali del framework OWASP W
 - 🔄 **In Progress** - Test in corso
 - ✅ **Done** - Test completato
 
----
-
 ## 🚀 Installazione e Avvio
 
 ### Prerequisiti
@@ -47,7 +45,6 @@ npm run dev
 ```
 Apre l'interfaccia web su `http://localhost:8080` (funzionalità limitate senza Electron)
 
----
 
 ## 🔨 Build e Distribuzione
 
@@ -83,7 +80,6 @@ npm run electron:build
 ```
 Crea automaticamente la build per il sistema operativo corrente.
 
----
 
 ## 📊 Funzionalità
 
@@ -131,8 +127,6 @@ Per ogni test sono disponibili:
 - **Dimensioni testo** - 5 livelli di grandezza
 - **Clear formatting** - Rimozione formattazione selettiva
 
----
-
 ## 📁 Struttura Progetto
 
 ```
@@ -176,8 +170,6 @@ OWASP_WSTG_Tracker/
 ├── tailwind.config.js           # Configurazione Tailwind CSS
 └── package.json                 # Configurazione npm e build
 ```
-
----
 
 ## ⚙️ Configurazione
 
@@ -241,8 +233,6 @@ export default defineConfig({
   }
 });
 ```
-
----
 
 ## 📄 Formato Dati
 
@@ -327,8 +317,6 @@ Salvato automaticamente in `public/saves/`:
 }
 ```
 
----
-
 ## 🔧 Script NPM Disponibili
 
 | Comando | Descrizione |
@@ -339,30 +327,3 @@ Salvato automaticamente in `public/saves/`:
 | `npm run electron:build` | Build Electron per OS corrente |
 | `npm run electron:build:win` | Build Electron per Windows |
 | `npm run electron:build:linux` | Build Electron per Linux |
-
----
-
-## 📝  di Sviluppo
-
-### Gestione Stati
-- Gli stati dei test sono gestiti tramite `useChecklist` hook
-- `isInitialLoadComNoteplete` assicura che non vengano rilevate false modifiche all'avvio
-- `initialStateRef` traccia lo stato iniziale per rilevare modifiche non salvate
-
-### IPC Electron
-Comunicazione tra main e renderer process tramite:
-- `ipcMain.handle()` - Gestori nel main process
-- `ipcRenderer.invoke()` - Chiamate dal renderer
-- `contextBridge` - Esposizione API sicure via preload
-
-### Auto-save System
-1. Al caricamento, cerca `last-save.txt` in `public/saves/`
-2. Se trovato, carica il file referenziato
-3. Altrimenti carica `json/progress.json` come default
-4. Ogni salvataggio aggiorna `last-save.txt`
-
-### Warning Modifiche
-- `hasUnsavedChanges` state in React
-- Sincronizzato con Electron main process
-- Dialog personalizzato (MessageModal) invece di dialog nativi
-- Opzioni: Salva ed Esci / Esci senza Salvare / Annulla
