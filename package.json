@@ -2,9 +2,9 @@
   "name": "owasp-wstg-tracker",
   "productName": "OWASP WSTG Tracker",
   "description": "Desktop application for tracking OWASP Web Security Testing Guide checklist",
-  "author": "Your Name",
+  "author": "Alberto Montefusco",
   "private": true,
-  "version": "1.0.0",
+  "version": "2.0.0",
   "main": "electron/main.js",
   "scripts": {
     "dev": "vite",
