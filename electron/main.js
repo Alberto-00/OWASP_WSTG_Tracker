@@ -1,12 +1,38 @@
 const { app, BrowserWindow, Menu, ipcMain, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs').promises;
+const fsSync = require('fs');
 
 let mainWindow = null;
 let hasUnsavedChanges = false;
 
-// Percorso cartella saves
-const savesDir = path.join(__dirname, '../public/saves');
+// Cartella saves: dentro il progetto in sviluppo, accanto all'eseguibile in produzione.
+// NB: in produzione __dirname è dentro app.asar (read-only): mai scriverci. Si usa la
+// directory dell'eseguibile portatile (Windows) o dell'AppImage (Linux), che è scrivibile.
+function resolveSavesDir() {
+  if (process.env.NODE_ENV === 'development') {
+    return path.join(__dirname, '../public/saves');
+  }
+  // App portatile: accanto all'eseguibile/AppImage (posizione scelta dall'utente)
+  if (process.env.PORTABLE_EXECUTABLE_DIR) {
+    return path.join(process.env.PORTABLE_EXECUTABLE_DIR, 'saves');
+  }
+  if (process.env.APPIMAGE) {
+    return path.join(path.dirname(process.env.APPIMAGE), 'saves');
+  }
+  // App installata (NSIS): accanto all'exe se la cartella è scrivibile
+  // (installazione per-utente in %LOCALAPPDATA%), altrimenti ripiega su
+  // userData (es. installazione in Program Files, non scrivibile).
+  const exeDir = path.dirname(process.execPath);
+  try {
+    fsSync.accessSync(exeDir, fsSync.constants.W_OK);
+    return path.join(exeDir, 'saves');
+  } catch {
+    return path.join(app.getPath('userData'), 'saves');
+  }
+}
+
+const savesDir = resolveSavesDir();
 const lastSaveFilePath = path.join(savesDir, 'last-save.txt');
 
 // Assicura che la cartella saves esista
@@ -172,14 +198,20 @@ ipcMain.on('quit-without-saving', () => {
 
 // Funzione per creare la finestra principale
 function createMainWindow() {
+  const isDev = process.env.NODE_ENV === 'development';
+  // public/ sta accanto al codice in dev, in resources/public (extraResources) in produzione
+  const iconPath = isDev
+    ? path.join(__dirname, '../public/icon/logo_app.png')
+    : path.join(process.resourcesPath, 'public/icon/logo_app.png');
+
   mainWindow = new BrowserWindow({
     width: 1400,
     height: 800,
-    minWidth: 1400,
-    minHeight: 800,
+    minWidth: 1024,
+    minHeight: 700,
     show: false,
     backgroundColor: '#0f172a',
-    icon: path.join(__dirname, '../public/icon/icon_256x256.ico'),
+    icon: iconPath,
     autoHideMenuBar: true,
     webPreferences: {
       nodeIntegration: false,
@@ -193,8 +225,6 @@ function createMainWindow() {
 
   // In development, carica da Vite dev server
   // In production, carica i file buildati
-  const isDev = process.env.NODE_ENV === 'development';
-
   if (isDev) {
     mainWindow.loadURL('http://localhost:8080');
     mainWindow.webContents.openDevTools(); // Apri DevTools in dev
@@ -224,6 +254,11 @@ function createMainWindow() {
 
 // Quando Electron è pronto
 app.whenReady().then(() => {
+  // Identità app per la taskbar di Windows (icona/pin/raggruppamento corretti)
+  if (process.platform === 'win32') {
+    app.setAppUserModelId('com.owasp.wstg.tracker');
+  }
+
   createMainWindow();
 
   app.on('activate', () => {

@@ -2,9 +2,9 @@
 
 Applicazione desktop sviluppata con Electron, React e TypeScript per tracciare e gestire test di sicurezza secondo le linee guida OWASP Web Security Testing Guide (WSTG).
 
-## 🎯 Panoramica
+## Panoramica
 
-L'applicazione organizza i test in 11 categorie principali del framework OWASP WSTG, permettendo di:
+L'applicazione organizza i test in 12 categorie principali del framework OWASP WSTG, permettendo di:
 
 - **Tracciare test di sicurezza** con stati personalizzati (Pending, In Progress, Done)
 - **Gestire checklist** per ogni categoria di test con informazioni dettagliate
@@ -18,11 +18,11 @@ L'applicazione organizza i test in 11 categorie principali del framework OWASP W
 - 🔄 **In Progress** - Test in corso
 - ✅ **Done** - Test completato
 
-## 🚀 Installazione e Avvio
+## Installazione e Avvio
 
 ### Prerequisiti
 
-- **Node.js** 16+
+- **Node.js** 20+ (richiesto da Vite 7)
 - **npm** (incluso con Node.js)
 
 ### 1. Installazione
@@ -48,43 +48,30 @@ Apre l'interfaccia web su `http://localhost:8080` (funzionalità limitate senza 
 
 ## 🔨 Build e Distribuzione
 
+> ⚠️ **Binari nativi per-OS** — `node_modules` contiene binari compilati (rollup/esbuild/swc) specifici per sistema operativo. **Non condividere lo stesso `node_modules` tra Windows e WSL/Linux** e non committarlo: ogni OS esegue il proprio `npm install`.
+
 ### Build Applicazione Web
 
 ```bash
 npm run build
 ```
-Genera i file statici ottimizzati nella cartella `dist/` per deployment web.
+Genera i file statici ottimizzati in `dist/` (usati anche dalla build desktop).
 
-### Build Applicazione Desktop
+### Build Desktop in locale
 
-#### Windows
-```bash
-npm run electron:build:win
-```
-- **Output**: `release/OWASP WSTG Tracker-1.0.0-Portable.exe`
-- **Formato**: Eseguibile portabile (non richiede installazione)
-- **Architettura**: x64
+Ogni OS genera **solo il proprio target**:
 
-#### Linux
-```bash
-npm run electron:build:linux
-```
-- **Output**: `release/OWASP WSTG Tracker-1.0.0.AppImage`
-- **Formato**: AppImage
-- **Architettura**: x64
-- **Categoria**: Development
-
-#### Build Multipiattaforma
-```bash
-npm run electron:build
-```
-Crea automaticamente la build per il sistema operativo corrente.
+| Sei su | Comando | Output | Note |
+|--------|---------|--------|------|
+| **Windows** | `npm run electron:build:win` | `OWASP WSTG Tracker-2.0.0-Portable.zip` | Cartella portatile x64, icona `logo_app.ico` embeddata — fissabile alla taskbar ↓ |
+| **Linux/WSL** | `npm run electron:build:linux` | `release/OWASP WSTG Tracker-2.0.0.AppImage` | AppImage x64, icona `logo_app.png` |
+| OS corrente | `npm run electron:build` | target dell'OS in uso | — |
 
 
-## 📊 Funzionalità
+## Funzionalità
 
 ### 1. Gestione Checklist
-- **Organizzazione per categorie** - 11 categorie WSTG (Information Gathering, Authentication, Authorization, ecc.)
+- **Organizzazione per categorie** - 12 categorie WSTG (Information Gathering, Authentication, Authorization, API Testing, ecc.)
 - **Ricerca rapida** - Filtra test per ID o nome
 - **Filtri avanzati** - Per categoria e stato (Pending/In Progress/Done)
 - **Contatori in tempo reale** - Progress bar dinamica con percentuale completamento
@@ -110,7 +97,7 @@ Per ogni test sono disponibili:
 - **Tracking modifiche** - Sistema di rilevamento modifiche non salvate
 - **Dialog conferma** - Avviso prima di chiudere con modifiche non salvate
 - **Formato JSON** - Import/Export compatibile e leggibile
-- **Cartella saves** - Tutti i salvataggi in `public/saves/`
+- **Cartella saves** - `saves/` nella stessa cartella dell'app: **Windows** → dentro la cartella zip scompattata (accanto a `OWASP WSTG Tracker.exe`); **Linux** → accanto all'`.AppImage`. Se la cartella non è scrivibile (es. `Program Files`) ripiega su `%APPDATA%/owasp-wstg-tracker/saves`. In sviluppo: `public/saves/`
 
 ### 5. Multilingua
 - **Italiano** (default)
@@ -127,7 +114,7 @@ Per ogni test sono disponibili:
 - **Dimensioni testo** - 5 livelli di grandezza
 - **Clear formatting** - Rimozione formattazione selettiva
 
-## 📁 Struttura Progetto
+## Struttura Progetto
 
 ```
 OWASP_WSTG_Tracker/
@@ -141,7 +128,7 @@ OWASP_WSTG_Tracker/
 │   │   ├── useLanguage.tsx      # Internazionalizzazione
 │   │   └── useMessageModal.tsx  # Gestione state modali
 │   ├── types/                   # Definizioni TypeScript
-│   │   ├── checklist.d.ts       # Tipi per checklist, test, stati
+│   │   ├── checklist.ts         # Tipi per checklist, test, stati
 │   │   └── electron.d.ts        # Tipi per API Electron
 │   ├── pages/                   # Pagine applicazione
 │   ├── App.tsx                  # Router principale
@@ -159,26 +146,25 @@ OWASP_WSTG_Tracker/
 │   │   ├── it/                  # Dati localizzati italiano
 │   │   │   └── (stessi file)
 │   │   └── progress.json        # File progress default
-│   ├── icon/                    # Icone applicazione
-│   │   └── icon_256x256.ico
-│   └── saves/                   # Cartella salvataggi utente
-│       └── last-save.txt        # Riferimento ultimo file salvato
+│   └── icon/                    # Icone applicazione
+│       ├── logo_app.ico         # Icona Windows (ICO multi-size 16-256px)
+│       └── logo_app.png         # Icona Linux/runtime (PNG 1563x1563)
 ├── dist/                        # Build output web (generato)
 ├── release/                     # Eseguibili Electron (generato)
 ├── vite.config.ts               # Configurazione Vite
 ├── tsconfig.json                # Configurazione TypeScript
-├── tailwind.config.js           # Configurazione Tailwind CSS
+├── tailwind.config.ts           # Configurazione Tailwind CSS
 └── package.json                 # Configurazione npm e build
 ```
 
-## ⚙️ Configurazione
+## Configurazione
 
 ### package.json - Informazioni Progetto
 
 ```json
 {
   "name": "owasp-wstg-tracker",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "productName": "OWASP WSTG Tracker",
   "description": "Desktop application for tracking OWASP Web Security Testing Guide checklist",
   "main": "electron/main.js"
@@ -234,7 +220,7 @@ export default defineConfig({
 });
 ```
 
-## 📄 Formato Dati
+## Formato Dati
 
 ### Struttura File JSON
 
@@ -302,7 +288,7 @@ Mappatura alle vulnerabilità OWASP Top 10:
 
 ### File di Progresso (progress.json)
 
-Salvato automaticamente in `public/saves/`:
+Default in `public/json/progress.json`; i salvataggi utente vanno in `saves/` accanto all'eseguibile (in sviluppo `public/saves/`):
 
 ```json
 {

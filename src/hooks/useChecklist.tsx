@@ -14,9 +14,10 @@ export const useChecklist = () => {
   const [loadedFileName, setLoadedFileName] = useState<string>('progress.json');
   const [isInitialLoadComplete, setIsInitialLoadComplete] = useState(false);
 
-  // Caricamento automatico all'avvio
+  // Caricamento contenuto checklist (dipende dalla lingua).
+  // NON tocca status/notes: cambiare lingua non deve azzerare i progressi.
   useEffect(() => {
-    const loadData = async () => {
+    const loadContent = async () => {
       try {
         const [checklistRes, catDescRes, infoRes, owaspRes] = await Promise.all([
           fetch(`./json/${language}/checklist.json`),
@@ -38,53 +39,60 @@ export const useChecklist = () => {
         setCategoryDescriptions(catDesc);
         setTestInfoData(info);
         setOwaspTop10(owasp);
-
-        // Carica automaticamente l'ultimo salvataggio o progress.json
-        if (window.electron) {
-          try {
-            // Prima prova a caricare l'ultimo file salvato
-            const lastSave = await window.electron.getLastSaveFile();
-            if (lastSave.success && (lastSave.filePath || lastSave.filename)) {
-              // Usa il percorso completo se disponibile, altrimenti il filename
-              const fileToLoad = lastSave.filePath || lastSave.filename!;
-              const result = await window.electron.loadFile(fileToLoad);
-              if (result.success && result.data) {
-                const progressData = result.data as ProgressData;
-                if (progressData.status) setStatus(progressData.status);
-                if (progressData.notes) setNotes(progressData.notes);
-                setLoadedFileName(lastSave.filename || 'progress.json');
-                setIsInitialLoadComplete(true);
-                return;
-              }
-            }
-          } catch (e) {
-            // Nessun ultimo salvataggio trovato, carico progress.json
-          }
-        }
-
-        // Se non c'è ultimo salvataggio, carica progress.json dalla cartella json
-        try {
-          const progressRes = await fetch('./json/progress.json');
-          if (progressRes.ok) {
-            const progressData = await progressRes.json() as ProgressData;
-            if (progressData.status) setStatus(progressData.status);
-            if (progressData.notes) setNotes(progressData.notes);
-            setLoadedFileName('json/progress.json');
-          }
-        } catch (e) {
-          // progress.json non trovato, inizio con stato vuoto
-          setLoadedFileName('(nessun file)');
-        }
-
-        // Segnala che il caricamento iniziale è completo
-        setIsInitialLoadComplete(true);
       } catch (e) {
-        // Failed to load data
-        setIsInitialLoadComplete(true); // Anche in caso di errore
+        // Failed to load content
       }
     };
-    loadData();
+    loadContent();
   }, [language]);
+
+  // Caricamento status/note: SOLO al mount, indipendente dalla lingua.
+  useEffect(() => {
+    const loadProgress = async () => {
+      // Carica automaticamente l'ultimo salvataggio o progress.json
+      if (window.electron) {
+        try {
+          // Prima prova a caricare l'ultimo file salvato
+          const lastSave = await window.electron.getLastSaveFile();
+          if (lastSave.success && (lastSave.filePath || lastSave.filename)) {
+            // Usa il percorso completo se disponibile, altrimenti il filename
+            const fileToLoad = lastSave.filePath || lastSave.filename!;
+            const result = await window.electron.loadFile(fileToLoad);
+            if (result.success && result.data) {
+              const progressData = result.data as ProgressData;
+              if (progressData.status) setStatus(progressData.status);
+              if (progressData.notes) setNotes(progressData.notes);
+              setLoadedFileName(lastSave.filename || 'progress.json');
+              setIsInitialLoadComplete(true);
+              return;
+            }
+          }
+        } catch (e) {
+          // Nessun ultimo salvataggio trovato, carico progress.json
+        }
+      }
+
+      // Se non c'è ultimo salvataggio, carica progress.json dalla cartella json
+      try {
+        const progressRes = await fetch('./json/progress.json');
+        if (progressRes.ok) {
+          const progressData = await progressRes.json() as ProgressData;
+          if (progressData.status) setStatus(progressData.status);
+          if (progressData.notes) setNotes(progressData.notes);
+          setLoadedFileName('progress.json');
+        } else {
+          setLoadedFileName('(nessun file)');
+        }
+      } catch (e) {
+        // progress.json non trovato, inizio con stato vuoto
+        setLoadedFileName('(nessun file)');
+      }
+
+      // Segnala che il caricamento iniziale è completo
+      setIsInitialLoadComplete(true);
+    };
+    loadProgress();
+  }, []);
 
   const getStatus = useCallback((testId: string): TestStatus => status[testId] || 'pending', [status]);
   
@@ -125,15 +133,6 @@ export const useChecklist = () => {
     setCollapsedCategories(new Set());
   }, []);
 
-  const getCategoryStatus = useCallback((catId: string): 'done' | 'progress' | 'pending' => {
-    const cat = categories.find(c => c.id === catId);
-    if (!cat) return 'pending';
-    const statuses = cat.tests.map(t => getStatus(t.id));
-    if (statuses.every(s => s === 'done')) return 'done';
-    if (statuses.some(s => s === 'in-progress' || s === 'done')) return 'progress';
-    return 'pending';
-  }, [categories, getStatus]);
-
   const getCompletedCount = useCallback((testIds: string[]) => testIds.filter(id => getStatus(id) === 'done').length, [getStatus]);
   const getInProgressCount = useCallback((testIds: string[]) => testIds.filter(id => getStatus(id) === 'in-progress').length, [getStatus]);
 
@@ -154,7 +153,7 @@ export const useChecklist = () => {
   return {
     categories, categoryDescriptions, testInfoData, owaspTop10,
     getStatus, setTestStatus, cycleStatus, setMultipleStatus,
-    toggleCategory, isCategoryCollapsed, collapseAll, expandAll, getCategoryStatus,
+    toggleCategory, isCategoryCollapsed, collapseAll, expandAll,
     getCompletedCount, getInProgressCount,
     getNote, setNote, exportState, importState,
     loadedFileName, setLoadedFileName,

@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { NoteEditor } from '@/components/NoteEditor';
-import { cn } from '@/lib/utils';
+import { cn, escapeHtml } from '@/lib/utils';
 
 const owaspMapping: Record<string, string> = {
   'Information Gathering': 'A01, A05, A06',
@@ -159,11 +159,13 @@ export const ChecklistApp = () => {
         }, 350); // Delay maggiore per permettere l'animazione di chiusura
       }
     });
-  }, [modal, exportState]);
+  }, [modal, saveWithPrompt]);
 
   useEffect(() => {
     if (window.electron) {
-      window.electron.onShowUnsavedChangesDialog(handleUnsavedChangesDialog);
+      // onShowUnsavedChangesDialog restituisce il cleanup: rimuove il listener
+      // al re-render, evitando l'accumulo di handler (modali duplicate alla chiusura)
+      return window.electron.onShowUnsavedChangesDialog(handleUnsavedChangesDialog);
     }
   }, [handleUnsavedChangesDialog]);
 
@@ -274,7 +276,7 @@ export const ChecklistApp = () => {
             // Resetta il tracking modifiche dopo caricamento riuscito
             initialStateRef.current = JSON.stringify(loadedData);
             setHasUnsavedChanges(false);
-            modal.success('Caricamento Completato', `File "${file.name}" caricato con successo!`);
+            modal.success('Caricamento Completato', `File "${escapeHtml(file.name)}" caricato con successo!`);
           }
           catch {
             modal.danger('Errore di Caricamento', 'Il file selezionato non è valido o è corrotto.');

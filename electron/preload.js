@@ -15,8 +15,15 @@ contextBridge.exposeInMainWorld('electron', {
 
   // Window controls
   setUnsavedChanges: (hasChanges) => ipcRenderer.send('set-unsaved-changes', hasChanges),
-  onSaveBeforeClose: (callback) => ipcRenderer.on('save-before-close', callback),
-  onShowUnsavedChangesDialog: (callback) => ipcRenderer.on('show-unsaved-changes-dialog', callback),
+  // I listener restituiscono una funzione di cleanup per evitare accumulo di handler
+  onSaveBeforeClose: (callback) => {
+    ipcRenderer.on('save-before-close', callback);
+    return () => ipcRenderer.removeListener('save-before-close', callback);
+  },
+  onShowUnsavedChangesDialog: (callback) => {
+    ipcRenderer.on('show-unsaved-changes-dialog', callback);
+    return () => ipcRenderer.removeListener('show-unsaved-changes-dialog', callback);
+  },
   forceQuit: () => ipcRenderer.send('force-quit'),
   quitWithoutSaving: () => ipcRenderer.send('quit-without-saving')
 });

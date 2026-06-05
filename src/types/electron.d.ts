@@ -19,8 +19,8 @@ export interface ElectronAPI {
 
   // Window controls
   setUnsavedChanges: (hasChanges: boolean) => void;
-  onSaveBeforeClose: (callback: () => void) => void;
-  onShowUnsavedChangesDialog: (callback: () => void) => void;
+  onSaveBeforeClose: (callback: () => void) => () => void;
+  onShowUnsavedChangesDialog: (callback: () => void) => () => void;
   forceQuit: () => void;
   quitWithoutSaving: () => void;
 }
