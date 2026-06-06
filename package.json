@@ -137,7 +137,7 @@
       ],
       "icon": "public/icon/logo_app.ico",
       "artifactName": "${productName}-${version}-Portable.${ext}",
-      "signAndEditExecutable": false
+      "signAndEditExecutable": true
     },
     "nsis": {
       "oneClick": false,

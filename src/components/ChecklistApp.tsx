@@ -469,8 +469,9 @@ export const ChecklistApp = () => {
                           <span className={cn('flex-1 text-left font-semibold text-sm', getCatStatusColor(cat.id))}>{cat.name}</span>
                           <span className={cn('text-sm font-medium flex-shrink-0', getCatStatusColor(cat.id))}>{getCompletedCount(cat.tests.map(t => t.id))}/{cat.tests.length}</span>
                         </button>
-                        {!collapsed && (
-                          <div className="mt-1 space-y-0.5 animate-fade-in">
+                        <div className={cn('grid transition-[grid-template-rows] duration-200 ease-out', collapsed ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]')}>
+                          <div className="overflow-hidden">
+                            <div className="mt-1 space-y-0.5">
                             {cat.tests.map((test, ti) => {
                               const status = getStatus(test.id);
                               const isSelected = selectedTest?.id === test.id || selectedTests.has(test.id);
@@ -484,13 +485,12 @@ export const ChecklistApp = () => {
                                           setSelectedTest(test);
                                         }
                                       }}
-                                      className={cn('w-full flex items-center gap-2 px-2.5 py-2 rounded-md transition-all text-left animate-fade-in', isSelected ? 'bg-primary/20 border-l-2 border-primary' : 'hover:bg-secondary/50 border-l-2 border-transparent')}
-                                      style={{ animationDelay: `${(ci * 30) + (ti * 15)}ms` }}
+                                      className={cn('w-full flex items-center gap-2 px-2.5 py-2 rounded-md transition-all text-left', isSelected ? 'bg-primary/20 border-l-2 border-primary' : 'hover:bg-foreground/10 border-l-2 border-transparent')}
                                     >
-                                      <span onClick={(e) => { e.stopPropagation(); cycleStatus(test.id); }} className="flex-shrink-0 cursor-pointer">
+                                      <span onClick={(e) => { e.stopPropagation(); cycleStatus(test.id); }} className="flex-shrink-0 cursor-pointer transition-transform duration-150 hover:scale-110 active:scale-90">
                                         {getStatusIcon(status)}
                                       </span>
-                                      <span className={cn('flex-1 text-[13px]', getStatusColor(status))}>{test.id} - {test.name}</span>
+                                      <span className={cn('flex-1 text-[13px] transition-colors duration-200', getStatusColor(status))}>{test.id} - {test.name}</span>
                                     </button>
                                   </ContextMenuTrigger>
                                   <ContextMenuContent>
@@ -525,8 +525,9 @@ export const ChecklistApp = () => {
                                 </ContextMenu>
                               );
                             })}
+                            </div>
                           </div>
-                        )}
+                        </div>
                       </div>
                     );
                   })}
@@ -541,10 +542,7 @@ export const ChecklistApp = () => {
           <ResizablePanel defaultSize={50}>
             <div className="h-full flex flex-col gap-3">
               {/* Top Section: Test Info or Category Description - Collapsible */}
-              <div className={cn(
-                "rounded-lg border border-border/70 bg-card/40 flex flex-col shadow-md overflow-hidden transition-all duration-300",
-                isTopSectionCollapsed ? "h-auto" : "h-[35vh]"
-              )}>
+              <div className="rounded-lg border border-border/70 bg-card/40 flex flex-col shadow-md overflow-hidden">
                 {/* Collapse Button Header */}
                   <div className="flex-shrink-0 px-3 py-2 bg-card/60 border-b border-border/50 flex items-center justify-between cursor-pointer hover:bg-card/80 transition-colors"
                     onClick={() => setIsTopSectionCollapsed(!isTopSectionCollapsed)}>
@@ -584,9 +582,9 @@ export const ChecklistApp = () => {
                   </Button>
                 </div>
 
-                {/* Content - Only visible when not collapsed */}
-                {!isTopSectionCollapsed && (
-                  <div className="flex-1 overflow-hidden">
+                {/* Content - height-animated collapse (always mounted) */}
+                <div className={cn('overflow-hidden transition-[max-height] duration-300 ease-out', isTopSectionCollapsed ? 'max-h-0' : 'max-h-[35vh]')}>
+                  <div className="h-[35vh]">
                     {showCategoryDescription && selectedCategoryInfo ? (
                       <div className="p-4 animate-fade-in h-full overflow-y-auto">
                         <h3 className="text-base font-semibold text-foreground mb-2">{selectedCategoryInfo.name}</h3>
@@ -617,7 +615,7 @@ export const ChecklistApp = () => {
                       </div>
                     )}
                   </div>
-                )}
+                </div>
               </div>
 
               {/* Bottom Section: Tab Content - Expands when top is collapsed */}

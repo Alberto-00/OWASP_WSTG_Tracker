@@ -6,7 +6,7 @@ Applicazione desktop sviluppata con Electron, React e TypeScript per tracciare e
 
 L'applicazione organizza i test in 12 categorie principali del framework OWASP WSTG, permettendo di:
 
-- **Tracciare test di sicurezza** con stati personalizzati (Pending, In Progress, Done)
+- **Tracciare test di sicurezza** con stati personalizzati (Da Fare, In Corso, Completato)
 - **Gestire checklist** per ogni categoria di test con informazioni dettagliate
 - **Monitorare progressi** attraverso statistiche e contatori in tempo reale
 - **Mappare vulnerabilità** alla OWASP Top 10 per analisi di rischio
@@ -14,15 +14,15 @@ L'applicazione organizza i test in 12 categorie principali del framework OWASP W
 - **Navigare in italiano o inglese** con cambio lingua istantaneo
 
 ### Stati Test
-- ⏳ **Pending** - Test da eseguire
-- 🔄 **In Progress** - Test in corso
-- ✅ **Done** - Test completato
+- ⏳ **Da Fare** - Test da eseguire
+- 🔄 **In Corso** - Test in corso
+- ✅ **Completato** - Test completato
 
 ## Installazione e Avvio
 
 ### Prerequisiti
 
-- **Node.js** 20+ (richiesto da Vite 7)
+- **Node.js** 20.19+ o 22.12+ (richiesto da Vite 7)
 - **npm** (incluso con Node.js)
 
 ### 1. Installazione
@@ -48,8 +48,6 @@ Apre l'interfaccia web su `http://localhost:8080` (funzionalità limitate senza 
 
 ## 🔨 Build e Distribuzione
 
-> ⚠️ **Binari nativi per-OS** — `node_modules` contiene binari compilati (rollup/esbuild/swc) specifici per sistema operativo. **Non condividere lo stesso `node_modules` tra Windows e WSL/Linux** e non committarlo: ogni OS esegue il proprio `npm install`.
-
 ### Build Applicazione Web
 
 ```bash
@@ -63,7 +61,7 @@ Ogni OS genera **solo il proprio target**:
 
 | Sei su | Comando | Output | Note |
 |--------|---------|--------|------|
-| **Windows** | `npm run electron:build:win` | `OWASP WSTG Tracker-2.0.0-Portable.zip` | Cartella portatile x64, icona `logo_app.ico` embeddata — fissabile alla taskbar ↓ |
+| **Windows** | `npm run electron:build:win` | `OWASP WSTG Tracker-2.0.0-Portable.zip` | Cartella portatile x64, icona `logo_app.ico` incorporata — fissabile alla taskbar ↓ |
 | **Linux/WSL** | `npm run electron:build:linux` | `release/OWASP WSTG Tracker-2.0.0.AppImage` | AppImage x64, icona `logo_app.png` |
 | OS corrente | `npm run electron:build` | target dell'OS in uso | — |
 
@@ -73,17 +71,17 @@ Ogni OS genera **solo il proprio target**:
 ### 1. Gestione Checklist
 - **Organizzazione per categorie** - 12 categorie WSTG (Information Gathering, Authentication, Authorization, API Testing, ecc.)
 - **Ricerca rapida** - Filtra test per ID o nome
-- **Filtri avanzati** - Per categoria e stato (Pending/In Progress/Done)
+- **Filtri avanzati** - Per categoria e stato (Da Fare/In Corso/Completato)
 - **Contatori in tempo reale** - Progress bar dinamica con percentuale completamento
 - **Espandi/Collassa** - Visualizzazione ottimizzata delle categorie
 
 ### 2. Dettagli Test
 Per ogni test sono disponibili:
-- **Summary** - Descrizione completa del test
-- **How-To** - Guida step-by-step per l'esecuzione
-- **Tools** - Strumenti consigliati (Burp Suite, OWASP ZAP, ecc.)
-- **Remediation** - Raccomandazioni di remediation
-- **Notes** - Editor rich-text per note personalizzate con formattazione
+- **Sommario** - Descrizione completa del test
+- **How-To** - Guida passo-passo per l'esecuzione
+- **Strumenti** - Strumenti consigliati (Burp Suite, OWASP ZAP, ecc.)
+- **Mitigazione** - Raccomandazioni per la correzione
+- **Note** - Editor rich-text per note personalizzate con formattazione
 
 ### 3. Mappatura OWASP Top 10
 - **Visualizzazione correlazioni** - Ogni categoria WSTG mappata alle vulnerabilità Top 10
@@ -178,23 +176,26 @@ OWASP_WSTG_Tracker/
   "build": {
     "appId": "com.owasp.wstg.tracker",
     "productName": "OWASP WSTG Tracker",
+    "copyright": "Copyright © 2025",
     "directories": {
+      "buildResources": "build",
       "output": "release"
     },
-    "files": [
-      "dist/**/*",
-      "electron/**/*",
-      "public/**/*"
+    "files": ["dist/**/*", "electron/**/*", "!electron/tsconfig.json", "package.json"],
+    "extraResources": [
+      { "from": "public", "to": "public", "filter": ["**/*"] }
     ],
     "win": {
-      "target": "portable",
-      "arch": ["x64"],
-      "sign": false
+      "target": [{ "target": "zip", "arch": ["x64"] }],
+      "icon": "public/icon/logo_app.ico",
+      "artifactName": "${productName}-${version}-Portable.${ext}",
+      "signAndEditExecutable": true
     },
     "linux": {
-      "target": "AppImage",
-      "arch": ["x64"],
-      "category": "Development"
+      "target": [{ "target": "AppImage", "arch": ["x64"] }],
+      "icon": "public/icon/logo_app.png",
+      "category": "Development",
+      "artifactName": "${productName}-${version}.${ext}"
     }
   }
 }

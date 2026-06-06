@@ -43,7 +43,7 @@ const translations: Record<Language, Record<string, string>> = {
     summary: 'Sommario',
     howTo: 'How-To',
     tools: 'Strumenti',
-    remediation: 'Rimediazione',
+    remediation: 'Mitigazione',
     notes: 'Note',
     selectTest: 'Seleziona un test',
     selectTestDesc: 'Clicca su un test dalla lista per vedere i dettagli',
