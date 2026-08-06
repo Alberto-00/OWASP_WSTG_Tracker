@@ -1,234 +1,140 @@
-# OWASP WSTG Tracker
+<p align="center">
+  <img src="public/icon/logo_app.png" alt="OWASP WSTG Tracker" width="160">
+</p>
 
-Applicazione desktop sviluppata con Electron, React e TypeScript per tracciare e gestire test di sicurezza secondo le linee guida OWASP Web Security Testing Guide (WSTG).
+<h1 align="center">OWASP WSTG Tracker</h1>
 
-## Panoramica
+<p align="center">
+  Desktop application to plan, track and document a web application security assessment<br>
+  against the <a href="https://owasp.org/www-project-web-security-testing-guide/">OWASP Web Security Testing Guide</a>.
+</p>
 
-L'applicazione organizza i test in 12 categorie principali del framework OWASP WSTG, permettendo di:
+<p align="center">
+  <img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT License">
+  <img src="https://img.shields.io/badge/Electron-39-47848F" alt="Electron 39">
+  <img src="https://img.shields.io/badge/React-18-61DAFB" alt="React 18">
+  <img src="https://img.shields.io/badge/TypeScript-5.8-3178C6" alt="TypeScript 5.8">
+  <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux-lightgrey" alt="Windows and Linux">
+</p>
 
-- **Tracciare test di sicurezza** con stati personalizzati (Da Fare, In Corso, Completato)
-- **Gestire checklist** per ogni categoria di test con informazioni dettagliate
-- **Monitorare progressi** attraverso statistiche e contatori in tempo reale
-- **Mappare vulnerabilità** alla OWASP Top 10 per analisi di rischio
-- **Salvare e caricare** dati in formato JSON con auto-save
-- **Navigare in italiano o inglese** con cambio lingua istantaneo
+## Contents
 
-### Stati Test
-- ⏳ **Da Fare** - Test da eseguire
-- 🔄 **In Corso** - Test in corso
-- ✅ **Completato** - Test completato
+1. [What it is](#what-it-is)
+2. [Quick start](#quick-start)
+3. [Build and distribution](#build-and-distribution)
+4. [Features](#features)
+5. [Data format](#data-format)
+6. [Configuration](#configuration)
+7. [NPM scripts](#npm-scripts)
+8. [License](#license)
+9. [Disclaimer](#disclaimer)
 
-## Installazione e Avvio
+## What it is
 
-### Prerequisiti
+A web application assessment is a long list of checks, and the part that actually costs you time is not running them, it is keeping track of what has been covered, what is still open and what you found. OWASP WSTG Tracker turns the WSTG into a working checklist you can drive during an engagement.
 
-- **Node.js** 20.19+ o 22.12+ (richiesto da Vite 7)
-- **npm** (incluso con Node.js)
+The full guide ships with the app: **12 categories, 109 tests**, each with objectives, a how-to, suggested tools and remediation notes, in **English and Italian**. You set each test to *pending*, *in progress* or *done*, write your findings in a rich-text note attached to the test, and watch the completion counters move. Every WSTG category is mapped to the OWASP Top 10 entries it relates to, with a risk level, so the checklist doubles as a risk view.
 
-### 1. Installazione
+Everything lives in a plain JSON file you own. There is no account, no telemetry and no backend: the app runs locally, saves next to the executable and reads back what you saved, so an assessment can be versioned, diffed and handed over like any other artifact.
+
+Built with Electron, React and TypeScript. It also runs in the browser during development, with reduced functionality since file access goes through Electron.
+
+![Main view, checklist on the left and test details on the right](public/icon/dashboard.png)
+
+## Quick start
+
+### Prerequisites
+
+- **Node.js** 20.19+ or 22.12+ (required by Vite 7)
+- **npm** (bundled with Node.js)
+
+### Install
 
 ```bash
+git clone https://github.com/Alberto-00/OWASP_WSTG_Tracker.git
+cd OWASP_WSTG_Tracker
 npm install
 ```
 
-### 2. Avvio Applicazione
-
-#### Modalità Desktop (Electron)
-```bash
-npm run electron:dev
-```
-Avvia l'applicazione desktop completa con tutte le funzionalità native.
-
-#### Modalità Web (solo sviluppo)
-```bash
-npm run dev
-```
-Apre l'interfaccia web su `http://localhost:8080` (funzionalità limitate senza Electron)
-
-
-## 🔨 Build e Distribuzione
-
-### Build Applicazione Web
+### Run
 
 ```bash
-npm run build
-```
-Genera i file statici ottimizzati in `dist/` (usati anche dalla build desktop).
-
-### Build Desktop in locale
-
-Ogni OS genera **solo il proprio target**:
-
-| Sei su | Comando | Output | Note |
-|--------|---------|--------|------|
-| **Windows** | `npm run electron:build:win` | `OWASP WSTG Tracker-2.0.0-Portable.zip` | Cartella portatile x64, icona `logo_app.ico` incorporata — fissabile alla taskbar ↓ |
-| **Linux/WSL** | `npm run electron:build:linux` | `release/OWASP WSTG Tracker-2.0.0.AppImage` | AppImage x64, icona `logo_app.png` |
-| OS corrente | `npm run electron:build` | target dell'OS in uso | — |
-
-
-## Funzionalità
-
-### 1. Gestione Checklist
-- **Organizzazione per categorie** - 12 categorie WSTG (Information Gathering, Authentication, Authorization, API Testing, ecc.)
-- **Ricerca rapida** - Filtra test per ID o nome
-- **Filtri avanzati** - Per categoria e stato (Da Fare/In Corso/Completato)
-- **Contatori in tempo reale** - Progress bar dinamica con percentuale completamento
-- **Espandi/Collassa** - Visualizzazione ottimizzata delle categorie
-
-### 2. Dettagli Test
-Per ogni test sono disponibili:
-- **Sommario** - Descrizione completa del test
-- **How-To** - Guida passo-passo per l'esecuzione
-- **Strumenti** - Strumenti consigliati (Burp Suite, OWASP ZAP, ecc.)
-- **Mitigazione** - Raccomandazioni per la correzione
-- **Note** - Editor rich-text per note personalizzate con formattazione
-
-### 3. Mappatura OWASP Top 10
-- **Visualizzazione correlazioni** - Ogni categoria WSTG mappata alle vulnerabilità Top 10
-- **Livelli di rischio** - Critico, Alto, Medio, Basso
-- **Descrizioni dettagliate** - Per ogni vulnerabilità con link esterni
-- **Modal interattivo** - Navigazione visuale tra WSTG e Top 10
-
-### 4. Gestione File
-- **Auto-save** - Salvataggio automatico dell'ultimo file utilizzato
-- **Prompt salvataggio** - Dialog nativo per scegliere nome e posizione file
-- **Tracking modifiche** - Sistema di rilevamento modifiche non salvate
-- **Dialog conferma** - Avviso prima di chiudere con modifiche non salvate
-- **Formato JSON** - Import/Export compatibile e leggibile
-- **Cartella saves** - `saves/` nella stessa cartella dell'app: **Windows** → dentro la cartella zip scompattata (accanto a `OWASP WSTG Tracker.exe`); **Linux** → accanto all'`.AppImage`. Se la cartella non è scrivibile (es. `Program Files`) ripiega su `%APPDATA%/owasp-wstg-tracker/saves`. In sviluppo: `public/saves/`
-
-### 5. Multilingua
-- **Italiano** (default)
-- **Inglese**
-- **Cambio istantaneo** - Senza reload dell'applicazione
-- **Dati localizzati** - Checklist, descrizioni e UI completamente tradotte
-
-### 6. Note Editor
-- **Formattazione testo** - Grassetto, corsivo, sottolineato, barrato
-- **Headers** - H1, H2, H3, paragrafi
-- **Liste** - Puntate e numerate
-- **Codice** - Inline code e blocchi di codice
-- **Evidenziazione** - 6 colori disponibili
-- **Dimensioni testo** - 5 livelli di grandezza
-- **Clear formatting** - Rimozione formattazione selettiva
-
-## Struttura Progetto
-
-```
-OWASP_WSTG_Tracker/
-├── src/                          # Codice sorgente React/TypeScript
-│   ├── components/               # Componenti React
-│   │   ├── ChecklistApp.tsx     # Componente principale dell'applicazione
-│   │   ├── MessageModal.tsx     # Sistema modale per conferme/errori
-│   │   └── ui/                  # Componenti UI shadcn/ui
-│   ├── hooks/                   # React Hooks personalizzati
-│   │   ├── useChecklist.tsx     # Gestione stato checklist e auto-load
-│   │   ├── useLanguage.tsx      # Internazionalizzazione
-│   │   └── useMessageModal.tsx  # Gestione state modali
-│   ├── types/                   # Definizioni TypeScript
-│   │   ├── checklist.ts         # Tipi per checklist, test, stati
-│   │   └── electron.d.ts        # Tipi per API Electron
-│   ├── pages/                   # Pagine applicazione
-│   ├── App.tsx                  # Router principale
-│   └── main.tsx                 # Entry point React
-├── electron/                    # Configurazione Electron
-│   ├── main.js                  # Processo principale (IPC, finestre, file system)
-│   └── preload.js               # Context bridge per API sicure
-├── public/                      # Asset statici
-│   ├── json/                    # Dati checklist JSON
-│   │   ├── en/                  # Dati localizzati inglese
-│   │   │   ├── checklist.json
-│   │   │   ├── category_descriptions.json
-│   │   │   ├── checklist_info_data.json
-│   │   │   └── owasp_top_10.json
-│   │   ├── it/                  # Dati localizzati italiano
-│   │   │   └── (stessi file)
-│   │   └── progress.json        # File progress default
-│   └── icon/                    # Icone applicazione
-│       ├── logo_app.ico         # Icona Windows (ICO multi-size 16-256px)
-│       └── logo_app.png         # Icona Linux/runtime (PNG 1563x1563)
-├── dist/                        # Build output web (generato)
-├── release/                     # Eseguibili Electron (generato)
-├── vite.config.ts               # Configurazione Vite
-├── tsconfig.json                # Configurazione TypeScript
-├── tailwind.config.ts           # Configurazione Tailwind CSS
-└── package.json                 # Configurazione npm e build
+npm run electron:dev    # desktop app, full functionality
+npm run dev             # web only, http://localhost:8080, no file system access
 ```
 
-## Configurazione
+## Build and distribution
 
-### package.json - Informazioni Progetto
-
-```json
-{
-  "name": "owasp-wstg-tracker",
-  "version": "2.0.0",
-  "productName": "OWASP WSTG Tracker",
-  "description": "Desktop application for tracking OWASP Web Security Testing Guide checklist",
-  "main": "electron/main.js"
-}
+```bash
+npm run build           # optimized static build in dist/, also consumed by the desktop build
 ```
 
-### package.json - Build Electron
+Each OS produces **its own target only**, cross compilation is not configured:
 
-```json
-{
-  "build": {
-    "appId": "com.owasp.wstg.tracker",
-    "productName": "OWASP WSTG Tracker",
-    "copyright": "Copyright © 2025",
-    "directories": {
-      "buildResources": "build",
-      "output": "release"
-    },
-    "files": ["dist/**/*", "electron/**/*", "!electron/tsconfig.json", "package.json"],
-    "extraResources": [
-      { "from": "public", "to": "public", "filter": ["**/*"] }
-    ],
-    "win": {
-      "target": [{ "target": "zip", "arch": ["x64"] }],
-      "icon": "public/icon/logo_app.ico",
-      "artifactName": "${productName}-${version}-Portable.${ext}",
-      "signAndEditExecutable": true
-    },
-    "linux": {
-      "target": [{ "target": "AppImage", "arch": ["x64"] }],
-      "icon": "public/icon/logo_app.png",
-      "category": "Development",
-      "artifactName": "${productName}-${version}.${ext}"
-    }
-  }
-}
-```
+| Host | Command | Output |
+|------|---------|--------|
+| **Windows** | `npm run electron:build:win` | `release/OWASP WSTG Tracker-2.0.0-Portable.zip`, portable x64 folder, `logo_app.ico` embedded, pinnable to the taskbar |
+| **Linux / WSL** | `npm run electron:build:linux` | `release/OWASP WSTG Tracker-2.0.0.AppImage`, x64, `logo_app.png` icon |
+| Current OS | `npm run electron:build` | target of the OS in use |
 
-### vite.config.ts
+## Features
 
-```typescript
-export default defineConfig({
-  base: './',              // Path relativo per Electron
-  server: {
-    port: 8080            // Porta server sviluppo
-  },
-  build: {
-    outDir: 'dist',       // Cartella output
-    emptyOutDir: true
-  },
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src')
-    }
-  }
-});
-```
+### Checklist management
 
-## Formato Dati
+- 12 WSTG categories (Information Gathering, Configuration and Deployment Management, Identity Management, Authentication, Authorization, Session Management, Input Validation, Error Handling, Weak Cryptography, Business Logic, Client-side, API Testing)
+- Search by test ID or name
+- Filters by category and status
+- Live counters and a completion progress bar
+- Expand and collapse per category
 
-### Struttura File JSON
+### Test details
 
-I dati delle checklist sono organizzati in 4 file per lingua:
+Each test carries the reference material you need while working on it:
 
-#### 1. checklist.json
-Contiene le categorie WSTG e i relativi test:
+- **Summary**, what the test covers
+- **How-to**, step by step execution
+- **Tools**, suggested tooling (Burp Suite, OWASP ZAP and others)
+- **Remediation**, fix recommendations
+- **Notes**, a rich-text editor for your own findings
+
+### OWASP Top 10 mapping
+
+- Every WSTG category is linked to the Top 10 entries it relates to
+- Risk levels: critical, high, medium, low
+- Per vulnerability descriptions with links to the OWASP references
+- Interactive modal to navigate between WSTG and Top 10
+
+### File handling
+
+- Auto-save and auto-reload of the last file used
+- Native save dialog to choose name and location
+- Unsaved changes tracking, with a confirmation dialog before closing
+- Readable JSON, easy to version and share
+- Saves live in a `saves/` folder next to the app: on **Windows** inside the unzipped portable folder, next to `OWASP WSTG Tracker.exe`; on **Linux** next to the `.AppImage`. If that folder is not writable (for example under `Program Files`) it falls back to `%APPDATA%/owasp-wstg-tracker/saves`. In development it is `public/saves/`
+
+### Bilingual
+
+- English and Italian, Italian is the default
+- Instant switch, no application reload
+- Checklists, descriptions and UI are fully translated
+
+### Note editor
+
+- Bold, italic, underline, strikethrough
+- H1, H2, H3 and paragraphs
+- Bullet and numbered lists
+- Inline code and code blocks
+- Highlighting in 6 colours
+- 5 text sizes
+- Selective clear formatting
+
+## Data format
+
+Checklist content is split into four JSON files per language, under `public/json/<lang>/`.
+
+### `checklist.json`
+
+WSTG categories and their tests:
 
 ```json
 {
@@ -251,45 +157,50 @@ Contiene le categorie WSTG e i relativi test:
 }
 ```
 
-#### 2. category_descriptions.json
-Descrizioni dettagliate per ogni categoria:
+### `category_descriptions.json`
+
+One description per category:
 
 ```json
 {
-  "Information Gathering": "Questa fase iniziale consiste nel raccogliere..."
+  "Information Gathering": "The initial phase consists of collecting..."
 }
 ```
 
-#### 3. checklist_info_data.json
-Informazioni dettagliate per ogni test (summary, how-to, tools, remediation):
+### `checklist_info_data.json`
+
+Reference material per test, as HTML:
 
 ```json
 {
   "WSTG-INFO-01": {
-    "summary": "<p>Descrizione HTML...</p>",
-    "how-to": "<p>Guida HTML...</p>",
+    "summary": "<p>HTML description...</p>",
+    "how-to": "<p>HTML guide...</p>",
     "tools": "<ul><li>Tool 1</li></ul>",
-    "remediation": "<p>Raccomandazioni...</p>"
+    "remediation": "<p>Recommendations...</p>"
   }
 }
 ```
 
-#### 4. owasp_top_10.json
-Mappatura alle vulnerabilità OWASP Top 10:
+### `owasp_top_10.json`
+
+Mapping to the OWASP Top 10:
 
 ```json
 {
   "A01:2021 - Broken Access Control": {
-    "level": "critico",
-    "description": "<p>Descrizione vulnerabilità...</p>",
+    "level": "alto",
+    "description": "<p>Vulnerability description...</p>",
     "link": "https://owasp.org/..."
   }
 }
 ```
 
-### File di Progresso (progress.json)
+`level` is one of `critico`, `alto`, `medio`, `basso` in both languages, the label is localized at render time.
 
-Default in `public/json/progress.json`; i salvataggi utente vanno in `saves/` accanto all'eseguibile (in sviluppo `public/saves/`):
+### Progress file
+
+The default is `public/json/progress.json`. User saves go to `saves/` next to the executable, or `public/saves/` in development:
 
 ```json
 {
@@ -299,18 +210,40 @@ Default in `public/json/progress.json`; i salvataggi utente vanno in `saves/` ac
     "WSTG-INFO-03": "pending"
   },
   "notes": {
-    "WSTG-INFO-01": "<p>Note HTML formattate...</p>"
+    "WSTG-INFO-01": "<p>Formatted HTML notes...</p>"
   }
 }
 ```
 
-## 🔧 Script NPM Disponibili
+## Configuration
 
-| Comando | Descrizione |
+| File | What it holds |
+|------|---------------|
+| `package.json` | App metadata and the `build` block for electron-builder: app id `com.owasp.wstg.tracker`, output in `release/`, `public/` shipped as an extra resource, Windows zip target with `signAndEditExecutable` so the icon is embedded, Linux AppImage target |
+| `vite.config.ts` | `base: './'` for relative paths under Electron, dev server on port 8080, output in `dist/`, `@` aliased to `src/` |
+| `electron/main.js` | Main process: windows, IPC, file system access, `saves/` resolution |
+| `electron/preload.js` | Context bridge exposing the file APIs to the renderer |
+
+## NPM scripts
+
+| Command | Description |
 |---------|-------------|
-| `npm run dev` | Avvia dev server Vite (web only) |
-| `npm run build` | Build produzione web |
-| `npm run electron:dev` | Avvia Electron in modalità sviluppo |
-| `npm run electron:build` | Build Electron per OS corrente |
-| `npm run electron:build:win` | Build Electron per Windows |
-| `npm run electron:build:linux` | Build Electron per Linux |
+| `npm run dev` | Vite dev server, web only |
+| `npm run build` | Production web build |
+| `npm run lint` | ESLint over the project |
+| `npm run electron:dev` | Electron in development mode |
+| `npm run electron:build` | Electron build for the current OS |
+| `npm run electron:build:win` | Electron build for Windows |
+| `npm run electron:build:linux` | Electron build for Linux |
+
+## License
+
+Licensed under the MIT License. See [LICENSE](LICENSE). The MIT license covers OWASP WSTG Tracker's own code only. The checklist content derives from the OWASP Web Security Testing Guide, which remains with the OWASP Foundation and its contributors under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/); the reference notes bundled with the app are reworked from that guide and from personal field experience. This project is not affiliated with or endorsed by the OWASP Foundation.
+
+## Disclaimer
+
+OWASP WSTG Tracker is a documentation and tracking tool for authorized security testing, training labs and CTFs. It tracks checklists and stores your notes, it does not test anything and does not run any command: what you execute against a target is on you.
+
+Run security tests only against systems you own or that you have explicit written permission to test. Unauthorized access to computer systems and networks is a crime in most countries, and scanning or attacking third party infrastructure without a mandate can get you prosecuted regardless of intent.
+
+The software comes with no warranty. The author takes no responsibility for damage, data loss, service disruption or legal consequences from using it. Your assessment data is stored locally in plain JSON: it usually contains sensitive findings about a client, so protect and dispose of those files accordingly.
