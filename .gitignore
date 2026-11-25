@@ -60,6 +60,7 @@ WSTG_Tracker*
 .idea
 
 public/saves
+saves/
 
 # Logs
 logs
