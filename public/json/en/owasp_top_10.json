@@ -1,52 +1,52 @@
 {
-  "A01:2021 - Broken Access Control": {
-    "description": "Access control vulnerabilities arise when role or permission-based controls are missing, poorly implemented, or can be bypassed through input manipulation or forced browsing of URLs/APIs. This can allow privilege escalation or direct access to restricted resources.\n\n<strong>Example:</strong> An authenticated user modifies their own ID in a GET parameter and accesses another user's data.",
-    "link": "https://owasp.org/Top10/A01_2021-Broken_Access_Control/",
+  "A01:2025 - Broken Access Control": {
+    "description": "<p>Access control enforces policy so that users cannot act outside their intended permissions. Failures lead to unauthorized disclosure, modification or destruction of data, or to business functions performed beyond the user's limits. Since 2025 the category also includes Server-Side Request Forgery (SSRF), alongside Cross-Site Request Forgery (CSRF).</p><p><strong>Example:</strong> An authenticated user changes the account ID in a request (<code>GET /api/accounts/1043</code>) and reads another customer's data.</p>",
+    "link": "https://top10.owasp.org/2025/A01_2025-Broken_Access_Control/",
     "level": "alto"
   },
-  "A02:2021 - Cryptographic Failures": {
-    "description": "These vulnerabilities stem from weak algorithms, improper key management, misuse of certificates, or lack of protection for data in transit or at rest. An attacker may intercept, alter, or decrypt sensitive data.\n\n<strong>Example:</strong> User passwords stored in cleartext or hashed with MD5 without a salt.",
-    "link": "https://owasp.org/Top10/A02_2021-Cryptographic_Failures/",
+  "A02:2025 - Security Misconfiguration": {
+    "description": "<p>A system, application or cloud service is set up insecurely: missing hardening, unnecessary features or accounts enabled, default credentials, overly verbose error messages, permissive cloud permissions or missing security headers. It moves up from #5 to #2 and now also covers XML External Entities (XXE).</p><p><strong>Example:</strong> A production server keeps the debug console and the default admin account enabled, and shows stack traces to users.</p>",
+    "link": "https://top10.owasp.org/2025/A02_2025-Security_Misconfiguration/",
     "level": "alto"
   },
-  "A03:2021 - Injection": {
-    "description": "Injection flaws allow an attacker to send unauthorized commands to an interpreter via crafted inputs, leading to command execution, database dumps, or system compromise.\n\n<strong>Example:</strong> A login form vulnerable to SQLi: input `' OR '1'='1` grants unauthorized access.",
-    "link": "https://owasp.org/Top10/A03_2021-Injection/",
+  "A03:2025 - Software Supply Chain Failures": {
+    "description": "<p>Breakdowns or compromises in building, distributing or updating software: vulnerable, unmaintained or untracked components, malicious dependencies, insecure CI/CD pipelines. It extends the former “Vulnerable and Outdated Components” to the whole supply chain and has the highest average exploit and impact scores in the 2025 data.</p><p><strong>Example:</strong> The application ships a JavaScript library with a known CVE, and the build pipeline pulls dependencies without pinning versions or verifying signatures.</p>",
+    "link": "https://top10.owasp.org/2025/A03_2025-Software_Supply_Chain_Failures/",
+    "level": "alto"
+  },
+  "A04:2025 - Cryptographic Failures": {
+    "description": "<p>Failures related to missing or weak cryptography: data sent or stored in cleartext, obsolete algorithms or protocols, poor key management, unvalidated certificates, weak randomness. They expose sensitive data in transit and at rest.</p><p><strong>Example:</strong> Passwords stored as unsalted MD5 hashes, or session tokens generated with a non-cryptographic random number generator.</p>",
+    "link": "https://top10.owasp.org/2025/A04_2025-Cryptographic_Failures/",
+    "level": "alto"
+  },
+  "A05:2025 - Injection": {
+    "description": "<p>Untrusted input reaches an interpreter (browser, database, shell, LDAP, template engine) and is executed as part of a command or query. It includes Cross-Site Scripting, very frequent, and SQL injection, less frequent but with high impact.</p><p><strong>Example:</strong> A login form vulnerable to SQL injection: the input <code>' OR '1'='1</code> grants access without valid credentials.</p>",
+    "link": "https://top10.owasp.org/2025/A05_2025-Injection/",
     "level": "critico"
   },
-  "A04:2021 - Insecure Design": {
-    "description": "An insecure design reflects a lack of threat modeling or absence of security measures in logical flows. It often leads to breaches that would have been avoidable with proper upfront architecture.\n\n<strong>Example:</strong> An app does not enforce authorization checks in checkout flows or profile edits.",
-    "link": "https://owasp.org/Top10/A04_2021-Insecure_Design/",
+  "A06:2025 - Insecure Design": {
+    "description": "<p>Security controls that are missing or ineffective by design, including flaws in business logic. A perfect implementation cannot fix an insecure design: it takes threat modeling, secure design patterns and reference architectures.</p><p><strong>Example:</strong> A checkout flow lets the client set the item price, or password recovery relies on security questions whose answers are public.</p>",
+    "link": "https://top10.owasp.org/2025/A06_2025-Insecure_Design/",
     "level": "medio"
   },
-  "A05:2021 - Security Misconfiguration": {
-    "description": "Misconfigurations or defaults in services, software, or environments expose data, interfaces, or unintended functionality. This includes enabled debugging, open ports, verbose errors, and unnecessary services.\n\n<strong>Example:</strong> Apache server exposes mod_status and configuration files accessible over the web.",
-    "link": "https://owasp.org/Top10/A05_2021-Security_Misconfiguration/",
+  "A07:2025 - Authentication Failures": {
+    "description": "<p>The system can be tricked into accepting an invalid user as legitimate: credential stuffing and brute force not blocked, default or weak passwords, weak recovery flows, missing or bypassable MFA, session identifiers that are not rotated or invalidated.</p><p><strong>Example:</strong> The session ID is not regenerated after login, enabling session fixation.</p>",
+    "link": "https://top10.owasp.org/2025/A07_2025-Authentication_Failures/",
     "level": "alto"
   },
-  "A06:2021 - Vulnerable and Outdated Components": {
-    "description": "Using libraries, frameworks, or components with known CVEs and missing updates allows attackers to exploit public vulnerabilities. These issues are often known but overlooked in patch processes.\n\n<strong>Example:</strong> WordPress with a known vulnerable plugin that allows arbitrary file upload.",
-    "link": "https://owasp.org/Top10/A06_2021-Vulnerable_and_Outdated_Components/",
+  "A08:2025 - Software or Data Integrity Failures": {
+    "description": "<p>Code or data from untrusted sources is treated as trusted without verifying its integrity: unsigned updates, plugins or CDN resources, insecure deserialization, object attributes changed by the client (mass assignment).</p><p><strong>Example:</strong> The application deserializes a cookie value without verifying its signature, and the attacker gets remote code execution.</p>",
+    "link": "https://top10.owasp.org/2025/A08_2025-Software_or_Data_Integrity_Failures/",
     "level": "medio"
   },
-  "A07:2021 - Identification and Authentication Failures": {
-    "description": "Authentication issues include poor credential management, absence of MFA, sessions not invalidated or predictable. They enable impersonation, brute forcing, and hijacking.\n\n<strong>Example:</strong> A static session ID or one not regenerated after login enables session fixation.",
-    "link": "https://owasp.org/Top10/A07_2021-Identification_and_Authentication_Failures/",
-    "level": "alto"
-  },
-  "A08:2021 - Software and Data Integrity Failures": {
-    "description": "Includes use of unverified packages, compromised CI/CD pipelines, or unsigned updates that can introduce malicious code into builds or deployments.\n\n<strong>Example:</strong> CI/CD fetches scripts from a GitHub repo without checksum or signature verification.",
-    "link": "https://owasp.org/Top10/A08_2021-Software_and_Data_Integrity_Failures/",
-    "level": "medio"
-  },
-  "A09:2021 - Security Logging and Monitoring Failures": {
-    "description": "The lack of logs, alerts, or tracing undermines timely attack detection and the effectiveness of the response. Attackers can operate undetected for long periods.\n\n<strong>Example:</strong> A brute-force attack goes unnoticed because failed attempts are not logged.",
-    "link": "https://owasp.org/Top10/A09_2021-Security_Logging_and_Monitoring_Failures/",
+  "A09:2025 - Security Logging & Alerting Failures": {
+    "description": "<p>Without logging, monitoring and alerting, attacks and breaches go undetected and the response comes late. It covers unlogged security events, logs without integrity protection, sensitive data written to logs, and alerting thresholds that are missing or ignored.</p><p><strong>Example:</strong> A brute-force attack goes unnoticed because failed logins are neither logged nor alerted on.</p>",
+    "link": "https://top10.owasp.org/2025/A09_2025-Security_Logging_and_Alerting_Failures/",
     "level": "basso"
   },
-  "A10:2021 - Server-Side Request Forgery (SSRF)": {
-    "description": "In an SSRF attack, the attacker tricks the server into making HTTP requests to internal or external resources, often bypassing firewalls. This can lead to information disclosure or lateral movement.\n\n<strong>Example:</strong> Input in a URL field allows access to `http://localhost:8080/admin` from the target server.",
-    "link": "https://owasp.org/Top10/A10_2021-Server-Side_Request_Forgery_(SSRF)/",
+  "A10:2025 - Mishandling of Exceptional Conditions": {
+    "description": "<p>New in 2025: the application fails to prevent, detect or handle abnormal conditions. Unhandled exceptions, error messages that leak internal details and logic that fails open lead to crashes, inconsistent states and bypassed controls.</p><p><strong>Example:</strong> An exception in the authorization check is caught by a generic handler that lets the request through (fail open).</p>",
+    "link": "https://top10.owasp.org/2025/A10_2025-Mishandling_of_Exceptional_Conditions/",
     "level": "medio"
   }
 }

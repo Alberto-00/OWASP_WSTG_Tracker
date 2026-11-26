@@ -1,12 +1,13 @@
 import { useEditor, EditorContent, useEditorState } from '@tiptap/react';
+import { Extension } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
-import Underline from '@tiptap/extension-underline';
 import Highlight from '@tiptap/extension-highlight';
 import Placeholder from '@tiptap/extension-placeholder';
-import { useEffect, useCallback } from 'react';
-import { Quote, Minus } from 'lucide-react';
+import { useEffect, useRef } from 'react';
+import { Quote, Minus, RemoveFormatting } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useLanguage } from '@/hooks/useLanguage';
 import { cn } from '@/lib/utils';
 
 interface NoteEditorProps {
@@ -17,21 +18,31 @@ interface NoteEditorProps {
 
 // Colori evidenziatore (hex solido = identità nel menu). Applicati come tinta translucida.
 const HIGHLIGHT_COLORS = [
-  { value: '#d97706', label: 'Ambra' },
-  { value: '#ea580c', label: 'Arancione' },
-  { value: '#db2777', label: 'Rosa' },
-  { value: '#7c3aed', label: 'Viola' },
-  { value: '#2563eb', label: 'Blu' },
-  { value: '#059669', label: 'Verde' },
+  { value: '#d97706', label: 'amber' },
+  { value: '#ea580c', label: 'orange' },
+  { value: '#db2777', label: 'pink' },
+  { value: '#7c3aed', label: 'purple' },
+  { value: '#2563eb', label: 'blue' },
+  { value: '#059669', label: 'green' },
 ] as const;
 
 // Alpha applicato all'evidenziazione: tinta leggibile su sfondo scuro, marks nidificati restano leggibili.
 const HIGHLIGHT_ALPHA = '80';
 
-const btnBase = 'h-8 w-8 p-0 text-sm hover:bg-primary/20';
+// Ctrl+Shift+S è "Salva con nome": va tolto al barrato di TipTap (resta il pulsante in toolbar).
+const ReserveAppShortcuts = Extension.create({
+  name: 'reserveAppShortcuts',
+  priority: 1000,
+  addKeyboardShortcuts() {
+    return { 'Mod-Shift-s': () => true };
+  },
+});
+
+const btnBase = 'h-7 w-7 p-0 text-sm hover:bg-primary/20';
 const btnActive = 'bg-primary/30 border-primary';
 
 const MenuBar = ({ editor }: { editor: ReturnType<typeof useEditor> }) => {
+  const { t } = useLanguage();
   // Snapshot reattivo: si aggiorna anche al solo spostamento del cursore (non solo a modifica testo).
   const state = useEditorState({
     editor,
@@ -104,102 +115,65 @@ const MenuBar = ({ editor }: { editor: ReturnType<typeof useEditor> }) => {
     }
   };
 
+  const markButton = (label: string, active: boolean, onClick: () => void, className: string, glyph: string) => (
+    <Button
+      variant="outline"
+      size="sm"
+      className={cn(btnBase, className, active && btnActive)}
+      onClick={onClick}
+      title={label}
+      aria-label={label}
+      aria-pressed={active}
+    >
+      {glyph}
+    </Button>
+  );
+
   return (
-    <div className="flex flex-wrap items-center gap-2 p-2 bg-card/50 rounded-lg border border-border/50">
+    // Gruppi separati dallo spazio (non da divisori): se la barra va a capo non restano separatori orfani
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 p-1.5 bg-card/50 rounded-lg border border-border/50" role="toolbar" aria-label={t('notes')}>
       {/* Marks combinabili */}
       <div className="flex gap-1">
-        <Button
-          variant="outline"
-          size="sm"
-          className={cn(btnBase, 'font-black', state.isBold && btnActive)}
-          onClick={() => editor.chain().focus().toggleBold().run()}
-          title="Grassetto (Ctrl+B)"
-        >
-          B
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          className={cn(btnBase, 'italic font-semibold', state.isItalic && btnActive)}
-          onClick={() => editor.chain().focus().toggleItalic().run()}
-          title="Corsivo (Ctrl+I)"
-        >
-          I
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          className={cn(btnBase, 'underline decoration-2', state.isUnderline && btnActive)}
-          onClick={() => editor.chain().focus().toggleUnderline().run()}
-          title="Sottolineato (Ctrl+U)"
-        >
-          U
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          className={cn(btnBase, 'line-through', state.isStrike && btnActive)}
-          onClick={() => editor.chain().focus().toggleStrike().run()}
-          title="Barrato"
-        >
-          S
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          className={cn(btnBase, 'font-mono text-xs', state.isCode && btnActive)}
-          onClick={() => editor.chain().focus().toggleCode().run()}
-          title="Codice inline"
-        >
-          {'</>'}
-        </Button>
+        {markButton(t('bold'), state.isBold, () => editor.chain().focus().toggleBold().run(), 'font-black', 'B')}
+        {markButton(t('italic'), state.isItalic, () => editor.chain().focus().toggleItalic().run(), 'italic font-semibold', 'I')}
+        {markButton(t('underline'), state.isUnderline, () => editor.chain().focus().toggleUnderline().run(), 'underline decoration-2', 'U')}
+        {markButton(t('strike'), state.isStrike, () => editor.chain().focus().toggleStrike().run(), 'line-through', 'S')}
+        {markButton(t('inlineCode'), state.isCode, () => editor.chain().focus().toggleCode().run(), 'font-mono text-xs', '</>')}
       </div>
-
-      <div className="w-px h-8 bg-border" />
 
       {/* Blocco (esclusivo) */}
       <Select value={state.block} onValueChange={setBlock}>
-        <SelectTrigger className="h-8 w-36 text-xs bg-secondary/50">
-          <SelectValue placeholder="Blocco" />
+        <SelectTrigger className="h-7 w-36 text-xs bg-secondary/50" aria-label={t('blockType')}>
+          <SelectValue placeholder={t('blockType')} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="p" className="text-xs">Paragrafo</SelectItem>
-          <SelectItem value="h1" className="text-base font-bold">H1 - Titolo 1</SelectItem>
-          <SelectItem value="h2" className="text-sm font-semibold">H2 - Titolo 2</SelectItem>
-          <SelectItem value="h3" className="text-xs font-semibold">H3 - Titolo 3</SelectItem>
-          <SelectItem value="bullet" className="text-xs">
-            <span className="flex items-center gap-2">&bull; Lista puntata</span>
-          </SelectItem>
-          <SelectItem value="ordered" className="text-xs">
-            <span className="flex items-center gap-2">1. Lista numerata</span>
-          </SelectItem>
-          <SelectItem value="codeblock" className="text-xs font-mono">
-            <span className="flex items-center gap-2">{'{ }'} Blocco codice</span>
-          </SelectItem>
+          <SelectItem value="p" className="text-xs">{t('paragraph')}</SelectItem>
+          <SelectItem value="h1" className="text-base font-bold">{t('heading1')}</SelectItem>
+          <SelectItem value="h2" className="text-sm font-semibold">{t('heading2')}</SelectItem>
+          <SelectItem value="h3" className="text-xs font-semibold">{t('heading3')}</SelectItem>
+          <SelectItem value="bullet" className="text-xs">&bull; {t('bulletList')}</SelectItem>
+          <SelectItem value="ordered" className="text-xs">1. {t('orderedList')}</SelectItem>
+          <SelectItem value="codeblock" className="text-xs font-mono">{'{ }'} {t('codeBlock')}</SelectItem>
         </SelectContent>
       </Select>
 
-      <div className="w-px h-8 bg-border" />
-
       {/* Evidenziazione */}
       <Select value={state.highlight} onValueChange={setHighlight}>
-        <SelectTrigger className="h-8 w-32 text-xs bg-secondary/50">
-          <SelectValue placeholder="Evidenzia" />
+        <SelectTrigger className="h-7 w-28 text-xs bg-secondary/50" aria-label={t('highlight')}>
+          <SelectValue placeholder={t('highlight')} />
         </SelectTrigger>
         <SelectContent>
           {HIGHLIGHT_COLORS.map((c) => (
             <SelectItem key={c.value} value={c.value} className="text-xs">
-              <div className="flex items-center gap-2">
+              <span className="flex items-center gap-2">
                 <span className="w-4 h-4 rounded" style={{ backgroundColor: c.value }} />
-                {c.label}
-              </div>
+                {t(c.label)}
+              </span>
             </SelectItem>
           ))}
-          <SelectItem value="none" className="text-xs">Rimuovi</SelectItem>
+          <SelectItem value="none" className="text-xs">{t('removeHighlight')}</SelectItem>
         </SelectContent>
       </Select>
-
-      <div className="w-px h-8 bg-border" />
 
       {/* Azioni */}
       <div className="flex gap-1">
@@ -208,27 +182,31 @@ const MenuBar = ({ editor }: { editor: ReturnType<typeof useEditor> }) => {
           size="sm"
           className={cn(btnBase, state.isBlockquote && btnActive)}
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
-          title="Citazione"
+          title={t('quote')}
+          aria-label={t('quote')}
+          aria-pressed={state.isBlockquote}
         >
           <Quote className="w-4 h-4" />
         </Button>
         <Button
           variant="outline"
           size="sm"
-          className={cn(btnBase, 'hover:bg-primary/20')}
+          className={btnBase}
           onClick={() => editor.chain().focus().setHorizontalRule().run()}
-          title="Linea orizzontale"
+          title={t('divider')}
+          aria-label={t('divider')}
         >
           <Minus className="w-4 h-4" />
         </Button>
         <Button
           variant="outline"
           size="sm"
-          className="h-8 px-3 text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10"
+          className={cn(btnBase, 'text-red-400 hover:text-red-300 hover:bg-red-500/10')}
           onClick={() => editor.chain().focus().clearNodes().unsetAllMarks().run()}
-          title="Rimuovi formattazione"
+          title={t('clearFormatting')}
+          aria-label={t('clearFormatting')}
         >
-          Clear
+          <RemoveFormatting className="w-4 h-4" />
         </Button>
       </div>
     </div>
@@ -236,9 +214,17 @@ const MenuBar = ({ editor }: { editor: ReturnType<typeof useEditor> }) => {
 };
 
 export const NoteEditor = ({ content, onChange, testId }: NoteEditorProps) => {
+  const { t } = useLanguage();
+  // Le estensioni vengono create una volta sola: il placeholder legge la lingua corrente da un ref
+  const placeholder = useRef('');
+  placeholder.current = t('notesPlaceholder');
   const editor = useEditor({
     extensions: [
+      ReserveAppShortcuts,
       StarterKit.configure({
+        // Il paragrafo vuoto aggiunto in coda a note che finiscono con elenco/citazione/codice
+        // risultava una modifica alla sola apertura della nota (e finiva nel file salvato)
+        trailingNode: false,
         heading: {
           levels: [1, 2, 3],
         },
@@ -253,18 +239,26 @@ export const NoteEditor = ({ content, onChange, testId }: NoteEditorProps) => {
           },
         },
       }),
-      Underline,
       Highlight.configure({
         multicolor: true,
       }),
       Placeholder.configure({
-        placeholder: 'Scrivi le tue note qui...',
+        placeholder: () => placeholder.current,
       }),
     ],
     content: content || '',
     editorProps: {
       attributes: {
-        class: 'note-editor-content outline-none min-h-[300px] max-h-[400px] overflow-y-auto p-4',
+        class: 'note-editor-content outline-none min-h-full p-4',
+        'aria-label': t('notes'),
+      },
+      // Esc esce dal blocco di codice (solo se il focus è nell'editor)
+      handleKeyDown: (view, event) => {
+        if (event.key === 'Escape' && editor?.isActive('codeBlock')) {
+          editor.chain().focus().exitCode().run();
+          return true;
+        }
+        return false;
       },
     },
     onUpdate: ({ editor }) => {
@@ -272,44 +266,27 @@ export const NoteEditor = ({ content, onChange, testId }: NoteEditorProps) => {
     },
   });
 
-  // Aggiorna il contenuto quando cambia il test selezionato
+  // Suggerimento per uscire dal blocco di codice: solo quando il cursore è dentro
+  const inCodeBlock = useEditorState({ editor, selector: (ctx) => !!ctx.editor?.isActive('codeBlock') });
+
+  // Cambio test: carica la sua nota senza emettere update (aprire una nota non è una modifica)
   useEffect(() => {
     if (editor && editor.getHTML() !== content) {
-      editor.commands.setContent(content || '');
+      editor.commands.setContent(content || '', { emitUpdate: false });
     }
   }, [testId, content, editor]);
 
-  // Gestione Escape per uscire dal code block
-  const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (e.key === 'Escape' && editor?.isActive('codeBlock')) {
-      editor.chain().focus().exitCode().run();
-    }
-  }, [editor]);
-
-  useEffect(() => {
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [handleKeyDown]);
-
   return (
-    <div className="space-y-2">
+    <div className="h-full flex flex-col gap-2 p-4">
       <MenuBar editor={editor} />
 
-      <div className="rounded-lg border-2 border-border bg-secondary/30 focus-within:border-primary transition-colors">
-        <EditorContent editor={editor} />
+      <div
+        className="flex-1 min-h-0 overflow-y-auto rounded-lg border-2 border-border bg-secondary/30 focus-within:border-primary transition-colors cursor-text"
+        onClick={(e) => e.target === e.currentTarget && editor?.commands.focus('end')}
+      >
+        <EditorContent editor={editor} className="h-full" />
       </div>
-      <div className="flex items-center justify-between text-[10px] text-muted-foreground/60 px-1">
-        <span>
-          Blocco codice: premi{' '}
-          <kbd className="px-1 py-0.5 bg-secondary/50 rounded text-[9px]">Esc</kbd> o{' '}
-          <kbd className="px-1 py-0.5 bg-secondary/50 rounded text-[9px]">Ctrl+Enter</kbd> per uscire
-        </span>
-        <span>
-          <kbd className="px-1 py-0.5 bg-secondary/50 rounded text-[9px]">Ctrl+B</kbd> Grassetto |{' '}
-          <kbd className="px-1 py-0.5 bg-secondary/50 rounded text-[9px]">Ctrl+I</kbd> Corsivo |{' '}
-          <kbd className="px-1 py-0.5 bg-secondary/50 rounded text-[9px]">Ctrl+U</kbd> Sottolineato
-        </span>
-      </div>
+      {inCodeBlock && <p className="text-[11px] text-muted-foreground px-1 animate-fade-in">{t('codeBlockHint')}</p>}
     </div>
   );
 };

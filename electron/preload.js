@@ -7,6 +7,7 @@ contextBridge.exposeInMainWorld('electron', {
 
   // File system operations
   showSaveDialog: (defaultFilename) => ipcRenderer.invoke('show-save-dialog', defaultFilename),
+  showOpenDialog: () => ipcRenderer.invoke('show-open-dialog'),
   saveFile: (filename, data) => ipcRenderer.invoke('save-file', filename, data),
   loadFile: (filename) => ipcRenderer.invoke('load-file', filename),
   getLastSaveFile: () => ipcRenderer.invoke('get-last-save-file'),

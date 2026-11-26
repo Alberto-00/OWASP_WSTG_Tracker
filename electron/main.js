@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, Menu, ipcMain, dialog, shell } = require('electron');
 const path = require('path');
 const fs = require('fs').promises;
 const fsSync = require('fs');
@@ -11,7 +11,8 @@ let hasUnsavedChanges = false;
 // directory dell'eseguibile portatile (Windows) o dell'AppImage (Linux), che è scrivibile.
 function resolveSavesDir() {
   if (process.env.NODE_ENV === 'development') {
-    return path.join(__dirname, '../public/saves');
+    // Fuori da public/: Vite copia public/ in dist/ e i salvataggi finirebbero nella build distribuita
+    return path.join(__dirname, '../saves');
   }
   // App portatile: accanto all'eseguibile/AppImage (posizione scelta dall'utente)
   if (process.env.PORTABLE_EXECUTABLE_DIR) {
@@ -49,7 +50,8 @@ ipcMain.handle('show-save-dialog', async (event, defaultFilename) => {
   try {
     const result = await dialog.showSaveDialog(mainWindow, {
       title: 'Salva stato WSTG',
-      defaultPath: path.join(savesDir, defaultFilename),
+      // Nome semplice -> cartella saves; percorso completo (file già aperto) -> usato così com'è
+      defaultPath: path.resolve(savesDir, defaultFilename),
       filters: [
         { name: 'JSON Files', extensions: ['json'] },
         { name: 'All Files', extensions: ['*'] }
@@ -61,6 +63,29 @@ ipcMain.handle('show-save-dialog', async (event, defaultFilename) => {
     }
 
     return { success: true, filePath: result.filePath };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('show-open-dialog', async () => {
+  try {
+    await ensureSavesDir();
+    const result = await dialog.showOpenDialog(mainWindow, {
+      title: 'Apri stato WSTG',
+      defaultPath: savesDir,
+      properties: ['openFile'],
+      filters: [
+        { name: 'JSON Files', extensions: ['json'] },
+        { name: 'All Files', extensions: ['*'] }
+      ]
+    });
+
+    if (result.canceled || result.filePaths.length === 0) {
+      return { success: false, canceled: true };
+    }
+
+    return { success: true, filePath: result.filePaths[0] };
   } catch (error) {
     return { success: false, error: error.message };
   }
@@ -89,7 +114,10 @@ ipcMain.handle('save-file', async (event, filePathOrName, data) => {
       await fs.mkdir(dir, { recursive: true });
     }
 
-    await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf-8');
+    // Scrittura atomica: un crash a metà scrittura non deve corrompere l'assessment esistente
+    const tmpPath = `${filePath}.tmp`;
+    await fs.writeFile(tmpPath, JSON.stringify(data, null, 2), 'utf-8');
+    await fs.rename(tmpPath, filePath);
 
     // Salva il percorso completo in last-save.txt
     await ensureSavesDir();
@@ -112,12 +140,12 @@ ipcMain.handle('load-file', async (event, filePathOrName) => {
       filePath = path.join(savesDir, filePathOrName);
     }
 
-    const data = await fs.readFile(filePath, 'utf-8');
+    const data = JSON.parse(await fs.readFile(filePath, 'utf-8'));
 
-    // Aggiorna last-save.txt con il percorso completo
+    // Aggiorna last-save.txt con il percorso completo (solo se il file è JSON valido)
     await ensureSavesDir();
     await fs.writeFile(lastSaveFilePath, filePath, 'utf-8');
-    return { success: true, data: JSON.parse(data), filePath };
+    return { success: true, data, filePath };
   } catch (error) {
     return { success: false, error: error.message };
   }
@@ -205,12 +233,16 @@ function createMainWindow() {
     : path.join(process.resourcesPath, 'public/icon/logo_app.png');
 
   mainWindow = new BrowserWindow({
-    width: 1400,
-    height: 800,
+    // Misure dell'area dell'app (esclusi bordi e barra del titolo): da 1477 px di larghezza
+    // il nome di test più lungo (WSTG-INFO-01) sta su una riga con la lista al 45%
+    useContentSize: true,
+    width: 1500,
+    height: 760,
     minWidth: 1024,
-    minHeight: 700,
+    // 600 e non 700: su un portatile 1080p con scala al 150% l'area utile è alta circa 670px
+    minHeight: 600,
     show: false,
-    backgroundColor: '#0f172a',
+    backgroundColor: '#292b33', // = --background dell'app: niente lampo di colore diverso all'avvio
     icon: iconPath,
     autoHideMenuBar: true,
     webPreferences: {
@@ -223,11 +255,24 @@ function createMainWindow() {
   // Rimuove completamente la barra dei menu
   Menu.setApplicationMenu(null);
 
+  // I link esterni (riferimenti WSTG/OWASP) si aprono nel browser di sistema,
+  // mai in una finestra Electron; nessuna navigazione fuori dall'app.
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    if (/^https?:\/\//i.test(url)) shell.openExternal(url);
+    return { action: 'deny' };
+  });
+  mainWindow.webContents.on('will-navigate', (event, url) => {
+    if (/^https?:\/\//i.test(url) && !(isDev && url.startsWith('http://localhost:8080'))) {
+      event.preventDefault();
+      shell.openExternal(url);
+    }
+  });
+
   // In development, carica da Vite dev server
   // In production, carica i file buildati
   if (isDev) {
     mainWindow.loadURL('http://localhost:8080');
-    mainWindow.webContents.openDevTools(); // Apri DevTools in dev
+    mainWindow.webContents.openDevTools({ mode: 'detach' }); // finestra separata: l'app resta larga come in produzione
   } else {
     mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
   }

@@ -15,7 +15,8 @@
     "electron:dev": "concurrently \"cross-env BROWSER=none npm run dev\" \"wait-on http://localhost:8080 && cross-env NODE_ENV=development electron .\"",
     "electron:build": "npm run build && electron-builder",
     "electron:build:win": "npm run build && electron-builder --win",
-    "electron:build:linux": "npm run build && electron-builder --linux"
+    "electron:build:linux": "npm run build && electron-builder --linux",
+    "check:data": "node --experimental-strip-types --no-warnings scripts/check-data.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -115,14 +116,15 @@
       "dist/**/*",
       "electron/**/*",
       "!electron/tsconfig.json",
-      "package.json"
+      "package.json",
+      "!node_modules/**/*"
     ],
     "extraResources": [
       {
         "from": "public",
         "to": "public",
         "filter": [
-          "**/*"
+          "icon/logo_app.png"
         ]
       }
     ],

@@ -1,777 +1,691 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
-import { Search, Save, FolderOpen, ChevronRight, Shield, ExternalLink, FileText, Lightbulb, Wrench, ShieldCheck, Sparkles, Target, Globe, StickyNote, Circle, CheckCircle, Clock, ChevronsDownUp, ChevronsUpDown, ChevronUp, ChevronDown } from 'lucide-react';
+import { AlertTriangle, ChevronDown, ChevronsDownUp, ChevronsUpDown, FileText, FolderOpen, Globe, Save, Search, Shield, Sparkles, X } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useChecklist } from '@/hooks/useChecklist';
 import { useMessageModal } from '@/hooks/useMessageModal';
 import { MessageModal } from '@/components/MessageModal';
-import { WSTGTest, WSTGCategory, TestStatus } from '@/types/checklist';
+import { TestList } from '@/components/TestList';
+import { CollapsedPart, DetailTab, TestDetail, Top10Ref } from '@/components/TestDetail';
+import { Top10Dialog } from '@/components/Top10Dialog';
+import { STATUSES, StatusIcon, statusLabelKey } from '@/components/status';
+import { ProgressData, TestStatus, WSTGCategory, WSTGTest } from '@/types/checklist';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu';
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
-import { NoteEditor } from '@/components/NoteEditor';
-import { cn, escapeHtml } from '@/lib/utils';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuShortcut, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
+import { TOP10_BY_TEST, top10Code } from '@/lib/top10Mapping';
+import { normalizeProgress } from '@/lib/progress';
+import { cn } from '@/lib/utils';
 
-const owaspMapping: Record<string, string> = {
-  'Information Gathering': 'A01, A05, A06',
-  'Configuration and Deployment Management Testing': 'A05, A06',
-  'Identity Management Testing': 'A07',
-  'Authentication Testing': 'A07',
-  'Authorization Testing': 'A01',
-  'Session Management Testing': 'A07',
-  'Input Validation Testing': 'A03, A10',
-  'Testing for Error Handling': 'A05',
-  'Testing for Weak Cryptography': 'A02, A08',
-  'Business Logic Testing': 'A04, A08',
-  'Client-side Testing': 'A03, A05',
-  'API Testing': 'A01, A03, A05, A06, A10',
+// Gradiente della barra di avanzamento: dal rosso al verde
+const progressGradient = (percent: number) =>
+  percent < 33
+    ? 'bg-gradient-to-r from-red-600 via-red-500 to-orange-500'
+    : percent < 66
+      ? 'bg-gradient-to-r from-orange-500 via-yellow-500 to-yellow-400'
+      : 'bg-gradient-to-r from-yellow-400 via-green-500 to-green-600';
+
+const legendColor: Record<TestStatus, string> = {
+  pending: 'bg-[hsl(var(--status-pending))]',
+  'in-progress': 'bg-[hsl(var(--status-progress))]',
+  done: 'bg-[hsl(var(--status-done))]',
 };
 
-type DetailTab = 'summary' | 'howto' | 'tools' | 'remediation' | 'notes';
+const today = () => new Date().toISOString().slice(0, 10);
+const baseName = (filePath: string) => filePath.split(/[\\/]/).pop() || filePath;
+const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 export const ChecklistApp = () => {
   const { language, setLanguage, t } = useLanguage();
-  const { categories, categoryDescriptions, testInfoData, owaspTop10, getStatus, cycleStatus, setMultipleStatus, toggleCategory, isCategoryCollapsed, collapseAll, expandAll, getCompletedCount, getInProgressCount, getNote, setNote, exportState, importState, loadedFileName, setLoadedFileName, isInitialLoadComplete } = useChecklist();
+  const {
+    categories, categoryDescriptions, testInfoData, owaspTop10, contentError,
+    getStatus, setTestStatus, cycleStatus, setMultipleStatus,
+    toggleCategory, expandCategory, isCategoryCollapsed, collapseAll, expandAll,
+    getNote, setNote, hasNote, exportState, applyProgress, markSaved, file, isDirty,
+  } = useChecklist();
   const modal = useMessageModal();
+  const { show: showModal, danger: showError } = modal;
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [selectedStatus, setSelectedStatus] = useState<string>('all');
-  const [selectedTest, setSelectedTest] = useState<WSTGTest | null>(null);
-  const [selectedCategoryInfo, setSelectedCategoryInfo] = useState<WSTGCategory | null>(null);
-  const [showCategoryDescription, setShowCategoryDescription] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | TestStatus>('all');
+  const [selectedTestId, setSelectedTestId] = useState<string | null>(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const [showCategory, setShowCategory] = useState(false);
+  const [selection, setSelection] = useState<Set<string>>(() => new Set());
   const [activeTab, setActiveTab] = useState<DetailTab>('summary');
-  const [showMappingModal, setShowMappingModal] = useState(false);
-  const [selectedTests, setSelectedTests] = useState<Set<string>>(new Set());
-  const [selectedOwaspItem, setSelectedOwaspItem] = useState<string | null>(null);
-  const [isTopSectionCollapsed, setIsTopSectionCollapsed] = useState(false);
+  const [collapsedPart, setCollapsedPart] = useState<CollapsedPart | null>(null);
+  const [top10Open, setTop10Open] = useState(false);
+  const [top10Key, setTop10Key] = useState<string | null>(null);
+  const [savedAt, setSavedAt] = useState<Date | null>(null);
+  const [scrollTarget, setScrollTarget] = useState<string | null>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const rangeAnchor = useRef<string | null>(null);
 
-  // Tracking modifiche non salvate
-  const initialStateRef = useRef<string>('');
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  // Indice id → test e categoria nella lingua corrente: la selezione è per id e sopravvive al cambio lingua
+  const testIndex = useMemo(() => {
+    const index = new Map<string, { test: WSTGTest; category: WSTGCategory }>();
+    categories.forEach((category) => category.tests.forEach((test) => index.set(test.id, { test, category })));
+    return index;
+  }, [categories]);
+  const allTestIds = useMemo(() => [...testIndex.keys()], [testIndex]);
 
-  // Calcola lo stato corrente come stringa
-  const currentStateString = useMemo(() => {
-    return JSON.stringify(exportState());
-  }, [exportState]);
-
-  // Memorizza lo stato iniziale SOLO dopo che il caricamento iniziale è completo
-  useEffect(() => {
-    if (isInitialLoadComplete && initialStateRef.current === '') {
-      initialStateRef.current = currentStateString;
-    }
-  }, [isInitialLoadComplete, currentStateString]);
-
-  // Controlla se ci sono modifiche non salvate
-  useEffect(() => {
-    if (!isInitialLoadComplete || initialStateRef.current === '') return;
-
-    const hasChanges = currentStateString !== initialStateRef.current;
-    setHasUnsavedChanges(hasChanges);
-
-    if (window.electron) {
-      window.electron.setUnsavedChanges(hasChanges);
-    }
-  }, [currentStateString, isInitialLoadComplete]);
-
-  // Funzione per salvare con dialog nativo
-  const saveWithPrompt = useCallback(async (onSuccess?: () => void) => {
-    const defaultFilename = `wstg-progress-${new Date().toISOString().split('T')[0]}.json`;
-    const data = exportState();
-
-    if (window.electron) {
-      // Mostra dialog di salvataggio nativo
-      const dialogResult = await window.electron.showSaveDialog(defaultFilename);
-
-      // Se l'utente ha annullato
-      if (dialogResult.canceled || !dialogResult.filePath) {
-        return false;
-      }
-
-      // Usa il percorso completo dalla dialog
-      const filePath = dialogResult.filePath;
-
-      // Salva il file usando il percorso completo
-      const result = await window.electron.saveFile(filePath, data);
-      if (result.success) {
-        // Usa il filename restituito dal backend
-        const filename = result.filename || filePath.split(/[\\/]/).pop() || defaultFilename;
-        setLoadedFileName(filename);
-        initialStateRef.current = JSON.stringify(data);
-        setHasUnsavedChanges(false);
-        // Mostra messaggio di successo
-        modal.success('Salvataggio Completato', `File salvato con successo!`);
-        if (onSuccess) {
-          setTimeout(onSuccess, 2000);
-        }
-        return true;
-      } else {
-        modal.danger('Errore', `Impossibile salvare: ${result.error}`);
-        return false;
-      }
-    }
-    return false;
-  }, [exportState, modal, setLoadedFileName]);
-
-  // Handler per dialog modifiche non salvate
-  const handleUnsavedChangesDialog = useCallback(() => {
-    modal.show({
-      type: 'warning',
-      title: 'Modifiche non salvate',
-      message: 'Ci sono modifiche non salvate. Vuoi salvare prima di uscire?',
-      confirmText: 'Sì, Salva',
-      cancelText: 'No',
-      showCancel: true,
-      closeOnOverlayClick: false,
-      onConfirm: async () => {
-        // Chiudi il modal per mostrare il prompt
-        modal.hide();
-        await new Promise(resolve => setTimeout(resolve, 300));
-
-        // Salva con prompt per il nome file
-        await saveWithPrompt(() => {
-          window.electron?.forceQuit();
-        });
-      },
-      onCancel: () => {
-        // Prima chiudi il modal corrente, poi mostra il secondo
-        modal.hide();
-        setTimeout(() => {
-          modal.show({
-            type: 'danger',
-            title: 'Conferma Uscita',
-            message: 'Sei sicuro di voler uscire senza salvare? Tutte le modifiche andranno perse.',
-            confirmText: 'Esci senza Salvare',
-            cancelText: 'Annulla',
-            showCancel: true,
-            closeOnOverlayClick: false,
-            onConfirm: () => {
-              // Esci senza salvare
-              if (window.electron) {
-                window.electron.quitWithoutSaving();
-              }
-            }
-            // onCancel non definito = chiude il modal e torna all'app
-          });
-        }, 350); // Delay maggiore per permettere l'animazione di chiusura
-      }
-    });
-  }, [modal, saveWithPrompt]);
-
-  useEffect(() => {
-    if (window.electron) {
-      // onShowUnsavedChangesDialog restituisce il cleanup: rimuove il listener
-      // al re-render, evitando l'accumulo di handler (modali duplicate alla chiusura)
-      return window.electron.onShowUnsavedChangesDialog(handleUnsavedChangesDialog);
-    }
-  }, [handleUnsavedChangesDialog]);
-
+  // Filtri
+  const query = searchQuery.trim().toLowerCase();
+  const hasFilters = query !== '' || categoryFilter !== 'all' || statusFilter !== 'all';
   const filteredCategories = useMemo(() => {
-    let cats = categories;
-    if (selectedCategory !== 'all') cats = cats.filter(c => c.id === selectedCategory);
-
-    // Filtra per status
-    if (selectedStatus !== 'all') {
-      cats = cats.map(c => ({
+    const byCategory = categoryFilter === 'all' ? categories : categories.filter((c) => c.id === categoryFilter);
+    if (!query && statusFilter === 'all') return byCategory;
+    return byCategory
+      .map((c) => ({
         ...c,
-        tests: c.tests.filter(t => getStatus(t.id) === selectedStatus)
-      })).filter(c => c.tests.length > 0);
-    }
+        tests: c.tests.filter(
+          (test) =>
+            (statusFilter === 'all' || getStatus(test.id) === statusFilter) &&
+            (!query ||
+              test.id.toLowerCase().includes(query) ||
+              test.name.toLowerCase().includes(query) ||
+              test.objectives.some((o) => o.toLowerCase().includes(query))),
+        ),
+      }))
+      .filter((c) => c.tests.length > 0);
+  }, [categories, categoryFilter, statusFilter, query, getStatus]);
 
-    // Filtra per ricerca
-    if (!searchQuery.trim()) return cats;
-    const q = searchQuery.toLowerCase();
-    return cats.map(c => ({ ...c, tests: c.tests.filter(t => t.id.toLowerCase().includes(q) || t.name.toLowerCase().includes(q)) })).filter(c => c.tests.length > 0);
-  }, [categories, selectedCategory, selectedStatus, searchQuery, getStatus]);
+  // Con ricerca o filtro di stato attivi le categorie si aprono da sole: i risultati non restano nascosti
+  const forceExpand = query !== '' || statusFilter !== 'all';
+  const isCollapsed = useCallback((catId: string) => !forceExpand && isCategoryCollapsed(catId), [forceExpand, isCategoryCollapsed]);
+  const visibleIds = useMemo(
+    () => filteredCategories.flatMap((c) => (isCollapsed(c.id) ? [] : c.tests.map((test) => test.id))),
+    [filteredCategories, isCollapsed],
+  );
 
-  const allTestIds = useMemo(() => categories.flatMap(c => c.tests.map(t => t.id)), [categories]);
-  const totalCompleted = getCompletedCount(allTestIds);
+  const clearFilters = useCallback(() => {
+    setSearchQuery('');
+    setCategoryFilter('all');
+    setStatusFilter('all');
+  }, []);
+
+  const counts = useMemo(() => {
+    const result: Record<TestStatus, number> = { pending: 0, 'in-progress': 0, done: 0 };
+    allTestIds.forEach((id) => {
+      result[getStatus(id)]++;
+    });
+    return result;
+  }, [allTestIds, getStatus]);
   const totalTests = allTestIds.length;
-  const percentage = totalTests > 0 ? (totalCompleted / totalTests) * 100 : 0;
+  const percentage = totalTests > 0 ? (counts.done / totalTests) * 100 : 0;
 
-  // Calcola il gradiente della progress bar da rosso a verde
-  const getProgressBarGradient = (percent: number) => {
-    if (percent < 33) {
-      return 'bg-gradient-to-r from-red-600 via-red-500 to-orange-500';
-    } else if (percent < 66) {
-      return 'bg-gradient-to-r from-orange-500 via-yellow-500 to-yellow-400';
-    } else {
-      return 'bg-gradient-to-r from-yellow-400 via-green-500 to-green-600';
+  // Selezione: clic = singolo, Ctrl+clic = aggiunge/toglie, Maiusc+clic = intervallo visibile
+  const selectTest = useCallback(
+    (id: string, mode?: 'toggle' | 'range') => {
+      if (mode === 'toggle') {
+        setSelection((prev) => {
+          const next = new Set(prev);
+          if (next.size === 0 && selectedTestId && selectedTestId !== id) next.add(selectedTestId);
+          if (next.has(id)) next.delete(id);
+          else next.add(id);
+          return next;
+        });
+        rangeAnchor.current = id;
+      } else if (mode === 'range') {
+        const from = visibleIds.indexOf(rangeAnchor.current ?? selectedTestId ?? id);
+        const to = visibleIds.indexOf(id);
+        setSelection(from < 0 || to < 0 ? new Set() : new Set(visibleIds.slice(Math.min(from, to), Math.max(from, to) + 1)));
+      } else {
+        setSelection(new Set());
+        rangeAnchor.current = id;
+      }
+      setSelectedTestId(id);
+      setShowCategory(false);
+    },
+    [selectedTestId, visibleIds],
+  );
+
+  const onCategoryClick = useCallback(
+    (cat: WSTGCategory) => {
+      toggleCategory(cat.id);
+      setSelectedCategoryId(cat.id);
+      setShowCategory(true);
+      setSelectedTestId(null);
+      setSelection(new Set());
+    },
+    [toggleCategory],
+  );
+
+  const setStatusFor = useCallback(
+    (ids: string[], status: TestStatus) => {
+      setMultipleStatus(ids, status);
+      setSelection(new Set());
+    },
+    [setMultipleStatus],
+  );
+
+  // Porta a un test (link interni, mappatura Top 10): toglie i filtri che lo nascondono e apre la categoria
+  const goToTest = useCallback(
+    (id: string) => {
+      const entry = testIndex.get(id);
+      if (!entry) return;
+      setTop10Open(false);
+      if (!filteredCategories.some((c) => c.tests.some((test) => test.id === id))) clearFilters();
+      expandCategory(entry.category.id);
+      setSelection(new Set());
+      setSelectedTestId(id);
+      setShowCategory(false);
+      rangeAnchor.current = id;
+      setScrollTarget(id);
+    },
+    [testIndex, filteredCategories, clearFilters, expandCategory],
+  );
+
+  useEffect(() => {
+    if (!scrollTarget) return;
+    const row = document.querySelector<HTMLElement>(`[data-test-id="${scrollTarget}"]`);
+    row?.scrollIntoView({ block: 'center', behavior: reducedMotion() ? 'auto' : 'smooth' });
+    row?.querySelector<HTMLElement>('[data-row]')?.focus({ preventScroll: true });
+    setScrollTarget(null);
+  }, [scrollTarget]);
+
+  // Dettaglio
+  const selected = selectedTestId ? testIndex.get(selectedTestId) ?? null : null;
+  const shownCategory = showCategory ? categories.find((c) => c.id === selectedCategoryId) ?? null : selected?.category ?? null;
+
+  const top10Refs = useMemo(() => {
+    const refs: Record<string, Top10Ref> = {};
+    Object.entries(owaspTop10).forEach(([key, item]) => {
+      const code = top10Code(key);
+      refs[code] = { key, code, title: key.split(' - ')[1] ?? key, level: item.level };
+    });
+    return refs;
+  }, [owaspTop10]);
+
+  const detailTop10 = useMemo(() => {
+    if (showCategory && shownCategory) {
+      // Categoria: unione delle categorie Top 10 dei suoi test, dalla più frequente
+      const frequency = new Map<string, number>();
+      shownCategory.tests.forEach((test) => (TOP10_BY_TEST[test.id] ?? []).forEach((code) => frequency.set(code, (frequency.get(code) ?? 0) + 1)));
+      return [...frequency.entries()]
+        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+        .map(([code]) => top10Refs[code])
+        .filter(Boolean);
     }
-  };
+    return selected ? (TOP10_BY_TEST[selected.test.id] ?? []).map((code) => top10Refs[code]).filter(Boolean) : [];
+  }, [showCategory, shownCategory, selected, top10Refs]);
 
-  const handleTestClick = (test: WSTGTest, cat: WSTGCategory, e: React.MouseEvent) => {
-    if (e.ctrlKey || e.metaKey) {
-      setSelectedTests(prev => {
-        const n = new Set(prev);
-        if (selectedTest && !prev.has(selectedTest.id)) n.add(selectedTest.id);
-        if (n.has(test.id)) {
-          n.delete(test.id);
-        } else {
-          n.add(test.id);
+  const categoryStats =
+    showCategory && shownCategory
+      ? {
+          done: shownCategory.tests.filter((test) => getStatus(test.id) === 'done').length,
+          busy: shownCategory.tests.filter((test) => getStatus(test.id) === 'in-progress').length,
+          total: shownCategory.tests.length,
         }
-        return n;
-      });
-      setSelectedTest(test);
-    } else if (e.shiftKey && selectedTest) {
-      const allTests = categories.flatMap(c => c.tests);
-      const startIdx = allTests.findIndex(t => t.id === selectedTest.id);
-      const endIdx = allTests.findIndex(t => t.id === test.id);
-      const [from, to] = startIdx < endIdx ? [startIdx, endIdx] : [endIdx, startIdx];
-      setSelectedTests(new Set(allTests.slice(from, to + 1).map(t => t.id)));
-      setSelectedTest(test);
-    } else {
-      setSelectedTests(new Set());
-      setSelectedTest(test);
-      setSelectedCategoryInfo(cat);
-      setShowCategoryDescription(false);
-    }
-  };
+      : null;
 
-  const handleCategoryClick = (cat: WSTGCategory) => {
-    toggleCategory(cat.id);
-    setSelectedCategoryInfo(cat);
-    setSelectedTest(null);
-    setShowCategoryDescription(true);
-  };
+  const openTop10 = useCallback((key?: string) => {
+    if (key) setTop10Key(key);
+    setTop10Open(true);
+  }, []);
 
-  const handleSave = async () => {
-    if (window.electron) {
-      // Salvataggio tramite Electron con prompt per il nome
-      await saveWithPrompt();
-    } else {
-      // Fallback browser: download tradizionale
+  // Salvataggio: Salva sovrascrive il file aperto; senza file dell'utente si comporta come Salva con nome
+  const finishSave = useCallback(
+    (data: ProgressData, path: string | null, name?: string) => {
+      markSaved(data, path, name);
+      setSavedAt(new Date());
+    },
+    [markSaved],
+  );
+
+  const writeFile = useCallback(
+    async (filePath: string) => {
       const data = exportState();
-      const filename = `wstg-progress-${new Date().toISOString().split('T')[0]}.json`;
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      a.click();
-      URL.revokeObjectURL(url);
-      // Resetta il tracking modifiche
-      initialStateRef.current = JSON.stringify(data);
-      setHasUnsavedChanges(false);
-      setLoadedFileName(filename);
-      modal.success('Salvataggio Completato', 'Lo stato è stato salvato con successo!');
-    }
-  };
+      const result = await window.electron!.saveFile(filePath, data);
+      if (!result.success) {
+        showError(t('saveErrorTitle'), t('saveErrorMsg', { error: result.error ?? '' }));
+        return false;
+      }
+      finishSave(data, result.path ?? filePath, result.filename);
+      return true;
+    },
+    [exportState, finishSave, showError, t],
+  );
 
-  const handleLoad = () => {
+  // Browser (sviluppo web): download del file
+  const download = useCallback(() => {
+    const data = exportState();
+    const name = file.name && file.name !== 'progress.json' ? file.name : `wstg-progress-${today()}.json`;
+    const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = name;
+    link.click();
+    URL.revokeObjectURL(url);
+    finishSave(data, null, name);
+    return true;
+  }, [exportState, file.name, finishSave]);
+
+  const saveAs = useCallback(async () => {
+    if (!window.electron) return download();
+    const dialog = await window.electron.showSaveDialog(file.path ?? `wstg-progress-${today()}.json`);
+    if (!dialog.success || !dialog.filePath) return false;
+    return writeFile(dialog.filePath);
+  }, [download, file.path, writeFile]);
+
+  const save = useCallback(
+    async () => (window.electron && file.path ? writeFile(file.path) : saveAs()),
+    [file.path, saveAs, writeFile],
+  );
+
+  const loadInto = useCallback(
+    (raw: unknown, name: string, path: string | null) => {
+      try {
+        applyProgress(normalizeProgress(raw), name, path);
+        setSavedAt(null);
+        setSelection(new Set());
+      } catch {
+        showError(t('openErrorTitle'), t('openErrorMsg'));
+      }
+    },
+    [applyProgress, showError, t],
+  );
+
+  const openFile = useCallback(async () => {
+    if (window.electron) {
+      const dialog = await window.electron.showOpenDialog();
+      if (!dialog.success || !dialog.filePath) return;
+      const result = await window.electron.loadFile(dialog.filePath);
+      if (!result.success) {
+        showError(t('openErrorTitle'), t('openErrorMsg'));
+        return;
+      }
+      loadInto(result.data, baseName(dialog.filePath), result.filePath ?? dialog.filePath);
+      return;
+    }
     const input = document.createElement('input');
     input.type = 'file';
-    input.accept = '.json';
-    input.onchange = (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-          try {
-            const loadedData = JSON.parse(ev.target?.result as string);
-            importState(loadedData, file.name);
-            // Resetta il tracking modifiche dopo caricamento riuscito
-            initialStateRef.current = JSON.stringify(loadedData);
-            setHasUnsavedChanges(false);
-            modal.success('Caricamento Completato', `File "${escapeHtml(file.name)}" caricato con successo!`);
-          }
-          catch {
-            modal.danger('Errore di Caricamento', 'Il file selezionato non è valido o è corrotto.');
-          }
-        };
-        reader.readAsText(file);
-      }
+    input.accept = '.json,application/json';
+    input.onchange = () => {
+      const picked = input.files?.[0];
+      if (!picked) return;
+      picked.text().then((text) => {
+        try {
+          loadInto(JSON.parse(text), picked.name, null);
+        } catch {
+          showError(t('openErrorTitle'), t('openErrorMsg'));
+        }
+      });
     };
     input.click();
-  };
+  }, [loadInto, showError, t]);
 
-  const getStatusIcon = (status: TestStatus) => {
-    if (status === 'done') return <CheckCircle className="w-4 h-4 text-[hsl(var(--status-done))]" />;
-    if (status === 'in-progress') return <Clock className="w-4 h-4 text-[hsl(var(--status-progress))]" />;
-    return <Circle className="w-4 h-4 text-[hsl(var(--status-pending))]" />;
-  };
-
-  const getStatusColor = (status: TestStatus) => status === 'done' ? 'text-done' : status === 'in-progress' ? 'text-progress' : 'text-foreground';
-
-  const getCatStatusColor = (catId: string) => {
-    const cat = categories.find(c => c.id === catId);
-    if (!cat) return 'text-pending';
-    const statuses = cat.tests.map(t => getStatus(t.id));
-    const hasInProgress = statuses.some(s => s === 'in-progress');
-    const hasDone = statuses.some(s => s === 'done');
-
-    if (hasInProgress) return 'text-progress'; // Viola se c'è almeno un in-progress
-    if (hasDone) return 'text-done'; // Verde se c'è almeno un completato (senza in-progress)
-    return 'text-pending'; // Default pending
-  };
-
-  const getCatBgColor = (catId: string) => {
-    const cat = categories.find(c => c.id === catId);
-    if (!cat) return 'bg-pending';
-    const statuses = cat.tests.map(t => getStatus(t.id));
-    const hasInProgress = statuses.some(s => s === 'in-progress');
-    const hasDone = statuses.some(s => s === 'done');
-
-    if (hasInProgress) return 'bg-progress';
-    if (hasDone) return 'bg-done';
-    return 'bg-pending';
-  };
-
-  const getLevelColor = (level: string) => {
-    switch (level) {
-      case 'critico': return 'hsl(var(--level-critical))';
-      case 'alto': return 'hsl(var(--level-high))';
-      case 'medio': return 'hsl(var(--level-medium))';
-      case 'basso': return 'hsl(var(--level-low))';
-      default: return 'hsl(var(--cyan))';
+  // Aprire un altro file con modifiche in sospeso: prima chiede se salvarle
+  const requestOpen = useCallback(() => {
+    if (!isDirty) {
+      openFile();
+      return;
     }
-  };
+    showModal({
+      type: 'warning',
+      title: t('unsavedTitle'),
+      message: t('unsavedOpenMsg'),
+      confirmText: t('saveNow'),
+      cancelText: t('dontSave'),
+      showCancel: true,
+      onConfirm: async () => {
+        if (await save()) openFile();
+      },
+      onCancel: openFile,
+    });
+  }, [isDirty, openFile, save, showModal, t]);
 
-  const tabs = [
-    { id: 'summary' as const, label: t('summary'), icon: FileText, color: 'bg-cyan-600 hover:bg-cyan-700' },
-    { id: 'howto' as const, label: t('howTo'), icon: Lightbulb, color: 'bg-amber-600 hover:bg-amber-700' },
-    { id: 'tools' as const, label: t('tools'), icon: Wrench, color: 'bg-purple-600 hover:bg-purple-700' },
-    { id: 'remediation' as const, label: t('remediation'), icon: ShieldCheck, color: 'bg-emerald-600 hover:bg-emerald-700' },
-    { id: 'notes' as const, label: t('notes'), icon: StickyNote, color: 'bg-pink-600 hover:bg-pink-700' },
-  ];
+  // Chiusura della finestra con modifiche non salvate (richiesta dal processo Electron)
+  const onCloseRequest = useCallback(() => {
+    showModal({
+      type: 'warning',
+      title: t('unsavedTitle'),
+      message: t('unsavedExitMsg'),
+      confirmText: t('saveNow'),
+      cancelText: t('dontSave'),
+      showCancel: true,
+      onConfirm: async () => {
+        if (await save()) window.electron?.forceQuit();
+      },
+      onCancel: () =>
+        showModal({
+          type: 'danger',
+          title: t('confirmExitTitle'),
+          message: t('confirmExitMsg'),
+          confirmText: t('quitWithoutSaving'),
+          cancelText: t('cancel'),
+          showCancel: true,
+          onConfirm: () => window.electron?.quitWithoutSaving(),
+        }),
+    });
+  }, [save, showModal, t]);
 
-  const testInfo = selectedTest ? testInfoData[selectedTest.id] : null;
-  const selectedOwaspData = selectedOwaspItem ? owaspTop10[selectedOwaspItem] : null;
+  useEffect(() => window.electron?.onShowUnsavedChangesDialog(onCloseRequest), [onCloseRequest]);
+
+  useEffect(() => {
+    window.electron?.setUnsavedChanges(isDirty);
+  }, [isDirty]);
+
+  useEffect(() => {
+    document.title = `${isDirty ? '● ' : ''}${file.name || t('noFile')} — OWASP WSTG Tracker`;
+  }, [isDirty, file.name, t]);
+
+  // Scorciatoie: Ctrl+S salva, Ctrl+Maiusc+S salva con nome, Ctrl+O apre, Ctrl+F cerca
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (!(e.ctrlKey || e.metaKey) || e.altKey) return;
+      const key = e.key.toLowerCase();
+      if (key === 's') {
+        e.preventDefault();
+        if (e.repeat) return;
+        if (e.shiftKey) saveAs();
+        else save();
+      } else if (key === 'o' && !e.shiftKey) {
+        e.preventDefault();
+        if (!e.repeat) requestOpen();
+      } else if (key === 'f' && !e.shiftKey) {
+        e.preventDefault();
+        searchRef.current?.focus();
+        searchRef.current?.select();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [save, saveAs, requestOpen]);
 
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden">
-      {/* Header */}
       <header className="flex-shrink-0 bg-gradient-to-b from-card/95 to-card/80 backdrop-blur-xl border-b border-border/60 shadow-lg">
-        {/* Top Section: Title & Progress */}
-        <div className="px-4 py-2 flex items-center gap-6">
-          {/* Logo Only */}
-          <div className="flex items-center">
-            <div className="p-1.5 rounded-lg bg-primary/10 border border-primary/20">
-              <Shield className="w-5 h-5 text-primary" />
-            </div>
+        {/* Avanzamento e file aperto */}
+        <div className="px-4 py-1.5 flex items-center gap-4">
+          <div className="h-7 w-7 flex items-center justify-center rounded-lg bg-primary/10 border border-primary/20 flex-shrink-0" title="OWASP WSTG Tracker">
+            <Shield className="w-4 h-4 text-primary" />
           </div>
 
-          {/* Progress Bar Section */}
-          <div className="flex-1 flex items-center gap-4 min-w-0">
-            <div className="flex-1 h-3 bg-secondary/50 rounded-full overflow-hidden shadow-inner border border-border/30">
-              <div className={cn("h-full rounded-full transition-all duration-500 shadow-sm", getProgressBarGradient(percentage))} style={{ width: `${percentage}%` }} />
+          <div className="flex-1 flex items-center gap-3 min-w-0">
+            <div
+              role="progressbar"
+              aria-label={t('overallProgress')}
+              aria-valuemin={0}
+              aria-valuemax={totalTests}
+              aria-valuenow={counts.done}
+              className="flex-1 h-3 bg-secondary/50 rounded-full overflow-hidden shadow-inner border border-border/30"
+            >
+              <div className={cn('h-full rounded-full transition-all duration-500 shadow-sm', progressGradient(percentage))} style={{ width: `${percentage}%` }} />
             </div>
-            <div className="flex items-center gap-2 bg-secondary/30 px-3 py-1.5 rounded-lg border border-border/40">
-              <span className="text-sm font-semibold text-foreground">{totalCompleted}/{totalTests}</span>
+            <div className="h-7 flex items-center gap-2 bg-secondary/30 px-2.5 rounded-lg border border-border/40 tabular-nums flex-shrink-0">
+              <span className="text-sm font-semibold text-foreground">
+                {counts.done}/{totalTests}
+              </span>
               <span className="text-xs text-muted-foreground">({percentage.toFixed(1)}%)</span>
             </div>
           </div>
 
-          {/* Currently Loaded File Indicator */}
-          <div className="flex items-center gap-2 bg-primary/10 px-3 py-1.5 rounded-lg border border-primary/20">
-            <FileText className="w-3.5 h-3.5 text-primary" />
-            <span className="text-xs text-muted-foreground">File:</span>
-            <span className="text-xs font-medium text-cyan-400 max-w-[200px] truncate" title={loadedFileName}>
-              {loadedFileName}
-            </span>
+          <div className="h-7 flex items-center gap-2 bg-primary/10 px-2.5 rounded-lg border border-primary/20 min-w-0 max-w-[40%]" title={file.path ?? file.name}>
+            <FileText className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+            <span className="text-xs font-medium text-cyan-400 truncate">{file.name || t('noFile')}</span>
+            {isDirty ? (
+              <span role="status" aria-label={t('unsaved')} title={t('unsaved')} className="flex items-center gap-1.5 text-xs text-amber-400 flex-shrink-0">
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-fade-in" />
+                <span className="hidden xl:inline">{t('unsaved')}</span>
+              </span>
+            ) : savedAt ? (
+              <span role="status" className="hidden lg:inline text-xs text-muted-foreground flex-shrink-0 animate-fade-in">
+                {t('savedAt', { time: savedAt.toLocaleTimeString(language, { hour: '2-digit', minute: '2-digit' }) })}
+              </span>
+            ) : null}
           </div>
         </div>
 
-        {/* Bottom Section: Controls */}
+        {/* Filtri e azioni */}
         <div className="px-4 py-2 flex items-center gap-3 border-t border-border/30 bg-card/40">
-          <div className="relative w-80">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary" />
+          <div className="relative flex-1 min-w-[170px] max-w-[320px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary pointer-events-none" />
             <Input
+              ref={searchRef}
               placeholder={t('search')}
+              title={t('searchHint')}
+              aria-label={t('searchHint')}
               value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="pl-9 h-9 text-sm bg-card border-2 border-primary/50 shadow-sm focus:border-primary focus:ring-2 focus:ring-primary/30"
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape' && searchQuery) {
+                  e.preventDefault();
+                  setSearchQuery('');
+                }
+              }}
+              className="pl-9 pr-8 h-8 text-sm bg-card border-2 border-primary/50 shadow-sm focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-0"
             />
+            {searchQuery && (
+              <button
+                onClick={() => {
+                  setSearchQuery('');
+                  searchRef.current?.focus();
+                }}
+                aria-label={t('clearSearch')}
+                title={t('clearSearch')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground hover:text-foreground"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
-          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-            <SelectTrigger className="w-48 h-9 text-sm bg-card border-2 border-primary/50 shadow-sm hover:border-primary focus:ring-2 focus:ring-primary/30">
-              <SelectValue placeholder={t('allCategories')} />
+
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger
+              aria-label={t('allCategories')}
+              className="w-40 lg:w-52 h-8 text-sm bg-card border-2 border-primary/50 shadow-sm hover:border-primary focus:ring-2 focus:ring-primary/30 focus:ring-offset-0"
+            >
+              <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{t('allCategories')}</SelectItem>
-              {categories.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+              {categories.map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
-          <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-            <SelectTrigger className="w-40 h-9 text-sm bg-card border-2 border-primary/50 shadow-sm hover:border-primary focus:ring-2 focus:ring-primary/30">
-              <SelectValue placeholder="Tutti gli stati" />
+
+          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as 'all' | TestStatus)}>
+            <SelectTrigger
+              aria-label={t('allStatuses')}
+              className="w-36 lg:w-40 h-8 text-sm bg-card border-2 border-primary/50 shadow-sm hover:border-primary focus:ring-2 focus:ring-primary/30 focus:ring-offset-0"
+            >
+              <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Tutti gli stati</SelectItem>
-              <SelectItem value="pending">
-                <div className="flex items-center gap-2">
-                  <Circle className="w-3.5 h-3.5 text-[hsl(var(--status-pending))]" />
-                  <span>Da fare</span>
-                </div>
-              </SelectItem>
-              <SelectItem value="in-progress">
-                <div className="flex items-center gap-2">
-                  <Clock className="w-3.5 h-3.5 text-[hsl(var(--status-progress))]" />
-                  <span>In corso</span>
-                </div>
-              </SelectItem>
-              <SelectItem value="done">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-3.5 h-3.5 text-[hsl(var(--status-done))]" />
-                  <span>Completato</span>
-                </div>
-              </SelectItem>
+              <SelectItem value="all">{t('allStatuses')}</SelectItem>
+              {STATUSES.map((s) => (
+                <SelectItem key={s} value={s}>
+                  <span className="flex items-center gap-2">
+                    <StatusIcon status={s} className="w-3.5 h-3.5" />
+                    {t(statusLabelKey[s])}
+                  </span>
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
-          {/* Separatore visivo */}
-          <div className="h-6 w-px bg-border/50" />
 
-          {/* View Controls */}
+          <div className="h-6 w-px bg-border/50 flex-shrink-0" />
+
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={expandAll} className="h-8 w-8 p-0" title="Espandi tutte le fasi">
+            <Button variant="outline" size="sm" onClick={expandAll} className="h-8 w-8 p-0" title={t('expandAll')} aria-label={t('expandAll')}>
               <ChevronsUpDown className="w-3.5 h-3.5" />
             </Button>
-            <Button variant="outline" size="sm" onClick={collapseAll} className="h-8 w-8 p-0" title="Collassa tutte le fasi">
+            <Button variant="outline" size="sm" onClick={collapseAll} className="h-8 w-8 p-0" title={t('collapseAll')} aria-label={t('collapseAll')}>
               <ChevronsDownUp className="w-3.5 h-3.5" />
             </Button>
           </div>
 
           <div className="flex-1" />
 
-          {/* Action Buttons */}
-          <div className="flex items-center gap-2">
-            <Button size="sm" onClick={() => setShowMappingModal(true)} className="h-8 gap-1.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-sm shadow-md">
-              <Sparkles className="w-3.5 h-3.5" />{t('mapping')}
+          <Button
+            size="sm"
+            onClick={() => openTop10()}
+            title={t('mappingHint')}
+            className="h-8 gap-1.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-sm text-white shadow-md"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span className="hidden xl:inline">{t('mapping')}</span>
+          </Button>
+
+          <div className="h-6 w-px bg-border/50 flex-shrink-0" />
+
+          <div className="flex">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => save()}
+              title={t('saveHint')}
+              className="h-8 gap-1.5 rounded-r-none text-sm border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-500 hover:text-cyan-300"
+            >
+              <Save className="w-3.5 h-3.5" />
+              <span className="hidden xl:inline">{t('save')}</span>
             </Button>
-            <div className="h-6 w-px bg-border/50" />
-            <Button variant="outline" size="sm" onClick={handleSave} className="h-8 gap-1.5 text-sm border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-500">
-              <Save className="w-3.5 h-3.5" />{t('saveState')}
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleLoad} className="h-8 gap-1.5 text-sm border-orange-500/50 text-orange-400 hover:bg-orange-500/10 hover:border-orange-500">
-              <FolderOpen className="w-3.5 h-3.5" />{t('loadState')}
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  title={t('saveAs')}
+                  aria-label={t('saveAs')}
+                  className="h-8 w-7 p-0 -ml-px rounded-l-none border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-500 hover:text-cyan-300"
+                >
+                  <ChevronDown className="w-3.5 h-3.5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onSelect={() => saveAs()}>
+                  {t('saveAs')}
+                  <DropdownMenuShortcut>Ctrl+Shift+S</DropdownMenuShortcut>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={requestOpen}
+            title={t('openHint')}
+            className="h-8 gap-1.5 text-sm border-orange-500/50 text-orange-400 hover:bg-orange-500/10 hover:border-orange-500 hover:text-orange-300"
+          >
+            <FolderOpen className="w-3.5 h-3.5" />
+            <span className="hidden xl:inline">{t('open')}</span>
+          </Button>
         </div>
       </header>
 
-      {/* Main */}
-      <div className="flex-1 overflow-hidden mx-1 my-2 bg-background/40 rounded-xl p-3">
-        <ResizablePanelGroup direction="horizontal" className="h-full">
-          {/* Left Panel */}
-          <ResizablePanel defaultSize={48} minSize={40} maxSize={48}>
-            <aside className="h-full flex flex-col bg-sidebar-background rounded-lg border border-sidebar-border overflow-hidden shadow-lg">
-              <ScrollArea className="flex-1">
-                <div className="p-2 space-y-5">
-                  {filteredCategories.map((cat, ci) => {
-                    const collapsed = isCategoryCollapsed(cat.id);
-                    return (
-                      <div key={cat.id} className="animate-fade-in" style={{ animationDelay: `${ci * 30}ms` }}>
-                        <button onClick={() => handleCategoryClick(cat)} className={cn('w-full flex items-center gap-2 p-2.5 rounded-lg transition-all', getCatBgColor(cat.id), 'hover:opacity-90')}>
-                          <ChevronRight className={cn('w-4 h-4 flex-shrink-0 transition-transform', getCatStatusColor(cat.id), !collapsed && 'rotate-90')} />
-                          <span className={cn('flex-1 text-left font-semibold text-sm', getCatStatusColor(cat.id))}>{cat.name}</span>
-                          <span className={cn('text-sm font-medium flex-shrink-0', getCatStatusColor(cat.id))}>{getCompletedCount(cat.tests.map(t => t.id))}/{cat.tests.length}</span>
-                        </button>
-                        <div className={cn('grid transition-[grid-template-rows] duration-200 ease-out', collapsed ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]')}>
-                          <div className="overflow-hidden">
-                            <div className="mt-1 space-y-0.5">
-                            {cat.tests.map((test, ti) => {
-                              const status = getStatus(test.id);
-                              const isSelected = selectedTest?.id === test.id || selectedTests.has(test.id);
-                              return (
-                                <ContextMenu key={test.id}>
-                                  <ContextMenuTrigger asChild>
-                                    <button
-                                      onClick={(e) => handleTestClick(test, cat, e)}
-                                      onContextMenu={(e) => {
-                                        if (!selectedTests.has(test.id) && selectedTest?.id !== test.id) {
-                                          setSelectedTest(test);
-                                        }
-                                      }}
-                                      className={cn('w-full flex items-center gap-2 px-2.5 py-2 rounded-md transition-all text-left', isSelected ? 'bg-primary/20 border-l-2 border-primary' : 'hover:bg-foreground/10 border-l-2 border-transparent')}
-                                    >
-                                      <span onClick={(e) => { e.stopPropagation(); cycleStatus(test.id); }} className="flex-shrink-0 cursor-pointer transition-transform duration-150 hover:scale-110 active:scale-90">
-                                        {getStatusIcon(status)}
-                                      </span>
-                                      <span className={cn('flex-1 text-[13px] transition-colors duration-200', getStatusColor(status))}>{test.id} - {test.name}</span>
-                                    </button>
-                                  </ContextMenuTrigger>
-                                  <ContextMenuContent>
-                                    <ContextMenuItem onClick={() => {
-                                      const targets = selectedTests.size > 0 ? Array.from(selectedTests) : [test.id];
-                                      setMultipleStatus(targets, 'pending');
-                                      setSelectedTests(new Set());
-                                      if (selectedTest?.id === test.id) setSelectedTest(null);
-                                    }}>
-                                      <Circle className="w-4 h-4 mr-2 text-[hsl(var(--status-pending))]" />
-                                      {t('pending')}
-                                    </ContextMenuItem>
-                                    <ContextMenuItem onClick={() => {
-                                      const targets = selectedTests.size > 0 ? Array.from(selectedTests) : [test.id];
-                                      setMultipleStatus(targets, 'in-progress');
-                                      setSelectedTests(new Set());
-                                      if (selectedTest?.id === test.id) setSelectedTest(null);
-                                    }}>
-                                      <Clock className="w-4 h-4 mr-2 text-[hsl(var(--status-progress))]" />
-                                      {t('inProgress')}
-                                    </ContextMenuItem>
-                                    <ContextMenuItem onClick={() => {
-                                      const targets = selectedTests.size > 0 ? Array.from(selectedTests) : [test.id];
-                                      setMultipleStatus(targets, 'done');
-                                      setSelectedTests(new Set());
-                                      if (selectedTest?.id === test.id) setSelectedTest(null);
-                                    }}>
-                                      <CheckCircle className="w-4 h-4 mr-2 text-[hsl(var(--status-done))]" />
-                                      {t('done')}
-                                    </ContextMenuItem>
-                                  </ContextMenuContent>
-                                </ContextMenu>
-                              );
-                            })}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </ScrollArea>
-            </aside>
-          </ResizablePanel>
-
-          <ResizableHandle className="mx-2 opacity-0 hover:opacity-100 transition-opacity" />
-
-          {/* Right Panel */}
-          <ResizablePanel defaultSize={50}>
-            <div className="h-full flex flex-col gap-3">
-              {/* Top Section: Test Info or Category Description - Collapsible */}
-              <div className="rounded-lg border border-border/70 bg-card/40 flex flex-col shadow-md overflow-hidden">
-                {/* Collapse Button Header */}
-                  <div className="flex-shrink-0 px-3 py-2 bg-card/60 border-b border-border/50 flex items-center justify-between cursor-pointer hover:bg-card/80 transition-colors"
-                    onClick={() => setIsTopSectionCollapsed(!isTopSectionCollapsed)}>
-                    <div className="flex items-center gap-2">
-                    {showCategoryDescription && selectedCategoryInfo ? (
-                      <>
-                        <Target className="w-4 h-4 text-cyan-400" />
-                        <span className="text-xs font-semibold text-cyan-400">{t('categoryDescription')}</span>
-                      </>
-                    ) : selectedTest ? (
-                      <>
-                        <Shield className="w-4 h-4 text-pink-400" />
-                        <span className="text-sm font-semibold text-pink-400">{selectedTest.id} - {selectedCategoryInfo?.name}</span>
-                      </>
-                    ) : (
-                      <>
-                        <Shield className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-xs font-semibold text-muted-foreground">Info Test</span>
-                      </>
-                    )}
-                  </div>
-                   <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setIsTopSectionCollapsed(!isTopSectionCollapsed);
-                    }}
-                    className="h-6 w-6 p-0 hover:bg-primary/10"
-                    title={isTopSectionCollapsed ? "Espandi" : "Collassa"}
-                    >
-                    {isTopSectionCollapsed ? (
-                      <ChevronDown className="w-4 h-4 text-primary" />
-                    ) : (
-                      <ChevronUp className="w-4 h-4 text-primary" />
-                    )}
-                  </Button>
-                </div>
-
-                {/* Content - height-animated collapse (always mounted) */}
-                <div className={cn('overflow-hidden transition-[max-height] duration-300 ease-out', isTopSectionCollapsed ? 'max-h-0' : 'max-h-[35vh]')}>
-                  <div className="h-[35vh]">
-                    {showCategoryDescription && selectedCategoryInfo ? (
-                      <div className="p-4 animate-fade-in h-full overflow-y-auto">
-                        <h3 className="text-base font-semibold text-foreground mb-2">{selectedCategoryInfo.name}</h3>
-                        <p className="text-sm text-muted-foreground leading-relaxed">
-                          {categoryDescriptions[selectedCategoryInfo.name] || 'No description available.'}
-                        </p>
-                      </div>
-                    ) : selectedTest ? (
-                      <div className="p-4 animate-fade-in h-full overflow-y-auto">
-                        <h3 className="text-sm font-semibold mb-3 text-pink-400">{selectedTest.name}</h3>
-                        <div className="space-y-2">
-                          <span className="text-sm text-pink-300 font-semibold">{t('testObjectives')}:</span>
-                          <ul className="list-disc list-outside text-[13px] text-pink-300 leading-relaxed space-y-2 pl-5">
-                            {selectedTest.objectives.map((o, i) => <li key={i}>{o}</li>)}
-                          </ul>
-                        </div>
-                        <a href={selectedTest.reference} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm text-cyan-400 hover:underline mt-3">
-                          <ExternalLink className="w-3.5 h-3.5" />{t('reference')}
-                        </a>
-                      </div>
-                    ) : (
-                      <div className="flex-1 flex items-center justify-center h-full">
-                        <div className="text-center">
-                          <Shield className="w-12 h-12 mx-auto text-muted-foreground/50 mb-3" />
-                          <p className="text-sm text-muted-foreground">{t('selectTest')}</p>
-                          <p className="text-xs text-muted-foreground/70">{t('selectTestDesc')}</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Bottom Section: Tab Content - Expands when top is collapsed */}
-              <div className="flex-1 rounded-lg border border-border/70 bg-elevated/60 overflow-hidden flex flex-col shadow-md">
-                {selectedTest ? (
-                  <>
-                    <div className="flex-shrink-0 p-3 border-b border-border bg-card/50 flex flex-wrap gap-2">
-                      {tabs.map(tab => (
-                        <button
-                          key={tab.id}
-                          onClick={() => setActiveTab(tab.id)}
-                          style={{ padding: '7px 15px', marginRight: '5px' }}
-                          className={cn(
-                            'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200',
-                            'border border-transparent backdrop-blur-sm shadow-md hover-lift',
-                            activeTab === tab.id
-                              ? `${tab.color} text-white`
-                              : 'bg-secondary/50 text-muted-foreground hover:bg-secondary hover:text-foreground'
-                          )}
-                        >
-                          <tab.icon className="w-3.5 h-3.5" />{tab.label}
-                        </button>
-                      ))}
-                    </div>
-                    <ScrollArea className="flex-1 p-4">
-                      {activeTab === 'summary' && testInfo?.summary && <div className="tab-content text-muted-foreground prose prose-invert prose-sm max-w-none animate-fade-in" dangerouslySetInnerHTML={{ __html: testInfo.summary }} />}
-                      {activeTab === 'howto' && testInfo?.['how-to'] && <div className="tab-content text-muted-foreground prose prose-invert prose-sm max-w-none animate-fade-in" dangerouslySetInnerHTML={{ __html: testInfo['how-to'] }} />}
-                      {activeTab === 'tools' && testInfo?.tools && <div className="tab-content text-muted-foreground prose prose-invert prose-sm max-w-none animate-fade-in" dangerouslySetInnerHTML={{ __html: testInfo.tools }} />}
-                      {activeTab === 'remediation' && testInfo?.remediation && <div className="tab-content text-muted-foreground prose prose-invert prose-sm max-w-none animate-fade-in" dangerouslySetInnerHTML={{ __html: testInfo.remediation }} />}
-                      {activeTab === 'notes' && (
-                        <NoteEditor
-                          content={getNote(selectedTest.id)}
-                          onChange={(html) => setNote(selectedTest.id, html)}
-                          testId={selectedTest.id}
-                        />
-                      )}
-
-                      {!testInfo && activeTab !== 'notes' && <p className="text-sm text-muted-foreground">Nessuna informazione disponibile per questo test.</p>}
-                    </ScrollArea>
-                  </>
-                ) : (
-                  <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
-                    Seleziona un test per vedere i dettagli
-                  </div>
-                )}
-              </div>
-            </div>
-          </ResizablePanel>
-        </ResizablePanelGroup>
-      </div>
-
-      {/* Footer */}
-      <footer className="flex-shrink-0 border-t border-border px-4 py-2 flex items-center justify-between bg-card/50">
-        <div className="flex items-center gap-4 text-xs">
-          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-[hsl(var(--status-pending))]" />{t('pending')}: {allTestIds.length - totalCompleted - getInProgressCount(allTestIds)}</span>
-          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-[hsl(var(--status-progress))]" />{t('inProgress')}: {getInProgressCount(allTestIds)}</span>
-          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-[hsl(var(--status-done))]" />{t('done')}: {totalCompleted}</span>
-        </div>
-        <Select value={language} onValueChange={(v) => setLanguage(v as 'en' | 'it')}>
-          <SelectTrigger className="w-36 h-9 text-sm font-medium bg-gradient-to-r from-primary/10 to-accent/10 border-primary/30 hover:border-primary/50 transition-all">
-            <Globe className="w-4 h-4 mr-2 text-primary" />
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="it" className="text-sm">🇮🇹 Italiano</SelectItem>
-            <SelectItem value="en" className="text-sm">🇬🇧 English</SelectItem>
-          </SelectContent>
-        </Select>
-      </footer>
-
-      {/* Mapping Modal */}
-      <Dialog open={showMappingModal} onOpenChange={setShowMappingModal}>
-        <DialogContent className="max-w-[1300px] h-[91.2vh] p-0 gap-0 bg-background border-border overflow-hidden">
-          <DialogHeader className="px-4 py-2 border-b border-border">
-            <DialogTitle className="flex items-center gap-2 text-base">
-              <Sparkles className="w-4 h-4 text-amber-400" />
-              Mapping WSTG <ChevronRight className="w-4 h-4 mx-1" /> OWASP Top 10
-            </DialogTitle>          
-          </DialogHeader>
-          <div className="flex-1 flex overflow-hidden gap-4 p-3">
-            {/* Left: Table */}
-            <div className="w-[430px] overflow-auto flex-shrink-0 rounded-lg border border-border/70 bg-card/40 shadow-md">
-              <table className="w-full text-sm">
-                <thead className="sticky top-0 bg-card/80 backdrop-blur-sm">
-                  <tr><th className="text-left p-3 font-semibold border-b border-border">Categoria WSTG</th><th className="text-left p-3 font-semibold border-b border-border">OWASP Top 10</th></tr>
-                </thead>
-                <tbody>
-                  {categories.map((cat, i) => (
-                    <tr key={cat.id} className="border-b border-border/50 hover:bg-secondary/30 animate-fade-in" style={{ animationDelay: `${i * 40}ms` }}>
-                      <td className="p-3 text-cyan-400">{cat.name}</td>
-                      <td className="p-3 text-purple-400">{owaspMapping[cat.name] || '—'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            {/* Center: OWASP List */}
-            <div className="w-[390px] p-3 overflow-auto flex-shrink-0 rounded-lg border border-border/70 bg-elevated/60 shadow-md">
-              <div className="space-y-1.5">
-                {Object.entries(owaspTop10).map(([key, item], i) => (
-                  <button
-                      key={key}
-                      onClick={() => setSelectedOwaspItem(key)}
-                      className={cn(
-                        'w-full p-2.5 rounded-lg text-left transition-all duration-200 animate-fade-in'
-                      )}
-                      style={{
-                        animationDelay: `${i * 50}ms`,
-                        backgroundColor: selectedOwaspItem === key ? `${getLevelColor(item.level)}30` : `${getLevelColor(item.level)}10`,
-                        border: `3px solid ${selectedOwaspItem === key ? getLevelColor(item.level) : 'transparent'}`
-                      }}
-                      onMouseEnter={(e) => {
-                        if (selectedOwaspItem !== key) {
-                          e.currentTarget.style.backgroundColor = `${getLevelColor(item.level)}20`;
-                          e.currentTarget.style.borderColor = getLevelColor(item.level);
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (selectedOwaspItem !== key) {
-                          e.currentTarget.style.backgroundColor = `${getLevelColor(item.level)}10`;
-                          e.currentTarget.style.borderColor = 'transparent';
-                        }
-                      }}
-                    >
-                    <span className="text-[13px] font-semibold" style={{ color: getLevelColor(item.level) }}>{key}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-            {/* Right: Description */}
-            <div className="w-[420px] p-4 overflow-auto flex-shrink-0 rounded-lg border border-border/70 bg-card/40 shadow-md">
-              {selectedOwaspData ? (
-                <div className="animate-fade-in">
-                  <h3 className="text-lg font-semibold mb-3" style={{ color: getLevelColor(selectedOwaspData.level) }}>{selectedOwaspItem}</h3>
-                  <div className="text-sm text-muted-foreground leading-relaxed mb-4" dangerouslySetInnerHTML={{ __html: selectedOwaspData.description }} />
-                  {selectedOwaspData.link && (
-                    <a href={selectedOwaspData.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm text-cyan-400 hover:underline">
-                      <ExternalLink className="w-3.5 h-3.5" />Riferimento
-                    </a>
-                  )}
-                </div>
-              ) : (
-                <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
-                  Seleziona un elemento OWASP Top 10 per vedere la descrizione
-                </div>
-              )}
+      <main className="flex-1 min-h-0 p-3">
+        {contentError ? (
+          <div className="h-full flex items-center justify-center p-6">
+            <div className="max-w-md text-center space-y-3">
+              <AlertTriangle className="w-10 h-10 mx-auto text-amber-400" />
+              <p className="text-sm text-muted-foreground">{t('contentError')}</p>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        ) : (
+          <ResizablePanelGroup direction="horizontal" autoSaveId="wstg-tracker-layout" className="h-full">
+            <ResizablePanel defaultSize={45} minSize={28} maxSize={62}>
+              {categories.length > 0 ? (
+                <TestList
+                  categories={filteredCategories}
+                  visibleIds={visibleIds}
+                  getStatus={getStatus}
+                  hasNote={hasNote}
+                  isCollapsed={isCollapsed}
+                  selectedTestId={selectedTestId}
+                  selection={selection}
+                  hasFilters={hasFilters}
+                  onCategoryClick={onCategoryClick}
+                  onSelectTest={selectTest}
+                  onCycleStatus={cycleStatus}
+                  onSetStatus={setStatusFor}
+                  onClearSelection={() => setSelection(new Set())}
+                  onClearFilters={clearFilters}
+                />
+              ) : (
+                <div className="h-full rounded-lg border border-sidebar-border bg-sidebar" />
+              )}
+            </ResizablePanel>
+            <ResizableHandle className="mx-1.5 w-1 rounded-full bg-border/30 transition-colors hover:bg-primary/50 data-[resize-handle-state=drag]:bg-primary/70" />
+            <ResizablePanel defaultSize={55} minSize={38}>
+              <TestDetail
+                test={selected?.test ?? null}
+                category={shownCategory}
+                showCategory={showCategory}
+                info={selected ? testInfoData[selected.test.id] ?? null : null}
+                categoryDescription={shownCategory ? categoryDescriptions[shownCategory.name] ?? '' : ''}
+                categoryStats={categoryStats}
+                status={selected ? getStatus(selected.test.id) : 'pending'}
+                onSetStatus={(status) => selected && setTestStatus(selected.test.id, status)}
+                top10={detailTop10}
+                onOpenTop10={openTop10}
+                activeTab={activeTab}
+                onTabChange={setActiveTab}
+                note={selected ? getNote(selected.test.id) : ''}
+                hasNote={selected ? hasNote(selected.test.id) : false}
+                onNoteChange={(html) => selected && setNote(selected.test.id, html)}
+                collapsed={collapsedPart}
+                onToggleCollapsed={(part) => setCollapsedPart((c) => (c === part ? null : part))}
+                onNavigateTest={goToTest}
+              />
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        )}
+      </main>
 
-      <MessageModal
-        isOpen={modal.isOpen}
-        config={modal.config}
-        onClose={modal.hide}
+      <footer className="flex-shrink-0 border-t border-border px-4 py-1 flex items-center justify-between gap-4 bg-card/50">
+        {/* Legenda: un clic filtra per quello stato */}
+        <div className="flex items-center gap-2 text-xs tabular-nums">
+          {STATUSES.map((s) => (
+            <button
+              key={s}
+              aria-pressed={statusFilter === s}
+              onClick={() => setStatusFilter(statusFilter === s ? 'all' : s)}
+              className={cn('focus-ring flex items-center gap-1.5 rounded-md px-2 py-1 transition-colors hover:bg-secondary/60', statusFilter === s && 'bg-secondary')}
+            >
+              <span className={cn('w-2.5 h-2.5 rounded-sm', legendColor[s])} />
+              {t(statusLabelKey[s])}: {counts[s]}
+            </button>
+          ))}
+        </div>
+
+        <div role="radiogroup" aria-label={t('language')} className="flex items-center gap-0.5 rounded-lg border border-primary/30 bg-gradient-to-r from-primary/10 to-accent/10 p-0.5">
+          <Globe className="w-4 h-4 mx-1.5 text-primary" aria-hidden />
+          {(['it', 'en'] as const).map((lang) => (
+            <button
+              key={lang}
+              role="radio"
+              aria-checked={language === lang}
+              onClick={() => setLanguage(lang)}
+              className={cn(
+                'focus-ring rounded-md px-2.5 py-0.5 text-xs font-semibold transition-colors',
+                language === lang ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground',
+              )}
+            >
+              {lang === 'it' ? 'Italiano' : 'English'}
+            </button>
+          ))}
+        </div>
+      </footer>
+
+      <Top10Dialog
+        open={top10Open}
+        onOpenChange={setTop10Open}
+        entries={owaspTop10}
+        selectedKey={top10Key}
+        onSelect={setTop10Key}
+        categories={categories}
+        getStatus={getStatus}
+        onGoToTest={goToTest}
       />
+
+      <MessageModal isOpen={modal.isOpen} config={modal.config} onClose={modal.hide} />
     </div>
   );
 };

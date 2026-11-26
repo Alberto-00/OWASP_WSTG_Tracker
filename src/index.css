@@ -1,8 +1,40 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@300;400&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Font inclusi nell'app: funzionano offline e non generano richieste verso terzi (OFL 1.1) */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url('./assets/fonts/inter-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url('./assets/fonts/inter-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400 500;
+  font-display: swap;
+  src: url('./assets/fonts/jetbrains-mono-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400 500;
+  font-display: swap;
+  src: url('./assets/fonts/jetbrains-mono-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
 
 @layer base {
   :root {
@@ -69,6 +101,16 @@
   ::-webkit-scrollbar-thumb { background: hsl(var(--border-light)); border-radius: 4px; }
   ::-webkit-scrollbar-thumb:hover { background: hsl(var(--purple)); }
   ::selection { background: hsl(var(--purple) / 0.3); color: hsl(var(--foreground)); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-delay: 0ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }
 
 @layer components {
@@ -82,64 +124,91 @@
   .bg-progress { background: hsl(var(--status-progress) / 0.15); }
   .bg-pending { background: hsl(var(--status-pending) / 0.15); }
 
-  /* Controllo preciso contenuto tab */
-  .tab-content {
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-    word-break: break-word;
-    white-space: normal;
-    overflow-x: hidden;
-  }
+  /* Anello di focus da tastiera per i controlli personalizzati */
+  .focus-ring:focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; }
 
-  .tab-content p,
-  .tab-content li,
-  .tab-content span {
-    font-size: 13px !important;
-  }
-  
-  .tab-content h1 {
-    font-size: 1.75rem !important;
-    font-weight: 700;
-  }
-  
-  .tab-content h2 {
-    font-size: 1.4rem !important;
-    font-weight: 600;
-  }
-  
-  .tab-content h3 {
-    font-size: 0.9rem !important;
-    font-weight: 600;
-  }
-  
-  .tab-content h4 {
-    font-size: 1rem !important;
-    font-weight: 600;
-  }
+  /* Livello di rischio Top 10: il colore arriva da --lvl (impostata via style) */
+  .level-text { color: hsl(var(--lvl)); }
+  .level-chip { color: hsl(var(--lvl)); background: hsl(var(--lvl) / 0.12); border: 1px solid hsl(var(--lvl) / 0.35); }
+  button.level-chip:hover { background: hsl(var(--lvl) / 0.22); }
+  .level-item:hover { background: hsl(var(--lvl) / 0.08); }
+  .level-item[aria-selected='true'] { background: hsl(var(--lvl) / 0.16); box-shadow: inset 3px 0 0 hsl(var(--lvl)); }
 
-  .tab-content pre {
+  /* Contenuti WSTG (HTML) nelle schede: scala tipografica coerente con la palette */
+  .prose.tab-content {
+    --tw-prose-body: hsl(var(--muted-foreground));
+    --tw-prose-headings: hsl(var(--foreground));
+    --tw-prose-links: hsl(var(--cyan));
+    --tw-prose-bold: hsl(var(--foreground));
+    --tw-prose-counters: hsl(var(--muted-foreground));
+    --tw-prose-bullets: hsl(var(--border-light));
+    --tw-prose-hr: hsl(var(--border));
+    --tw-prose-quotes: hsl(var(--muted-foreground));
+    --tw-prose-quote-borders: hsl(var(--purple));
+    --tw-prose-code: hsl(var(--cyan));
+    --tw-prose-pre-code: hsl(var(--foreground) / 0.9);
+    --tw-prose-pre-bg: hsl(228 10% 12%);
+    --tw-prose-th-borders: hsl(var(--border));
+    --tw-prose-td-borders: hsl(var(--border) / 0.6);
+    font-size: 13px;
+    line-height: 1.65;
+    overflow-wrap: anywhere;
+  }
+  .prose.tab-content h3 { font-size: 15px; font-weight: 600; margin: 1.6em 0 0.6em; }
+  .prose.tab-content h3:first-child { margin-top: 0; }
+  .prose.tab-content h4 { font-size: 14px; font-weight: 600; margin: 1.4em 0 0.5em; }
+  .prose.tab-content h5,
+  .prose.tab-content h6 { font-size: 13px; font-weight: 600; color: hsl(var(--foreground) / 0.85); margin: 1.2em 0 0.4em; }
+  .prose.tab-content p,
+  .prose.tab-content li { margin-top: 0.5em; margin-bottom: 0.5em; }
+  .prose.tab-content a { text-decoration: none; font-weight: 500; }
+  .prose.tab-content a:hover { text-decoration: underline; }
+  /* Link a un altro test della checklist */
+  .prose.tab-content a[href^='#WSTG-'] { color: hsl(var(--purple)); border-bottom: 1px dotted hsl(var(--purple) / 0.6); }
+  .prose.tab-content a[href^='#WSTG-']:hover { text-decoration: none; border-bottom-style: solid; }
+  .prose.tab-content code {
+    font-weight: 400;
+    font-size: 12px;
+    background: hsl(228 10% 12%);
+    border: 1px solid hsl(220 9% 25%);
+    border-radius: 0.25rem;
+    padding: 0.1rem 0.35rem;
+  }
+  .prose.tab-content code::before,
+  .prose.tab-content code::after { content: none; }
+  .prose.tab-content pre {
+    font-size: 12px;
+    line-height: 1.6;
+    border: 1px solid hsl(220 9% 25%);
+    border-radius: 0.5rem;
     white-space: pre-wrap;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-    overflow-x: auto;
-    max-width: 100%;
+    overflow-wrap: anywhere;
   }
+  .prose.tab-content pre code { background: transparent; border: 0; padding: 0; font-size: inherit; }
+  .prose.tab-content table { font-size: 12.5px; }
+  .prose.tab-content table code { white-space: nowrap; }
 
-  .tab-content code {
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-    white-space: pre-wrap;
+  /* Descrizione Top 10 */
+  .top10-description p + p { margin-top: 0.75rem; }
+  .top10-description strong { color: hsl(var(--foreground)); font-weight: 600; }
+  .top10-description code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85em;
+    color: hsl(var(--cyan));
+    background: hsl(228 10% 12%);
+    border: 1px solid hsl(220 9% 25%);
+    border-radius: 0.25rem;
+    padding: 0.05rem 0.35rem;
   }
 }
 
-@keyframes fade-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes cascade { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
-.animate-fade-in { animation: fade-in 0.3s ease-out forwards; }
-.animate-cascade { animation: cascade 0.4s ease-out forwards; }
+/* Entrata morbida: "both" evita il lampo durante il ritardo dello stagger */
+@keyframes fade-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.animate-fade-in { animation: fade-in 0.25s ease-out both; }
 
-/* Micro-interazione: solleva l'elemento all'hover */
-.hover-lift { transition: transform 0.2s ease, box-shadow 0.2s ease; }
-.hover-lift:hover { transform: translateY(-2px); box-shadow: 0 6px 16px hsl(0 0% 0% / 0.25); }
+/* Cambio di stato di un test */
+@keyframes status-pop { 0% { transform: scale(0.6); } 60% { transform: scale(1.15); } 100% { transform: scale(1); } }
+.animate-status-pop { animation: status-pop 0.25s ease-out; }
 
 /* TipTap Editor Styles */
 .note-editor-content {
@@ -162,8 +231,8 @@
 }
 
 .note-editor-content h1 {
-  font-size: 1.5rem;
-  font-weight: 800;
+  font-size: 18px;
+  font-weight: 700;
   margin-bottom: 0.5rem;
   color: hsl(var(--primary));
   border-bottom: 1px solid hsl(var(--primary) / 0.3);
@@ -171,14 +240,14 @@
 }
 
 .note-editor-content h2 {
-  font-size: 1.25rem;
+  font-size: 16px;
   font-weight: 700;
   margin-bottom: 0.5rem;
   color: hsl(var(--cyan));
 }
 
 .note-editor-content h3 {
-  font-size: 1.1rem;
+  font-size: 14px;
   font-weight: 600;
   margin-bottom: 0.25rem;
   color: hsl(var(--purple));
@@ -208,7 +277,7 @@
   padding: 0.15rem 0.4rem;
   border-radius: 0.25rem;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.8rem;
+  font-size: 12px;
   border: 1px solid hsl(220 9% 25%);
   word-wrap: break-word;
   overflow-wrap: break-word;
@@ -221,7 +290,7 @@
   padding: 0.75rem 1rem;
   border-radius: 0.5rem;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.75rem;
+  font-size: 12px;
   border: 1px solid hsl(220 9% 25%);
   overflow-x: auto;
   margin: 0.5rem 0;

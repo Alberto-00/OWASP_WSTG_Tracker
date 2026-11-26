@@ -33,7 +33,7 @@
 
 A web application assessment is a long list of checks, and the part that actually costs you time is not running them, it is keeping track of what has been covered, what is still open and what you found. OWASP WSTG Tracker turns the WSTG into a working checklist you can drive during an engagement.
 
-The full guide ships with the app: **12 categories, 109 tests**, each with objectives, a how-to, suggested tools and remediation notes, in **English and Italian**. You set each test to *pending*, *in progress* or *done*, write your findings in a rich-text note attached to the test, and watch the completion counters move. Every WSTG category is mapped to the OWASP Top 10 entries it relates to, with a risk level, so the checklist doubles as a risk view.
+The full guide ships with the app: **12 categories, 109 tests**, each with objectives, a how-to, suggested tools and remediation notes, in **English and Italian**. You set each test to *pending*, *in progress* or *done*, write your findings in a rich-text note attached to the test, and watch the completion counters move. Every WSTG test is mapped to the **OWASP Top 10:2025** categories of the weaknesses it can uncover, with a risk level, so the checklist doubles as a risk view.
 
 Everything lives in a plain JSON file you own. There is no account, no telemetry and no backend: the app runs locally, saves next to the executable and reads back what you saved, so an assessment can be versioned, diffed and handed over like any other artifact.
 
@@ -45,7 +45,7 @@ Built with Electron, React and TypeScript. It also runs in the browser during de
 
 ### Prerequisites
 
-- **Node.js** 20.19+ or 22.12+ (required by Vite 7)
+- **Node.js** 20.19+ or 22.12+ (required by Vite 7); 22.6+ for `npm run check:data`
 - **npm** (bundled with Node.js)
 
 ### Install
@@ -82,10 +82,11 @@ Each OS produces **its own target only**, cross compilation is not configured:
 ### Checklist management
 
 - 12 WSTG categories (Information Gathering, Configuration and Deployment Management, Identity Management, Authentication, Authorization, Session Management, Input Validation, Error Handling, Weak Cryptography, Business Logic, Client-side, API Testing)
-- Search by test ID or name
-- Filters by category and status
-- Live counters and a completion progress bar
+- Search by test ID, name or objective; matching categories open by themselves
+- Filters by category and status (also from the status counters in the footer)
+- Live counters, a completion progress bar and a per-category progress bar
 - Expand and collapse per category
+- Keyboard first: arrow keys move between tests, Space changes the status, Ctrl/Shift+click selects several tests for a bulk status change
 
 ### Test details
 
@@ -97,26 +98,31 @@ Each test carries the reference material you need while working on it:
 - **Remediation**, fix recommendations
 - **Notes**, a rich-text editor for your own findings
 
-### OWASP Top 10 mapping
+Links between tests open the related test inside the app; WSTG and OWASP references open in the system browser. The five tests that the WSTG has since merged or removed (INFO-09, CONF-08, ATHN-01, INPV-03, ERRH-02) say so and, when merged, link to the test that absorbed them.
 
-- Every WSTG category is linked to the Top 10 entries it relates to
+### OWASP Top 10:2025 mapping
+
+- Every WSTG test is linked to the Top 10:2025 categories of the weaknesses it can uncover (first one = main category), based on the CWEs OWASP assigns to each category; pure reconnaissance tests have no direct category
+- The test details show its Top 10 badges; a category shows the union of its tests
 - Risk levels: critical, high, medium, low
-- Per vulnerability descriptions with links to the OWASP references
-- Interactive modal to navigate between WSTG and Top 10
+- Per-category description, example and link to the official page (the Italian page in the Italian UI)
+- For each Top 10 category, the linked WSTG tests with their status and how many are done; a click opens the test
 
 ### File handling
 
-- Auto-save and auto-reload of the last file used
-- Native save dialog to choose name and location
-- Unsaved changes tracking, with a confirmation dialog before closing
+- The last file used is reopened at startup
+- **Save** (Ctrl+S) writes to the open file, **Save as** (Ctrl+Shift+S) and **Open** (Ctrl+O) use the native dialogs
+- Atomic writes: a crash while saving cannot corrupt the existing file
+- Unsaved changes are shown in the header and in the window title, with a confirmation before closing or opening another file
+- Files are validated on open: unknown statuses and malformed entries are dropped
 - Readable JSON, easy to version and share
-- Saves live in a `saves/` folder next to the app: on **Windows** inside the unzipped portable folder, next to `OWASP WSTG Tracker.exe`; on **Linux** next to the `.AppImage`. If that folder is not writable (for example under `Program Files`) it falls back to `%APPDATA%/owasp-wstg-tracker/saves`. In development it is `public/saves/`
+- Saves live in a `saves/` folder next to the app: on **Windows** inside the unzipped portable folder, next to `OWASP WSTG Tracker.exe`; on **Linux** next to the `.AppImage`. If that folder is not writable (for example under `Program Files`) it falls back to `%APPDATA%/owasp-wstg-tracker/saves`. In development it is `saves/` in the project root, outside `public/` so that it never ends up in a build
 
 ### Bilingual
 
-- English and Italian, Italian is the default
+- English and Italian, Italian is the default; the choice is remembered
 - Instant switch, no application reload
-- Checklists, descriptions and UI are fully translated
+- UI, objectives, descriptions and reference material are translated; test and category names stay in English, as in the official WSTG
 
 ### Note editor
 
@@ -125,8 +131,7 @@ Each test carries the reference material you need while working on it:
 - Bullet and numbered lists
 - Inline code and code blocks
 - Highlighting in 6 colours
-- 5 text sizes
-- Selective clear formatting
+- Clear formatting
 
 ## Data format
 
@@ -149,7 +154,7 @@ WSTG categories and their tests:
             "Identify what sensitive information is exposed",
             "Determine the attack surface"
           ],
-          "reference": "https://owasp.org/..."
+          "reference": "https://github.com/OWASP/wstg/blob/<commit>/document/..."
         }
       ]
     }
@@ -182,21 +187,25 @@ Reference material per test, as HTML:
 }
 ```
 
+References are pinned to the WSTG commit the checklist comes from: the `latest` pages of the guide are being renumbered for v5 and no longer match these tests.
+
 ### `owasp_top_10.json`
 
-Mapping to the OWASP Top 10:
+The OWASP Top 10:2025 categories:
 
 ```json
 {
-  "A01:2021 - Broken Access Control": {
+  "A01:2025 - Broken Access Control": {
     "level": "alto",
     "description": "<p>Vulnerability description...</p>",
-    "link": "https://owasp.org/..."
+    "link": "https://top10.owasp.org/2025/A01_2025-Broken_Access_Control/"
   }
 }
 ```
 
-`level` is one of `critico`, `alto`, `medio`, `basso` in both languages, the label is localized at render time.
+`level` is one of `critico`, `alto`, `medio`, `basso` in both languages, the label is localized at render time. The per-test mapping lives in `src/lib/top10Mapping.ts`.
+
+After editing any of these files run `npm run check:data`: it checks that English and Italian match, that the HTML uses only safe tags, that links between tests resolve and that the mapping covers every test.
 
 ### Progress file
 
@@ -231,6 +240,7 @@ The default is `public/json/progress.json`. User saves go to `saves/` next to th
 | `npm run dev` | Vite dev server, web only |
 | `npm run build` | Production web build |
 | `npm run lint` | ESLint over the project |
+| `npm run check:data` | Consistency check of the checklist data and the Top 10 mapping |
 | `npm run electron:dev` | Electron in development mode |
 | `npm run electron:build` | Electron build for the current OS |
 | `npm run electron:build:win` | Electron build for Windows |

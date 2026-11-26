@@ -1,6 +1,15 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useLanguage } from './useLanguage';
 import { WSTGCategory, WSTGTest, TestStatus, TestInfoData, OwaspTop10Item, ProgressData } from '@/types/checklist';
+import { canonicalProgress, isEmptyNote, normalizeProgress } from '@/lib/progress';
+
+export interface OpenFile {
+  name: string;
+  // Percorso completo se il file è dell'utente (sovrascrivibile con Salva), null per il progress.json incluso nell'app
+  path: string | null;
+}
+
+const fileName = (filePath: string) => filePath.split(/[\\/]/).pop() || filePath;
 
 export const useChecklist = () => {
   const { language } = useLanguage();
@@ -8,114 +17,116 @@ export const useChecklist = () => {
   const [categoryDescriptions, setCategoryDescriptions] = useState<Record<string, string>>({});
   const [testInfoData, setTestInfoData] = useState<Record<string, TestInfoData>>({});
   const [owaspTop10, setOwaspTop10] = useState<Record<string, OwaspTop10Item>>({});
+  const [contentError, setContentError] = useState(false);
   const [status, setStatus] = useState<Record<string, TestStatus>>({});
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
-  const [loadedFileName, setLoadedFileName] = useState<string>('progress.json');
-  const [isInitialLoadComplete, setIsInitialLoadComplete] = useState(false);
+  const [file, setFile] = useState<OpenFile>({ name: '', path: null });
+  // Forma canonica dell'ultimo stato salvato/caricato; null finché il caricamento iniziale non è finito
+  const [savedSnapshot, setSavedSnapshot] = useState<string | null>(null);
 
-  // Caricamento contenuto checklist (dipende dalla lingua).
-  // NON tocca status/notes: cambiare lingua non deve azzerare i progressi.
+  // Contenuti della checklist (dipendono dalla lingua). Non tocca stati e note.
   useEffect(() => {
-    const loadContent = async () => {
+    let cancelled = false;
+    const load = async () => {
       try {
-        const [checklistRes, catDescRes, infoRes, owaspRes] = await Promise.all([
-          fetch(`./json/${language}/checklist.json`),
-          fetch(`./json/${language}/category_descriptions.json`),
-          fetch(`./json/${language}/checklist_info_data.json`),
-          fetch(`./json/${language}/owasp_top_10.json`),
-        ]);
-        const checklist = await checklistRes.json();
-        const catDesc = await catDescRes.json();
-        const info = await infoRes.json();
-        const owasp = await owaspRes.json();
-
-        const cats: WSTGCategory[] = Object.entries(checklist.categories).map(([name, data]: [string, { id: string; tests: WSTGTest[] }]) => ({
-          id: data.id,
-          name,
-          tests: data.tests,
-        }));
-        setCategories(cats);
+        const [checklist, catDesc, info, owasp] = await Promise.all(
+          ['checklist', 'category_descriptions', 'checklist_info_data', 'owasp_top_10'].map(async (name) => {
+            const res = await fetch(`./json/${language}/${name}.json`);
+            if (!res.ok) throw new Error(`${name}: HTTP ${res.status}`);
+            return res.json();
+          }),
+        );
+        // Un cambio lingua rapido non deve farsi sovrascrivere da una risposta arrivata in ritardo
+        if (cancelled) return;
+        const entries = Object.entries(checklist.categories as Record<string, { id: string; tests: WSTGTest[] }>);
+        setCategories(entries.map(([name, data]) => ({ id: data.id, name, tests: data.tests })));
         setCategoryDescriptions(catDesc);
         setTestInfoData(info);
         setOwaspTop10(owasp);
-      } catch (e) {
-        // Failed to load content
+        setContentError(false);
+      } catch {
+        if (!cancelled) setContentError(true);
       }
     };
-    loadContent();
+    load();
+    return () => {
+      cancelled = true;
+    };
   }, [language]);
 
-  // Caricamento status/note: SOLO al mount, indipendente dalla lingua.
+  const applyProgress = useCallback((data: ProgressData, name: string, path: string | null) => {
+    setStatus(data.status);
+    setNotes(data.notes);
+    setFile({ name, path });
+    setSavedSnapshot(canonicalProgress(data));
+  }, []);
+
+  // Stati e note: all'avvio riapre l'ultimo file usato, altrimenti il progress.json incluso nell'app
   useEffect(() => {
-    const loadProgress = async () => {
-      // Carica automaticamente l'ultimo salvataggio o progress.json
+    const loadInitial = async () => {
       if (window.electron) {
         try {
-          // Prima prova a caricare l'ultimo file salvato
-          const lastSave = await window.electron.getLastSaveFile();
-          if (lastSave.success && (lastSave.filePath || lastSave.filename)) {
-            // Usa il percorso completo se disponibile, altrimenti il filename
-            const fileToLoad = lastSave.filePath || lastSave.filename!;
-            const result = await window.electron.loadFile(fileToLoad);
-            if (result.success && result.data) {
-              const progressData = result.data as ProgressData;
-              if (progressData.status) setStatus(progressData.status);
-              if (progressData.notes) setNotes(progressData.notes);
-              setLoadedFileName(lastSave.filename || 'progress.json');
-              setIsInitialLoadComplete(true);
+          const last = await window.electron.getLastSaveFile();
+          if (last.success && last.filePath) {
+            const res = await window.electron.loadFile(last.filePath);
+            if (res.success) {
+              applyProgress(normalizeProgress(res.data), last.filename || fileName(last.filePath), last.filePath);
               return;
             }
           }
-        } catch (e) {
-          // Nessun ultimo salvataggio trovato, carico progress.json
+        } catch {
+          // ultimo file non leggibile: si riparte dal progress.json incluso
         }
       }
-
-      // Se non c'è ultimo salvataggio, carica progress.json dalla cartella json
       try {
-        const progressRes = await fetch('./json/progress.json');
-        if (progressRes.ok) {
-          const progressData = await progressRes.json() as ProgressData;
-          if (progressData.status) setStatus(progressData.status);
-          if (progressData.notes) setNotes(progressData.notes);
-          setLoadedFileName('progress.json');
-        } else {
-          setLoadedFileName('(nessun file)');
+        const res = await fetch('./json/progress.json');
+        if (res.ok) {
+          applyProgress(normalizeProgress(await res.json()), 'progress.json', null);
+          return;
         }
-      } catch (e) {
-        // progress.json non trovato, inizio con stato vuoto
-        setLoadedFileName('(nessun file)');
+      } catch {
+        // nessun avanzamento iniziale
       }
-
-      // Segnala che il caricamento iniziale è completo
-      setIsInitialLoadComplete(true);
+      applyProgress({ status: {}, notes: {} }, '', null);
     };
-    loadProgress();
+    loadInitial();
+  }, [applyProgress]);
+
+  const snapshot = useMemo(() => canonicalProgress({ status, notes }), [status, notes]);
+  const isDirty = savedSnapshot !== null && snapshot !== savedSnapshot;
+
+  const markSaved = useCallback((data: ProgressData, filePath: string | null, name?: string) => {
+    setFile({ name: name || (filePath ? fileName(filePath) : ''), path: filePath });
+    setSavedSnapshot(canonicalProgress(data));
   }, []);
 
   const getStatus = useCallback((testId: string): TestStatus => status[testId] || 'pending', [status]);
-  
+
   const setTestStatus = useCallback((testId: string, newStatus: TestStatus) => {
-    setStatus(prev => ({ ...prev, [testId]: newStatus }));
+    setStatus((prev) => ({ ...prev, [testId]: newStatus }));
   }, []);
 
   const cycleStatus = useCallback((testId: string) => {
-    const current = getStatus(testId);
-    const next: TestStatus = current === 'pending' ? 'in-progress' : current === 'in-progress' ? 'done' : 'pending';
-    setTestStatus(testId, next);
-  }, [getStatus, setTestStatus]);
+    setStatus((prev) => {
+      const current = prev[testId] || 'pending';
+      const next: TestStatus = current === 'pending' ? 'in-progress' : current === 'in-progress' ? 'done' : 'pending';
+      return { ...prev, [testId]: next };
+    });
+  }, []);
 
   const setMultipleStatus = useCallback((testIds: string[], newStatus: TestStatus) => {
-    setStatus(prev => {
+    setStatus((prev) => {
       const updated = { ...prev };
-      testIds.forEach(id => { updated[id] = newStatus; });
+      testIds.forEach((id) => {
+        updated[id] = newStatus;
+      });
       return updated;
     });
   }, []);
 
   const toggleCategory = useCallback((catId: string) => {
-    setCollapsedCategories(prev => {
+    setCollapsedCategories((prev) => {
       const next = new Set(prev);
       if (next.has(catId)) next.delete(catId);
       else next.add(catId);
@@ -123,40 +134,47 @@ export const useChecklist = () => {
     });
   }, []);
 
+  const expandCategory = useCallback((catId: string) => {
+    setCollapsedCategories((prev) => {
+      if (!prev.has(catId)) return prev;
+      const next = new Set(prev);
+      next.delete(catId);
+      return next;
+    });
+  }, []);
+
   const isCategoryCollapsed = useCallback((catId: string) => collapsedCategories.has(catId), [collapsedCategories]);
 
   const collapseAll = useCallback(() => {
-    setCollapsedCategories(new Set(categories.map(c => c.id)));
+    setCollapsedCategories(new Set(categories.map((c) => c.id)));
   }, [categories]);
 
   const expandAll = useCallback(() => {
     setCollapsedCategories(new Set());
   }, []);
 
-  const getCompletedCount = useCallback((testIds: string[]) => testIds.filter(id => getStatus(id) === 'done').length, [getStatus]);
-  const getInProgressCount = useCallback((testIds: string[]) => testIds.filter(id => getStatus(id) === 'in-progress').length, [getStatus]);
-
-  const setNote = useCallback((testId: string, note: string) => {
-    setNotes(prev => ({ ...prev, [testId]: note }));
+  const setNote = useCallback((testId: string, html: string) => {
+    setNotes((prev) => {
+      if (isEmptyNote(html)) {
+        if (!(testId in prev)) return prev;
+        const rest = { ...prev };
+        delete rest[testId];
+        return rest;
+      }
+      return prev[testId] === html ? prev : { ...prev, [testId]: html };
+    });
   }, []);
 
   const getNote = useCallback((testId: string) => notes[testId] || '', [notes]);
+  const hasNote = useCallback((testId: string) => !isEmptyNote(notes[testId]), [notes]);
 
-  const exportState = useCallback(() => ({ status, notes }), [status, notes]);
-
-  const importState = useCallback((data: ProgressData, filename?: string) => {
-    if (data.status) setStatus(data.status);
-    if (data.notes) setNotes(data.notes);
-    if (filename) setLoadedFileName(filename);
-  }, []);
+  const exportState = useCallback((): ProgressData => ({ status, notes }), [status, notes]);
 
   return {
-    categories, categoryDescriptions, testInfoData, owaspTop10,
+    categories, categoryDescriptions, testInfoData, owaspTop10, contentError,
     getStatus, setTestStatus, cycleStatus, setMultipleStatus,
-    toggleCategory, isCategoryCollapsed, collapseAll, expandAll,
-    getCompletedCount, getInProgressCount,
-    getNote, setNote, exportState, importState,
-    loadedFileName, setLoadedFileName,
-    isInitialLoadComplete,
+    toggleCategory, expandCategory, isCategoryCollapsed, collapseAll, expandAll,
+    getNote, setNote, hasNote, exportState, applyProgress, markSaved,
+    file, isDirty,
   };
 };

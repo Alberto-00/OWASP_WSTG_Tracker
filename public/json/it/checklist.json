@@ -6,7 +6,7 @@
             {
                "name":"Conduct Search Engine Discovery Reconnaissance for Information Leakage",
                "id":"WSTG-INFO-01",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/01-Information_Gathering/01-Conduct_Search_Engine_Discovery_Reconnaissance_for_Information_Leakage",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/01-Information_Gathering/01-Conduct_Search_Engine_Discovery_Reconnaissance_for_Information_Leakage.md",
                "objectives":[
                   "Individuare tutte le informazioni sensibili di progettazione e configurazione relative all’applicazione, al sistema o all’organizzazione che risultano esposte, sia direttamente (ad esempio tramite il sito ufficiale), sia indirettamente, ad esempio attraverso servizi di terze parti."
                ]
@@ -14,7 +14,7 @@
             {
                "name":"Fingerprint Web Server",
                "id":"WSTG-INFO-02",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/01-Information_Gathering/02-Fingerprint_Web_Server",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/01-Information_Gathering/02-Fingerprint_Web_Server.md",
                "objectives":[
                   "Riconoscere tipologia e versione del web server in uso, per facilitare l’identificazione di eventuali vulnerabilità note."
                ]
@@ -22,7 +22,7 @@
             {
                "name":"Review Webserver Metafiles for Information Leakage",
                "id":"WSTG-INFO-03",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/01-Information_Gathering/03-Review_Webserver_Metafiles_for_Information_Leakage",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/01-Information_Gathering/03-Review_Webserver_Metafiles_for_Information_Leakage.md",
                "objectives":[
                   "Analizzare i file di metadata per individuare percorsi nascosti, offuscati o funzionalità non documentate.",
                   "Recuperare e organizzare informazioni utili per ottenere una visione più chiara dei sistemi in analisi."
@@ -31,7 +31,7 @@
             {
                "name":"Enumerate Applications on Webserver",
                "id":"WSTG-INFO-04",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/01-Information_Gathering/04-Enumerate_Applications_on_Webserver",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/01-Information_Gathering/04-Enumerate_Applications_on_Webserver.md",
                "objectives":[
                   "Elencare tutte le applicazioni, presenti sul web server, che rientrano nel perimetro dell’attività di test."
                ]
@@ -39,7 +39,7 @@
             {
                "name":"Review Web Page Content for Information Leakage",
                "id":"WSTG-INFO-05",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/01-Information_Gathering/05-Review_Web_Page_Content_for_Information_Leakage",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/01-Information_Gathering/05-Review_Web_Page_Content_for_Information_Leakage.md",
                "objectives":[
                   "Analizzare i commenti presenti nelle pagine web, i metadati e i contenuti di redirect per individuare eventuali leak di informazioni.",
                   "Raccogliere i file JavaScript e analizzarli per comprendere la logica dell’applicazione e identificare possibili leak di dati.",
@@ -49,7 +49,7 @@
             {
                "name":"Identify Application Entry Points",
                "id":"WSTG-INFO-06",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/01-Information_Gathering/06-Identify_Application_Entry_Points",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/01-Information_Gathering/06-Identify_Application_Entry_Points.md",
                "objectives":[
                   "Individuare possibili entry point e punti di injection tramite l’analisi delle richieste e delle risposte tra client e server."
                ]
@@ -57,7 +57,7 @@
             {
                "name":"Map Execution Paths Through Application",
                "id":"WSTG-INFO-07",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/01-Information_Gathering/07-Map_Execution_Paths_Through_Application",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/01-Information_Gathering/07-Map_Execution_Paths_Through_Application.md",
                "objectives":[
                   "Mappare l’applicazione target e ricostruire i principali flussi di lavoro (workflow) e interazioni tra funzionalità."
                ]
@@ -65,7 +65,7 @@
             {
                "name":"Fingerprint Web Application Framework",
                "id":"WSTG-INFO-08",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/01-Information_Gathering/08-Fingerprint_Web_Application_Framework",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/01-Information_Gathering/08-Fingerprint_Web_Application_Framework.md",
                "objectives":[
                   "Riconoscere e identificare i framework e i componenti software su cui si basa la web application."
                ]
@@ -73,7 +73,7 @@
             {
                "name":"Fingerprint Web Application",
                "id":"WSTG-INFO-09",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/01-Information_Gathering/09-Fingerprint_Web_Application",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/01-Information_Gathering/09-Fingerprint_Web_Application.md",
                "objectives":[
                   "Identificare l'applicazione web in uso e la relativa versione per determinare eventuali vulnerabilità note."
                ]
@@ -81,7 +81,7 @@
             {
                "name":"Map Application Architecture",
                "id":"WSTG-INFO-10",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/01-Information_Gathering/10-Map_Application_Architecture",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/01-Information_Gathering/10-Map_Application_Architecture.md",
                "objectives":[
                   "Analizzare l’architettura dell’applicazione e le principali tecnologie utilizzate, per identificare possibili punti di attacco."
                ]
@@ -94,7 +94,7 @@
             {
                "name":"Test Network Infrastructure Configuration",
                "id":"WSTG-CONF-01",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/02-Configuration_and_Deployment_Management_Testing/01-Test_Network_Infrastructure_Configuration",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/02-Configuration_and_Deployment_Management_Testing/01-Test_Network_Infrastructure_Configuration.md",
                "objectives":[
                   "Revisionare le configurazioni applicative e infrastrutturali distribuite sulla rete e verificare che non presentino vulnerabilità note.",
                   "Verificare che framework e sistemi adottati siano sicuri e aggiornati, evitando rischi legati a software obsoleto, impostazioni di default o credenziali predefinite."
@@ -103,7 +103,7 @@
             {
                "name":"Test Application Platform Configuration",
                "id":"WSTG-CONF-02",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/02-Configuration_and_Deployment_Management_Testing/02-Test_Application_Platform_Configuration",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/02-Configuration_and_Deployment_Management_Testing/02-Test_Application_Platform_Configuration.md",
                "objectives":[
                   "Verificare che tutti i file di default o noti siano stati rimossi dall’ambiente di produzione.",
                   "Controllare che nell’ambiente di produzione non siano rimasti codice di debug o estensioni di sviluppo.",
@@ -113,7 +113,7 @@
             {
                "name":"Test File Extensions Handling for Sensitive Information",
                "id":"WSTG-CONF-03",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/02-Configuration_and_Deployment_Management_Testing/03-Test_File_Extensions_Handling_for_Sensitive_Information",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/02-Configuration_and_Deployment_Management_Testing/03-Test_File_Extensions_Handling_for_Sensitive_Information.md",
                "objectives":[
                   "Effettuare tentativi di brute force sulle estensioni di file che potrebbero contenere dati sensibili come script, credenziali o configurazioni.",
                   "Verificare che le regole di sicurezza impostate non siano aggirabili tramite il framework di sistema."
@@ -122,7 +122,7 @@
             {
                "name":"Review Old Backup and Unreferenced Files for Sensitive Information",
                "id":"WSTG-CONF-04",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/02-Configuration_and_Deployment_Management_Testing/04-Review_Old_Backup_and_Unreferenced_Files_for_Sensitive_Information",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/02-Configuration_and_Deployment_Management_Testing/04-Review_Old_Backup_and_Unreferenced_Files_for_Sensitive_Information.md",
                "objectives":[
                   "Individuare e analizzare file di backup o non referenziati che potrebbero contenere informazioni sensibili."
                ]
@@ -130,7 +130,7 @@
             {
                "name":"Enumerate Infrastructure and Application Admin Interfaces",
                "id":"WSTG-CONF-05",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/02-Configuration_and_Deployment_Management_Testing/05-Enumerate_Infrastructure_and_Application_Admin_Interfaces",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/02-Configuration_and_Deployment_Management_Testing/05-Enumerate_Infrastructure_and_Application_Admin_Interfaces.md",
                "objectives":[
                   "Individuare eventuali interfacce o funzionalità di amministrazione nascoste o non documentate."
                ]
@@ -138,7 +138,7 @@
             {
                "name":"Test HTTP Methods",
                "id":"WSTG-CONF-06",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/02-Configuration_and_Deployment_Management_Testing/06-Test_HTTP_Methods",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/02-Configuration_and_Deployment_Management_Testing/06-Test_HTTP_Methods.md",
                "objectives":[
                   "Elencare i metodi HTTP supportati dal web server o dall’applicazione.",
                   "Testare la possibilità di bypassare i controlli di accesso tramite metodi HTTP non previsti.",
@@ -148,7 +148,7 @@
             {
                "name":"Test HTTP Strict Transport Security",
                "id":"WSTG-CONF-07",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/02-Configuration_and_Deployment_Management_Testing/07-Test_HTTP_Strict_Transport_Security",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/02-Configuration_and_Deployment_Management_Testing/07-Test_HTTP_Strict_Transport_Security.md",
                "objectives":[
                   "Verificare la presenza e la corretta configurazione dell’header HSTS (HTTP Strict Transport Security)."
                ]
@@ -156,7 +156,7 @@
             {
                "name":"Test RIA Cross Domain Policy",
                "id":"WSTG-CONF-08",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/02-Configuration_and_Deployment_Management_Testing/08-Test_RIA_Cross_Domain_Policy",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/02-Configuration_and_Deployment_Management_Testing/08-Test_RIA_Cross_Domain_Policy.md",
                "objectives":[
                   "Analizzare i file di policy cross-domain (crossdomain.xml, clientaccesspolicy.xml) per verificare configurazioni permissive che potrebbero consentire accessi non autorizzati."
                ]
@@ -164,7 +164,7 @@
             {
                "name":"Test File Permission",
                "id":"WSTG-CONF-09",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/02-Configuration_and_Deployment_Management_Testing/09-Test_File_Permission",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/02-Configuration_and_Deployment_Management_Testing/09-Test_File_Permission.md",
                "objectives":[
                   "Analizzare i permessi dei file per individuare configurazioni errate o eccessivamente permissive."
                ]
@@ -172,7 +172,7 @@
             {
                "name":"Test for Subdomain Takeover",
                "id":"WSTG-CONF-10",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/02-Configuration_and_Deployment_Management_Testing/10-Test_for_Subdomain_Takeover",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/02-Configuration_and_Deployment_Management_Testing/10-Test_for_Subdomain_Takeover.md",
                "objectives":[
                   "Elencare tutti i domini e sottodomini (attuali e passati) dell’applicazione.",
                   "Individuare eventuali domini dimenticati o mal configurati che possano essere vulnerabili a takeover."
@@ -181,7 +181,7 @@
             {
                "name":"Test Cloud Storage",
                "id":"WSTG-CONF-11",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/02-Configuration_and_Deployment_Management_Testing/11-Test_Cloud_Storage",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/02-Configuration_and_Deployment_Management_Testing/11-Test_Cloud_Storage.md",
                "objectives":[
                   "Verificare che i servizi di storage cloud adottino controlli di accesso corretti e sicuri."
                ]
@@ -189,7 +189,7 @@
             {
                "name":"Testing for Content Security Policy",
                "id":"WSTG-CONF-12",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/02-Configuration_and_Deployment_Management_Testing/12-Test_for_Content_Security_Policy",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/02-Configuration_and_Deployment_Management_Testing/12-Test_for_Content_Security_Policy.md",
                "objectives":[
                   "Revisionare la configurazione dell’header Content-Security-Policy o dei meta tag CSP, per identificare errori o configurazioni non sicure."
                ]
@@ -197,7 +197,7 @@
             {
                "name":"Test Path Confusion",
                "id":"WSTG-CONF-13",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/02-Configuration_and_Deployment_Management_Testing/13-Test_for_Path_Confusion",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/02-Configuration_and_Deployment_Management_Testing/13-Test_for_Path_Confusion.md",
                "objectives":[
                   "Verificare che i path e le directory dell’applicazione siano configurati in modo sicuro e non generino ambiguità."
                ]
@@ -205,7 +205,7 @@
             {
                "name":"Test Other HTTP Security Header Misconfigurations",
                "id":"WSTG-CONF-14",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/02-Configuration_and_Deployment_Management_Testing/14-Test_Other_HTTP_Security_Header_Misconfigurations",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/02-Configuration_and_Deployment_Management_Testing/14-Test_Other_HTTP_Security_Header_Misconfigurations.md",
                "objectives":[
                   "Individuare header di sicurezza HTTP configurati in modo scorretto.",
                   "Valutare l’impatto sulla sicurezza delle configurazioni errate.",
@@ -220,7 +220,7 @@
             {
                "name":"Test Role Definitions",
                "id":"WSTG-IDNT-01",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/03-Identity_Management_Testing/01-Test_Role_Definitions",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/03-Identity_Management_Testing/01-Test_Role_Definitions.md",
                "objectives":[
                   "Identificare e documentare tutti i ruoli gestiti dall’applicazione.",
                   "Verificare la possibilità di eseguire uno switch, una modifica o un accesso a ruoli diversi da quello assegnato.",
@@ -230,7 +230,7 @@
             {
                "name":"Test User Registration Process",
                "id":"WSTG-IDNT-02",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/03-Identity_Management_Testing/02-Test_User_Registration_Process",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/03-Identity_Management_Testing/02-Test_User_Registration_Process.md",
                "objectives":[
                   "Verificare che i requisiti di identità richiesti per la registrazione siano adeguati agli obiettivi di business e alle esigenze di sicurezza.",
                   "Valutare la sicurezza e la correttezza dell’intero processo di registrazione utente."
@@ -239,7 +239,7 @@
             {
                "name":"Test Account Provisioning Process",
                "id":"WSTG-IDNT-03",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/03-Identity_Management_Testing/03-Test_Account_Provisioning_Process",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/03-Identity_Management_Testing/03-Test_Account_Provisioning_Process.md",
                "objectives":[
                   "Verificare quali account hanno il permesso di creare o gestire altri account e di quale tipologia."
                ]
@@ -247,7 +247,7 @@
             {
                "name":"Testing for Account Enumeration and Guessable User Account",
                "id":"WSTG-IDNT-04",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/03-Identity_Management_Testing/04-Testing_for_Account_Enumeration_and_Guessable_User_Account",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/03-Identity_Management_Testing/04-Testing_for_Account_Enumeration_and_Guessable_User_Account.md",
                "objectives":[
                   "Analizzare i processi che gestiscono l’identificazione utente (ad esempio registrazione, login, recupero password).",
                   "Effettuare tentativi di enumerazione degli utenti sfruttando le risposte dell’applicazione."
@@ -256,7 +256,7 @@
             {
                "name":"Testing for Weak or Unenforced Username Policy",
                "id":"WSTG-IDNT-05",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/03-Identity_Management_Testing/05-Testing_for_Weak_or_Unenforced_Username_Policy",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/03-Identity_Management_Testing/05-Testing_for_Weak_or_Unenforced_Username_Policy.md",
                "objectives":[
                   "Verificare se la struttura dei nomi utente (username) rende l’applicazione vulnerabile a tecniche di account enumeration.",
                   "Analizzare se i messaggi di errore restituiti permettono di effettuare l’enumerazione degli account."
@@ -270,7 +270,7 @@
             {
                "name":"Testing for Credentials Transported over an Encrypted Channel",
                "id":"WSTG-ATHN-01",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/04-Authentication_Testing/01-Testing_for_Credentials_Transported_over_an_Encrypted_Channel",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/04-Authentication_Testing/01-Testing_for_Credentials_Transported_over_an_Encrypted_Channel.md",
                "objectives":[
                   "Verificare che le credenziali vengano trasmesse esclusivamente su canali cifrati, ad esempio tramite HTTPS/TLS."
                ]
@@ -278,7 +278,7 @@
             {
                "name":"Testing for Default Credentials",
                "id":"WSTG-ATHN-02",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/04-Authentication_Testing/02-Testing_for_Default_Credentials",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/04-Authentication_Testing/02-Testing_for_Default_Credentials.md",
                "objectives":[
                   "Verificare la presenza di account utente con password di default.",
                   "Valutare se la creazione di nuovi account consente l’uso di password deboli o facilmente prevedibili."
@@ -287,7 +287,7 @@
             {
                "name":"Testing for Weak Lock Out Mechanism",
                "id":"WSTG-ATHN-03",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/04-Authentication_Testing/03-Testing_for_Weak_Lock_Out_Mechanism",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/04-Authentication_Testing/03-Testing_for_Weak_Lock_Out_Mechanism.md",
                "objectives":[
                   "Valutare se il meccanismo di blocco degli account (lockout) è efficace nel prevenire attacchi di brute force.",
                   "Analizzare la robustezza del sistema di sblocco contro tentativi di accesso non autorizzati."
@@ -296,7 +296,7 @@
             {
                "name":"Testing for Bypassing Authentication Schema",
                "id":"WSTG-ATHN-04",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/04-Authentication_Testing/04-Testing_for_Bypassing_Authentication_Schema",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/04-Authentication_Testing/04-Testing_for_Bypassing_Authentication_Schema.md",
                "objectives":[
                   "Verificare che l’autenticazione sia applicata correttamente a tutti i servizi che la richiedono."
                ]
@@ -304,7 +304,7 @@
             {
                "name":"Testing for Vulnerable Remember Password",
                "id":"WSTG-ATHN-05",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/04-Authentication_Testing/05-Testing_for_Vulnerable_Remember_Password",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/04-Authentication_Testing/05-Testing_for_Vulnerable_Remember_Password.md",
                "objectives":[
                   "Verificare che la gestione delle sessioni sia sicura e non esponga le credenziali dell’utente (funzionalità 'ricorda password')."
                ]
@@ -312,7 +312,7 @@
             {
                "name":"Testing for Browser Cache Weaknesses",
                "id":"WSTG-ATHN-06",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/04-Authentication_Testing/06-Testing_for_Browser_Cache_Weaknesses",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/04-Authentication_Testing/06-Testing_for_Browser_Cache_Weaknesses.md",
                "objectives":[
                   "Verificare che l’applicazione non salvi informazioni sensibili nella cache del browser.",
                   "Accertarsi che non sia possibile accedere a dati sensibili senza autorizzazione."
@@ -321,7 +321,7 @@
             {
                "name":"Testing for Weak Authentication Methods",
                "id":"WSTG-ATHN-07",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/04-Authentication_Testing/07-Testing_for_Weak_Authentication_Methods",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/04-Authentication_Testing/07-Testing_for_Weak_Authentication_Methods.md",
                "objectives":[
                   "Valutare la robustezza dell’autenticazione rispetto a tentativi di brute force con dizionari, verificando lunghezza, complessità, riuso e scadenza delle password."
                ]
@@ -329,7 +329,7 @@
             {
                "name":"Testing for Weak Security Question Answer",
                "id":"WSTG-ATHN-08",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/04-Authentication_Testing/08-Testing_for_Weak_Security_Question_Answer",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/04-Authentication_Testing/08-Testing_for_Weak_Security_Question_Answer.md",
                "objectives":[
                   "Valutare se le domande di sicurezza sono troppo semplici o facilmente intuibili.",
                   "Analizzare la resistenza del sistema a tentativi di indovinare le risposte tramite brute force."
@@ -338,7 +338,7 @@
             {
                "name":"Testing for Weak Password Change or Reset Functionalities",
                "id":"WSTG-ATHN-09",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/04-Authentication_Testing/09-Testing_for_Weak_Password_Change_or_Reset_Functionalities",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/04-Authentication_Testing/09-Testing_for_Weak_Password_Change_or_Reset_Functionalities.md",
                "objectives":[
                   "Verificare che le procedure di cambio e reset password non permettano la compromissione degli account."
                ]
@@ -346,7 +346,7 @@
             {
                "name":"Testing for Weaker Authentication in Alternative Channel",
                "id":"WSTG-ATHN-10",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/04-Authentication_Testing/10-Testing_for_Weaker_Authentication_in_Alternative_Channel",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/04-Authentication_Testing/10-Testing_for_Weaker_Authentication_in_Alternative_Channel.md",
                "objectives":[
                   "Individuare eventuali canali di autenticazione alternativi (API, mobile, ecc).",
                   "Valutare la sicurezza di questi canali e l’eventuale presenza di bypass delle protezioni."
@@ -355,7 +355,7 @@
             {
                "name":"Testing Multi-Factor Authentication (MFA)",
                "id":"WSTG-ATHN-11",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/04-Authentication_Testing/11-Testing_Multi-Factor_Authentication",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/04-Authentication_Testing/11-Testing_Multi-Factor_Authentication.md",
                "objectives":[
                   "Identificare la tipologia di autenticazione multifattore (MFA) utilizzata dall’applicazione.",
                   "Valutare la robustezza e la sicurezza dell’implementazione MFA.",
@@ -370,7 +370,7 @@
             {
                "name":"Testing Directory Traversal File Include",
                "id":"WSTG-ATHZ-01",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/05-Authorization_Testing/01-Testing_Directory_Traversal_File_Include",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/05-Authorization_Testing/01-Testing_Directory_Traversal_File_Include.md",
                "objectives":[
                   "Individuare i punti di input che possono essere sfruttati per attacchi di path traversal.",
                   "Analizzare le tecniche di bypass e valutare fino a che punto è possibile accedere a percorsi non autorizzati tramite directory traversal."
@@ -379,7 +379,7 @@
             {
                "name":"Testing for Bypassing Authorization Schema",
                "id":"WSTG-ATHZ-02",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/05-Authorization_Testing/02-Testing_for_Bypassing_Authorization_Schema",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/05-Authorization_Testing/02-Testing_for_Bypassing_Authorization_Schema.md",
                "objectives":[
                   "Valutare se sia possibile ottenere accesso orizzontale (tra utenti con stesso livello) o verticale (tra utenti di diversi privilegi) aggirando i controlli di autorizzazione."
                ]
@@ -387,7 +387,7 @@
             {
                "name":"Testing for Privilege Escalation",
                "id":"WSTG-ATHZ-03",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/05-Authorization_Testing/03-Testing_for_Privilege_Escalation",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/05-Authorization_Testing/03-Testing_for_Privilege_Escalation.md",
                "objectives":[
                   "Individuare i punti di input che possono consentire manipolazione dei privilegi.",
                   "Effettuare fuzzing o altri tentativi per bypassare i meccanismi di sicurezza e ottenere escalation dei privilegi."
@@ -396,7 +396,7 @@
             {
                "name":"Testing for Insecure Direct Object References",
                "id":"WSTG-ATHZ-04",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/05-Authorization_Testing/04-Testing_for_Insecure_Direct_Object_References",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/05-Authorization_Testing/04-Testing_for_Insecure_Direct_Object_References.md",
                "objectives":[
                   "Individuare i punti dell’applicazione in cui sono presenti riferimenti diretti a oggetti (ad esempio ID nei parametri delle richieste).",
                   "Valutare se i controlli di accesso sono adeguati o se sono presenti vulnerabilità di tipo IDOR (Insecure Direct Object Reference)."
@@ -405,7 +405,7 @@
             {
                "name":"Testing for OAuth Weaknesses",
                "id":"WSTG-ATHZ-05",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/05-Authorization_Testing/05-Testing_for_OAuth_Weaknesses",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/05-Authorization_Testing/05-Testing_for_OAuth_Weaknesses.md",
                "objectives":[
                   "Verificare se l’implementazione di OAuth2 è vulnerabile, utilizza versioni deprecate o soluzioni personalizzate non sicure."
                ]
@@ -418,7 +418,7 @@
             {
                "name":"Testing for Session Management Schema",
                "id":"WSTG-SESS-01",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/06-Session_Management_Testing/01-Testing_for_Session_Management_Schema",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/06-Session_Management_Testing/01-Testing_for_Session_Management_Schema.md",
                "objectives":[
                   "Raccogliere i token di sessione, sia per lo stesso utente che per utenti diversi, ove possibile.",
                   "Analizzare l’entropia dei token di sessione per assicurarsi che sia sufficiente a prevenire attacchi di session forging.",
@@ -428,7 +428,7 @@
             {
                "name":"Testing for Cookies Attributes",
                "id":"WSTG-SESS-02",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/06-Session_Management_Testing/02-Testing_for_Cookies_Attributes",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/06-Session_Management_Testing/02-Testing_for_Cookies_Attributes.md",
                "objectives":[
                   "Verificare che i cookie siano configurati con tutti gli attributi di sicurezza appropriati (Secure, HttpOnly, SameSite, ecc)."
                ]
@@ -436,7 +436,7 @@
             {
                "name":"Testing for Session Fixation",
                "id":"WSTG-SESS-03",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/06-Session_Management_Testing/03-Testing_for_Session_Fixation",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/06-Session_Management_Testing/03-Testing_for_Session_Fixation.md",
                "objectives":[
                   "Analizzare il meccanismo di autenticazione e il relativo flusso di sessione.",
                   "Provare a forzare valori di cookie di sessione e valutare l’impatto di eventuali vulnerabilità di session fixation."
@@ -445,7 +445,7 @@
             {
                "name":"Testing for Exposed Session Variables",
                "id":"WSTG-SESS-04",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/06-Session_Management_Testing/04-Testing_for_Exposed_Session_Variables",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/06-Session_Management_Testing/04-Testing_for_Exposed_Session_Variables.md",
                "objectives":[
                   "Verificare che sia implementata una cifratura adeguata per le variabili di sessione sensibili.",
                   "Revisionare la configurazione della cache per evitare che dati di sessione possano essere recuperati dal client.",
@@ -455,7 +455,7 @@
             {
                "name":"Testing for Cross Site Request Forgery",
                "id":"WSTG-SESS-05",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/06-Session_Management_Testing/05-Testing_for_Cross_Site_Request_Forgery",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/06-Session_Management_Testing/05-Testing_for_Cross_Site_Request_Forgery.md",
                "objectives":[
                   "Verificare se sia possibile inviare richieste (request) a nome di un utente, senza che quest’ultimo le abbia effettivamente generate (test di vulnerabilità CSRF)."
                ]
@@ -463,7 +463,7 @@
             {
                "name":"Testing for Logout Functionality",
                "id":"WSTG-SESS-06",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/06-Session_Management_Testing/06-Testing_for_Logout_Functionality",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/06-Session_Management_Testing/06-Testing_for_Logout_Functionality.md",
                "objectives":[
                   "Valutare l’efficacia della funzionalità di logout, anche dal punto di vista della user interface.",
                   "Analizzare il comportamento della sessione dopo il logout e verificare che venga invalidata correttamente (incluso il timeout di sessione)."
@@ -472,7 +472,7 @@
             {
                "name":"Testing Session Timeout",
                "id":"WSTG-SESS-07",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/06-Session_Management_Testing/07-Testing_Session_Timeout",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/06-Session_Management_Testing/07-Testing_Session_Timeout.md",
                "objectives":[
                   "Verificare che sia impostato un timeout di sessione rigido e che funzioni correttamente."
                ]
@@ -480,7 +480,7 @@
             {
                "name":"Testing for Session Puzzling",
                "id":"WSTG-SESS-08",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/06-Session_Management_Testing/08-Testing_for_Session_Puzzling",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/06-Session_Management_Testing/08-Testing_for_Session_Puzzling.md",
                "objectives":[
                   "Individuare tutte le variabili di sessione gestite dall’applicazione.",
                   "Provare a rompere il flusso logico della generazione delle sessioni, individuando comportamenti anomali o inconsistenti."
@@ -489,7 +489,7 @@
             {
                "name":"Testing for Session Hijacking",
                "id":"WSTG-SESS-09",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/06-Session_Management_Testing/09-Testing_for_Session_Hijacking",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/06-Session_Management_Testing/09-Testing_for_Session_Hijacking.md",
                "objectives":[
                   "Identificare cookie di sessione vulnerabili (non sicuri, facilmente intercettabili o modificabili).",
                   "Provare a prendere il controllo di cookie vulnerabili (session hijacking) e valutare il livello di rischio."
@@ -498,7 +498,7 @@
             {
                "name":"Testing JSON Web Tokens",
                "id":"WSTG-SESS-10",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/06-Session_Management_Testing/10-Testing_JSON_Web_Tokens",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/06-Session_Management_Testing/10-Testing_JSON_Web_Tokens.md",
                "objectives":[
                   "Verificare se i JWT (JSON Web Token) contengono informazioni sensibili esposte.",
                   "Valutare la possibilità di modificare o alterare i JWT per scopi malevoli."
@@ -507,7 +507,7 @@
             {
                "name":"Testing for Concurrent Sessions",
                "id":"WSTG-SESS-11",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/06-Session_Management_Testing/11-Testing_for_Concurrent_Sessions",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/06-Session_Management_Testing/11-Testing_for_Concurrent_Sessions.md",
                "objectives":[
                   "Valutare come l’applicazione gestisce la presenza di più sessioni attive contemporaneamente per uno stesso account utente."
                ]
@@ -520,7 +520,7 @@
             {
                "name":"Testing for Reflected Cross Site Scripting",
                "id":"WSTG-INPV-01",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/07-Input_Validation_Testing/01-Testing_for_Reflected_Cross_Site_Scripting",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/07-Input_Validation_Testing/01-Testing_for_Reflected_Cross_Site_Scripting.md",
                "objectives":[
                   "Individuare le variabili che vengono riflesse nella risposta dall’applicazione.",
                   "Valutare quali input accettano queste variabili e quale encoding viene applicato in output (se presente)."
@@ -529,7 +529,7 @@
             {
                "name":"Testing for Stored Cross Site Scripting",
                "id":"WSTG-INPV-02",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/07-Input_Validation_Testing/02-Testing_for_Stored_Cross_Site_Scripting",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/07-Input_Validation_Testing/02-Testing_for_Stored_Cross_Site_Scripting.md",
                "objectives":[
                   "Individuare input memorizzati lato server che vengono successivamente riflessi lato client.",
                   "Valutare quali input vengono accettati e se viene applicata una codifica di output."
@@ -538,7 +538,7 @@
             {
                "name":"Testing for HTTP Verb Tampering",
                "id":"WSTG-INPV-03",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/07-Input_Validation_Testing/03-Testing_for_HTTP_Verb_Tampering",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/07-Input_Validation_Testing/03-Testing_for_HTTP_Verb_Tampering.md",
                "objectives":[
                   "Verificare se l'applicazione è vulnerabile a HTTP Verb Tampering attraverso l'uso di metodi HTTP non standard o alternativi per aggirare i controlli di sicurezza."
                ]
@@ -546,7 +546,7 @@
             {
                "name":"Testing for HTTP Parameter Pollution",
                "id":"WSTG-INPV-04",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/07-Input_Validation_Testing/04-Testing_for_HTTP_Parameter_Pollution",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/07-Input_Validation_Testing/04-Testing_for_HTTP_Parameter_Pollution.md",
                "objectives":[
                   "Individuare la tipologia di backend e il metodo di parsing usato per i parametri.",
                   "Valutare i possibili punti di injection e tentare di bypassare i filtri sugli input tramite tecniche di HTTP Parameter Pollution."
@@ -555,7 +555,7 @@
             {
                "name":"Testing for SQL Injection",
                "id":"WSTG-INPV-05",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/07-Input_Validation_Testing/05-Testing_for_SQL_Injection",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/07-Input_Validation_Testing/05-Testing_for_SQL_Injection.md",
                "objectives":[
                   "Individuare i punti in cui è possibile effettuare una SQL injection.",
                   "Valutare la gravità della vulnerabilità e il livello di accesso ottenibile tramite injection."
@@ -564,7 +564,7 @@
             {
                "name":"Testing for LDAP Injection",
                "id":"WSTG-INPV-06",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/07-Input_Validation_Testing/06-Testing_for_LDAP_Injection",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/07-Input_Validation_Testing/06-Testing_for_LDAP_Injection.md",
                "objectives":[
                   "Individuare i punti vulnerabili a LDAP injection.",
                   "Valutare la gravità dell’injection e le potenziali conseguenze."
@@ -573,7 +573,7 @@
             {
                "name":"Testing for XML Injection",
                "id":"WSTG-INPV-07",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/07-Input_Validation_Testing/07-Testing_for_XML_Injection",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/07-Input_Validation_Testing/07-Testing_for_XML_Injection.md",
                "objectives":[
                   "Individuare i punti dove è possibile realizzare una XML injection.",
                   "Valutare quali exploit sono possibili e la loro gravità."
@@ -582,7 +582,7 @@
             {
                "name":"Testing for SSI Injection",
                "id":"WSTG-INPV-08",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/07-Input_Validation_Testing/08-Testing_for_SSI_Injection",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/07-Input_Validation_Testing/08-Testing_for_SSI_Injection.md",
                "objectives":[
                   "Individuare punti di injection per Server Side Includes (SSI).",
                   "Valutare la gravità della vulnerabilità."
@@ -591,7 +591,7 @@
             {
                "name":"Testing for XPath Injection",
                "id":"WSTG-INPV-09",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/07-Input_Validation_Testing/09-Testing_for_XPath_Injection",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/07-Input_Validation_Testing/09-Testing_for_XPath_Injection.md",
                "objectives":[
                   "Individuare i punti vulnerabili a XPath injection."
                ]
@@ -599,7 +599,7 @@
             {
                "name":"Testing for IMAP SMTP Injection",
                "id":"WSTG-INPV-10",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/07-Input_Validation_Testing/10-Testing_for_IMAP_SMTP_Injection",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/07-Input_Validation_Testing/10-Testing_for_IMAP_SMTP_Injection.md",
                "objectives":[
                   "Individuare i punti vulnerabili a injection nei protocolli IMAP/SMTP.",
                   "Comprendere il flusso dei dati e l’architettura del sistema.",
@@ -609,7 +609,7 @@
             {
                "name":"Testing for Code Injection",
                "id":"WSTG-INPV-11",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/07-Input_Validation_Testing/11-Testing_for_Code_Injection",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/07-Input_Validation_Testing/11-Testing_for_Code_Injection.md",
                "objectives":[
                   "Individuare i punti in cui è possibile eseguire code injection sull’applicazione.",
                   "Valutare la gravità e le possibili conseguenze dell’injection."
@@ -618,7 +618,7 @@
             {
                "name":"Testing for Command Injection",
                "id":"WSTG-INPV-12",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/07-Input_Validation_Testing/12-Testing_for_Command_Injection",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/07-Input_Validation_Testing/12-Testing_for_Command_Injection.md",
                "objectives":[
                   "Individuare e valutare i punti vulnerabili a command injection."
                ]
@@ -626,7 +626,7 @@
             {
                "name":"Testing for Format String Injection",
                "id":"WSTG-INPV-13",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/07-Input_Validation_Testing/13-Testing_for_Format_String_Injection",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/07-Input_Validation_Testing/13-Testing_for_Format_String_Injection.md",
                "objectives":[
                   "Valutare se l’inserimento di specificatori di formato (format string) in input controllati dall’utente genera comportamenti anomali o pericolosi nell’applicazione."
                ]
@@ -634,7 +634,7 @@
             {
                "name":"Testing for Incubated Vulnerability",
                "id":"WSTG-INPV-14",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/07-Input_Validation_Testing/14-Testing_for_Incubated_Vulnerability",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/07-Input_Validation_Testing/14-Testing_for_Incubated_Vulnerability.md",
                "objectives":[
                   "Individuare gli input malevoli che vengono memorizzati e richiedono una successiva attivazione per l’exploit.",
                   "Comprendere come può essere richiamato l’exploit della vulnerabilità.",
@@ -644,7 +644,7 @@
             {
                "name":"Testing for HTTP Splitting Smuggling",
                "id":"WSTG-INPV-15",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/07-Input_Validation_Testing/15-Testing_for_HTTP_Splitting_Smuggling",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/07-Input_Validation_Testing/15-Testing_for_HTTP_Splitting_Smuggling.md",
                "objectives":[
                   "Valutare se l’applicazione è vulnerabile a tecniche di HTTP splitting e quali attacchi possono essere effettuati.",
                   "Valutare se la catena di comunicazione è vulnerabile a HTTP smuggling e quali exploit sono possibili."
@@ -653,7 +653,7 @@
             {
                "name":"Testing for HTTP Incoming Requests",
                "id":"WSTG-INPV-16",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/07-Input_Validation_Testing/16-Testing_for_HTTP_Incoming_Requests",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/07-Input_Validation_Testing/16-Testing_for_HTTP_Incoming_Requests.md",
                "objectives":[
                   "Monitorare tutte le richieste HTTP in ingresso e in uscita dal web server per individuare eventuali richieste sospette.",
                   "Monitorare il traffico HTTP senza modificare proxy del browser utente finale o applicazione lato client."
@@ -662,7 +662,7 @@
             {
                "name":"Testing for Host Header Injection",
                "id":"WSTG-INPV-17",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/07-Input_Validation_Testing/17-Testing_for_Host_Header_Injection",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/07-Input_Validation_Testing/17-Testing_for_Host_Header_Injection.md",
                "objectives":[
                   "Verificare se l’header Host viene interpretato dinamicamente dall’applicazione.",
                   "Provare a bypassare controlli di sicurezza che dipendono dal valore di questo header."
@@ -671,7 +671,7 @@
             {
                "name":"Testing for Server-side Template Injection",
                "id":"WSTG-INPV-18",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/07-Input_Validation_Testing/18-Testing_for_Server-side_Template_Injection",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/07-Input_Validation_Testing/18-Testing_for_Server-side_Template_Injection.md",
                "objectives":[
                   "Individuare i punti vulnerabili a template injection lato server.",
                   "Identificare il template engine in uso.",
@@ -681,7 +681,7 @@
             {
                "name":"Testing for Server-Side Request Forgery",
                "id":"WSTG-INPV-19",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/07-Input_Validation_Testing/19-Testing_for_Server-Side_Request_Forgery",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/07-Input_Validation_Testing/19-Testing_for_Server-Side_Request_Forgery.md",
                "objectives":[
                   "Individuare i punti di input vulnerabili a SSRF (Server-Side Request Forgery).",
                   "Verificare se questi punti sono effettivamente sfruttabili.",
@@ -691,7 +691,7 @@
             {
                "name":"Testing for Mass Assignment",
                "id":"WSTG-INPV-20",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/07-Input_Validation_Testing/20-Testing_for_Mass_Assignment",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/07-Input_Validation_Testing/20-Testing_for_Mass_Assignment.md",
                "objectives":[
                   "Individuare le richieste che permettono la modifica di oggetti (ad esempio tramite API REST o input JSON).",
                   "Verificare se sia possibile modificare campi che non dovrebbero essere accessibili o modificabili dall’esterno."
@@ -705,7 +705,7 @@
             {
                "name":"Testing for Improper Error Handling",
                "id":"WSTG-ERRH-01",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/08-Testing_for_Error_Handling/01-Testing_For_Improper_Error_Handling",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/08-Testing_for_Error_Handling/01-Testing_For_Improper_Error_Handling.md",
                "objectives":[
                   "Individuare tutti i messaggi di errore prodotti dall’applicazione.",
                   "Analizzare e classificare i diversi output di errore restituiti per identificare possibili leak di informazioni o comportamenti anomali."
@@ -714,7 +714,7 @@
             {
                "name":"Testing for Stack Traces",
                "id":"WSTG-ERRH-02",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/08-Testing_for_Error_Handling/02-Testing_for_Stack_Traces",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/08-Testing_for_Error_Handling/02-Testing_for_Stack_Traces.md",
                "objectives":[
                   "Identificare stack trace esposte nelle risposte di errore che potrebbero rivelare informazioni sensibili sulla tecnologia, l'architettura e la struttura interna dell'applicazione."
                ]
@@ -727,7 +727,7 @@
             {
                "name":"Testing for Weak Transport Layer Security",
                "id":"WSTG-CRYP-01",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/09-Testing_for_Weak_Cryptography/01-Testing_for_Weak_Transport_Layer_Security",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/09-Testing_for_Weak_Cryptography/01-Testing_for_Weak_Transport_Layer_Security.md",
                "objectives":[
                   "Verificare la configurazione del servizio per assicurarsi che l’implementazione di TLS sia corretta e robusta.",
                   "Analizzare la forza crittografica e la validità dei certificati digitali utilizzati.",
@@ -737,7 +737,7 @@
             {
                "name":"Testing for Padding Oracle",
                "id":"WSTG-CRYP-02",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/09-Testing_for_Weak_Cryptography/02-Testing_for_Padding_Oracle",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/09-Testing_for_Weak_Cryptography/02-Testing_for_Padding_Oracle.md",
                "objectives":[
                   "Individuare messaggi cifrati che utilizzano padding nei loro algoritmi.",
                   "Effettuare tentativi di attacco per forzare la gestione del padding e analizzare i messaggi di errore restituiti alla ricerca di vulnerabilità Padding Oracle."
@@ -746,7 +746,7 @@
             {
                "name":"Testing for Sensitive Information Sent via Unencrypted Channels",
                "id":"WSTG-CRYP-03",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/09-Testing_for_Weak_Cryptography/03-Testing_for_Sensitive_Information_Sent_via_Unencrypted_Channels",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/09-Testing_for_Weak_Cryptography/03-Testing_for_Sensitive_Information_Sent_via_Unencrypted_Channels.md",
                "objectives":[
                   "Individuare eventuali informazioni sensibili trasmesse tramite canali non cifrati.",
                   "Valutare il livello di privacy e sicurezza offerto dai vari canali di comunicazione utilizzati dall’applicazione."
@@ -755,7 +755,7 @@
             {
                "name":"Testing for Weak Encryption",
                "id":"WSTG-CRYP-04",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/09-Testing_for_Weak_Cryptography/04-Testing_for_Weak_Encryption",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/09-Testing_for_Weak_Cryptography/04-Testing_for_Weak_Encryption.md",
                "objectives":[
                   "Fornire linee guida per individuare utilizzi e implementazioni di algoritmi di cifratura o hashing deboli o non sicuri."
                ]
@@ -768,7 +768,7 @@
             {
                "name":"Test Business Logic Data Validation",
                "id":"WSTG-BUSL-01",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/10-Business_Logic_Testing/01-Test_Business_Logic_Data_Validation",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/10-Business_Logic_Testing/01-Test_Business_Logic_Data_Validation.md",
                "objectives":[
                   "Individuare tutti i punti in cui è possibile inserire dati nell’applicazione (data injection points).",
                   "Verificare che tutti i controlli di validazione siano eseguiti lato backend e che non possano essere aggirati da input malevoli.",
@@ -778,7 +778,7 @@
             {
                "name":"Test Ability to Forge Requests",
                "id":"WSTG-BUSL-02",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/10-Business_Logic_Testing/02-Test_Ability_to_Forge_Requests",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/10-Business_Logic_Testing/02-Test_Ability_to_Forge_Requests.md",
                "objectives":[
                   "Analizzare la documentazione per individuare funzionalità dei campi che siano prevedibili, facilmente indovinabili o nascoste.",
                   "Inserire dati logicamente validi, ma non previsti dal normale flusso applicativo, per tentare di bypassare la business logic."
@@ -787,7 +787,7 @@
             {
                "name":"Test Integrity Checks",
                "id":"WSTG-BUSL-03",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/10-Business_Logic_Testing/03-Test_Integrity_Checks",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/10-Business_Logic_Testing/03-Test_Integrity_Checks.md",
                "objectives":[
                   "Analizzare la documentazione per identificare i componenti che gestiscono, memorizzano o trasferiscono dati.",
                   "Definire quali tipi di dati sono accettabili per ogni componente e quali invece dovrebbero essere rifiutati.",
@@ -798,7 +798,7 @@
             {
                "name":"Test for Process Timing",
                "id":"WSTG-BUSL-04",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/10-Business_Logic_Testing/04-Test_for_Process_Timing",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/10-Business_Logic_Testing/04-Test_for_Process_Timing.md",
                "objectives":[
                   "Verificare nella documentazione tutte le funzionalità di sistema che potrebbero essere influenzate dal fattore tempo.",
                   "Elaborare ed eseguire misuse case, ovvero scenari di utilizzo anomalo per testare la logica temporale."
@@ -807,7 +807,7 @@
             {
                "name":"Test Number of Times a Function Can Be Used Limits",
                "id":"WSTG-BUSL-05",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/10-Business_Logic_Testing/05-Test_Number_of_Times_a_Function_Can_Be_Used_Limits",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/10-Business_Logic_Testing/05-Test_Number_of_Times_a_Function_Can_Be_Used_Limits.md",
                "objectives":[
                   "Individuare le funzionalità per cui devono essere previsti limiti al numero di invocazioni.",
                   "Verificare se tali limiti sono effettivamente implementati e correttamente validati."
@@ -816,7 +816,7 @@
             {
                "name":"Testing for the Circumvention of Work Flows",
                "id":"WSTG-BUSL-06",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/10-Business_Logic_Testing/06-Testing_for_the_Circumvention_of_Work_Flows",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/10-Business_Logic_Testing/06-Testing_for_the_Circumvention_of_Work_Flows.md",
                "objectives":[
                   "Analizzare la documentazione alla ricerca di modi per saltare passaggi o eseguire step fuori sequenza rispetto alla logica di business prevista.",
                   "Creare misuse case per provare a forzare o aggirare ogni flusso logico individuato."
@@ -825,7 +825,7 @@
             {
                "name":"Test Defenses Against Application Misuse",
                "id":"WSTG-BUSL-07",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/10-Business_Logic_Testing/07-Test_Defenses_Against_Application_Misuse",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/10-Business_Logic_Testing/07-Test_Defenses_Against_Application_Misuse.md",
                "objectives":[
                   "Annotare gli esiti di tutti i test condotti sul sistema.",
                   "Analizzare quali test hanno portato a comportamenti inattesi in presenza di input aggressivi.",
@@ -835,7 +835,7 @@
             {
                "name":"Test Upload of Unexpected File Types",
                "id":"WSTG-BUSL-08",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/10-Business_Logic_Testing/08-Test_Upload_of_Unexpected_File_Types",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/10-Business_Logic_Testing/08-Test_Upload_of_Unexpected_File_Types.md",
                "objectives":[
                   "Analizzare la documentazione per capire quali tipi di file sono bloccati dal sistema.",
                   "Verificare che i file non permessi vengano effettivamente rifiutati e gestiti in sicurezza.",
@@ -845,7 +845,7 @@
             {
                "name":"Test Upload of Malicious Files",
                "id":"WSTG-BUSL-09",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/10-Business_Logic_Testing/09-Test_Upload_of_Malicious_Files",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/10-Business_Logic_Testing/09-Test_Upload_of_Malicious_Files.md",
                "objectives":[
                   "Identificare tutte le funzionalità di upload file presenti nell’applicazione.",
                   "Analizzare la documentazione per individuare quali tipi di file sono ammessi e quali invece sono considerati pericolosi o malevoli.",
@@ -858,7 +858,7 @@
             {
                "name":"Test Payment Functionality",
                "id":"WSTG-BUSL-10",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/10-Business_Logic_Testing/10-Test-Payment-Functionality",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/10-Business_Logic_Testing/10-Test-Payment-Functionality.md",
                "objectives":[
                   "Valutare la robustezza della business logic relativa alle funzionalità di e-commerce.",
                   "Comprendere il funzionamento tecnico della gestione dei pagamenti.",
@@ -873,7 +873,7 @@
             {
                "name":"Testing for DOM-Based Cross Site Scripting",
                "id":"WSTG-CLNT-01",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/11-Client-side_Testing/01-Testing_for_DOM-based_Cross_Site_Scripting",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/11-Client-side_Testing/01-Testing_for_DOM-based_Cross_Site_Scripting.md",
                "objectives":[
                   "Individuare tutti i sink nel DOM (punti in cui dati non affidabili finiscono in funzioni pericolose).",
                   "Creare payload adatti per ciascun tipo di sink individuato."
@@ -882,7 +882,7 @@
             {
                "name":"Testing for JavaScript Execution",
                "id":"WSTG-CLNT-02",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/11-Client-side_Testing/02-Testing_for_JavaScript_Execution",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/11-Client-side_Testing/02-Testing_for_JavaScript_Execution.md",
                "objectives":[
                   "Individuare i sink e i possibili punti di injection di codice JavaScript nell’applicazione."
                ]
@@ -890,7 +890,7 @@
             {
                "name":"Testing for HTML Injection",
                "id":"WSTG-CLNT-03",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/11-Client-side_Testing/03-Testing_for_HTML_Injection",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/11-Client-side_Testing/03-Testing_for_HTML_Injection.md",
                "objectives":[
                   "Individuare i punti vulnerabili a HTML injection e valutare la gravità del contenuto iniettato."
                ]
@@ -898,7 +898,7 @@
             {
                "name":"Testing for Client-side URL Redirect",
                "id":"WSTG-CLNT-04",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/11-Client-side_Testing/04-Testing_for_Client-side_URL_Redirect",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/11-Client-side_Testing/04-Testing_for_Client-side_URL_Redirect.md",
                "objectives":[
                   "Individuare i punti in cui è possibile controllare URL o percorsi per effettuare redirect lato client.",
                   "Valutare le destinazioni verso cui il sistema può eseguire i redirect, identificando eventuali rischi di open redirect."
@@ -907,7 +907,7 @@
             {
                "name":"Testing for CSS Injection",
                "id":"WSTG-CLNT-05",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/11-Client-side_Testing/05-Testing_for_CSS_Injection",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/11-Client-side_Testing/05-Testing_for_CSS_Injection.md",
                "objectives":[
                   "Individuare i punti di input vulnerabili a CSS injection.",
                   "Valutare l’impatto che può avere l’injection di codice CSS personalizzato sulla sicurezza e la privacy dell’utente."
@@ -916,7 +916,7 @@
             {
                "name":"Testing for Client-side Resource Manipulation",
                "id":"WSTG-CLNT-06",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/11-Client-side_Testing/06-Testing_for_Client-side_Resource_Manipulation",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/11-Client-side_Testing/06-Testing_for_Client-side_Resource_Manipulation.md",
                "objectives":[
                   "Individuare i sink lato client dove la validazione degli input è debole.",
                   "Valutare l’impatto che può avere la manipolazione delle risorse lato client (ad esempio file JS, immagini, CSS)."
@@ -925,7 +925,7 @@
             {
                "name":"Testing Cross Origin Resource Sharing",
                "id":"WSTG-CLNT-07",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/11-Client-side_Testing/07-Testing_Cross_Origin_Resource_Sharing",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/11-Client-side_Testing/07-Testing_Cross_Origin_Resource_Sharing.md",
                "objectives":[
                   "Individuare gli endpoint che implementano Cross-Origin Resource Sharing (CORS).",
                   "Verificare che la configurazione CORS sia sicura e non permetta accessi non autorizzati da origini terze."
@@ -934,7 +934,7 @@
             {
                "name":"Testing for Cross Site Flashing",
                "id":"WSTG-CLNT-08",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/11-Client-side_Testing/08-Testing_for_Cross_Site_Flashing",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/11-Client-side_Testing/08-Testing_for_Cross_Site_Flashing.md",
                "objectives":[
                   "Decompilare e analizzare il codice dell’applicazione (ad esempio file SWF).",
                   "Valutare i sink di input e l’utilizzo di metodi insicuri che possono portare a vulnerabilità di Cross Site Flashing."
@@ -943,7 +943,7 @@
             {
                "name":"Testing for Clickjacking",
                "id":"WSTG-CLNT-09",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/11-Client-side_Testing/09-Testing_for_Clickjacking",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/11-Client-side_Testing/09-Testing_for_Clickjacking.md",
                "objectives":[
                   "Valutare se l’applicazione è vulnerabile ad attacchi di clickjacking (es. assenza di protezioni come X-Frame-Options o CSP)."
                ]
@@ -951,7 +951,7 @@
             {
                "name":"Testing WebSockets",
                "id":"WSTG-CLNT-10",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/11-Client-side_Testing/10-Testing_WebSockets",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/11-Client-side_Testing/10-Testing_WebSockets.md",
                "objectives":[
                   "Individuare l’utilizzo di WebSocket all’interno dell’applicazione.",
                   "Valutare la sicurezza dell’implementazione applicando gli stessi test di sicurezza utilizzati per i canali HTTP."
@@ -960,7 +960,7 @@
             {
                "name":"Testing Web Messaging",
                "id":"WSTG-CLNT-11",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/11-Client-side_Testing/11-Testing_Web_Messaging",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/11-Client-side_Testing/11-Testing_Web_Messaging.md",
                "objectives":[
                   "Valutare la sicurezza dell’origine dei messaggi (ad esempio postMessage).",
                   "Verificare che vengano utilizzati metodi sicuri e che gli input vengano sempre validati correttamente."
@@ -969,7 +969,7 @@
             {
                "name":"Testing Browser Storage",
                "id":"WSTG-CLNT-12",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/11-Client-side_Testing/12-Testing_Browser_Storage",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/11-Client-side_Testing/12-Testing_Browser_Storage.md",
                "objectives":[
                   "Verificare se l’applicazione memorizza dati sensibili nello storage lato client (localStorage, sessionStorage, IndexedDB).",
                   "Analizzare la gestione del codice che accede allo storage per individuare eventuali rischi di injection tramite input non validati o librerie vulnerabili."
@@ -978,7 +978,7 @@
             {
                "name":"Testing for Cross Site Script Inclusion",
                "id":"WSTG-CLNT-13",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/11-Client-side_Testing/13-Testing_for_Cross_Site_Script_Inclusion",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/11-Client-side_Testing/13-Testing_for_Cross_Site_Script_Inclusion.md",
                "objectives":[
                   "Individuare la presenza di dati sensibili nell’intero sistema.",
                   "Valutare se esistano tecniche che possano portare a una perdita (leak) di informazioni sensibili tramite script inclusion."
@@ -987,7 +987,7 @@
             {
                "name":"Testing for Reverse Tabnabbing",
                "id":"WSTG-CLNT-14",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/11-Client-side_Testing/14-Testing_for_Reverse_Tabnabbing",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/11-Client-side_Testing/14-Testing_for_Reverse_Tabnabbing.md",
                "objectives":[
                   "Verificare se i link con target='_blank' includono gli attributi rel='noopener noreferrer' per prevenire attacchi di reverse tabnabbing.",
                   "Valutare il rischio che una pagina esterna possa manipolare la pagina originale tramite window.opener."
@@ -1001,7 +1001,7 @@
             {
                "name":"API Reconnaissance",
                "id":"WSTG-APIT-01",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/12-API_Testing/01-API_Reconnaissance",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/12-API_Testing/01-API_Reconnaissance.md",
                "objectives":[
                   "Individuare tutti gli endpoint API gestiti dal backend, sia documentati che non documentati.",
                   "Elencare tutti i parametri accettati da ciascun endpoint disponibile.",
@@ -1011,7 +1011,7 @@
             {
                "name":"API Broken Object Level Authorization",
                "id":"WSTG-APIT-02",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/12-API_Testing/02-API_Broken_Object_Level_Authorization",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/12-API_Testing/02-API_Broken_Object_Level_Authorization.md",
                "objectives":[
                   "Verificare che l’API implementi correttamente i controlli di autorizzazione a livello di oggetto, assicurando che ciascun utente possa accedere e modificare solo le risorse per cui ha effettivamente i permessi."
                ]
@@ -1019,7 +1019,7 @@
             {
                "name":"Testing GraphQL",
                "id":"WSTG-APIT-99",
-               "reference":"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/12-API_Testing/99-Testing_GraphQL",
+               "reference":"https://github.com/OWASP/wstg/blob/d69a4842ba51e95496294d2817fd3b920ea3cc69/document/4-Web_Application_Security_Testing/12-API_Testing/99-Testing_GraphQL.md",
                "objectives":[
                   "Verificare che la configurazione GraphQL sia sicura e pronta per la produzione.",
                   "Testare tutti i campi di input per protezione da attacchi generici (iniezioni, query abusive, ecc).",
