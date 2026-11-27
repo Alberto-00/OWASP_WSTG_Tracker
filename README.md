@@ -7,8 +7,6 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Alberto-00/OWASP_WSTG_Tracker/releases/latest"><img src="https://img.shields.io/github/v/release/Alberto-00/OWASP_WSTG_Tracker?style=flat-square&color=8b5cf6" alt="Latest release"></a>
-  <a href="https://github.com/Alberto-00/OWASP_WSTG_Tracker/releases"><img src="https://img.shields.io/github/downloads/Alberto-00/OWASP_WSTG_Tracker/total?style=flat-square&color=ec4899" alt="Downloads"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT License"></a>
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux-lightgrey?style=flat-square" alt="Windows and Linux">
   <br>
@@ -76,10 +74,6 @@ It is a local desktop app. There is no account, no backend and no telemetry: an 
 </table>
 
 ## Installation
-
-### Download
-
-Get the latest Windows build from the [**Releases**](https://github.com/Alberto-00/OWASP_WSTG_Tracker/releases/latest) page. The app is portable: no installer and no admin rights are needed. If you downloaded the `.zip`, unzip it anywhere and run `OWASP WSTG Tracker.exe`. Your assessments are saved in the `saves` folder next to the executable.
 
 ### Build from source
 
