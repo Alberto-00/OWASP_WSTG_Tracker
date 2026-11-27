@@ -18,6 +18,11 @@ export interface ElectronAPI {
   listSaveFiles: () => Promise<{ success: boolean; files?: SaveFileInfo[]; error?: string }>;
   fileExists: (filename: string) => Promise<boolean>;
 
+  // WSTG: ultima release ufficiale su GitHub e suo download nella cartella saves
+  wstgLatestRelease: () => Promise<{ success: boolean; tag?: string; date?: string; error?: string }>;
+  wstgDownloadRelease: (tag: string) => Promise<{ success: boolean; dir?: string; count?: number; error?: string }>;
+  openFolder: (dir: string) => Promise<void>;
+
   // Window controls
   setUnsavedChanges: (hasChanges: boolean) => void;
   onSaveBeforeClose: (callback: () => void) => () => void;

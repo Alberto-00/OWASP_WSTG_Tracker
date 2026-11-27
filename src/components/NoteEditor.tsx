@@ -3,6 +3,10 @@ import { Extension } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
 import Highlight from '@tiptap/extension-highlight';
 import Placeholder from '@tiptap/extension-placeholder';
+import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
+import { TaskItem, TaskList } from '@tiptap/extension-list';
+import { common, createLowlight } from 'lowlight';
+import http from 'highlight.js/lib/languages/http';
 import { useEffect, useRef } from 'react';
 import { Quote, Minus, RemoveFormatting } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -28,6 +32,23 @@ const HIGHLIGHT_COLORS = [
 
 // Alpha applicato all'evidenziazione: tinta leggibile su sfondo scuro, marks nidificati restano leggibili.
 const HIGHLIGHT_ALPHA = '80';
+
+// Sintassi colorata nei blocchi di codice: linguaggi comuni più HTTP, per richieste e risposte
+const lowlight = createLowlight(common);
+lowlight.register({ http });
+// Linguaggi proposti quando il cursore è in un blocco di codice ('auto' = riconoscimento automatico)
+const CODE_LANGUAGES = [
+  ['auto', ''],
+  ['http', 'HTTP'],
+  ['bash', 'Bash'],
+  ['javascript', 'JavaScript'],
+  ['json', 'JSON'],
+  ['xml', 'HTML / XML'],
+  ['sql', 'SQL'],
+  ['python', 'Python'],
+  ['php', 'PHP'],
+  ['plaintext', ''],
+] as const;
 
 // Ctrl+Shift+S è "Salva con nome": va tolto al barrato di TipTap (resta il pulsante in toolbar).
 const ReserveAppShortcuts = Extension.create({
@@ -56,6 +77,7 @@ const MenuBar = ({ editor }: { editor: ReturnType<typeof useEditor> }) => {
       else if (e.isActive('heading', { level: 3 })) block = 'h3';
       else if (e.isActive('bulletList')) block = 'bullet';
       else if (e.isActive('orderedList')) block = 'ordered';
+      else if (e.isActive('taskList')) block = 'task';
       else if (e.isActive('codeBlock')) block = 'codeblock';
 
       const rawColor = (e.getAttributes('highlight').color as string | undefined)?.toLowerCase();
@@ -72,6 +94,7 @@ const MenuBar = ({ editor }: { editor: ReturnType<typeof useEditor> }) => {
         isBlockquote: e.isActive('blockquote'),
         block,
         highlight,
+        codeLanguage: (e.getAttributes('codeBlock').language as string | null) || 'auto',
       };
     },
   });
@@ -100,6 +123,9 @@ const MenuBar = ({ editor }: { editor: ReturnType<typeof useEditor> }) => {
         break;
       case 'ordered':
         chain.toggleOrderedList().run();
+        break;
+      case 'task':
+        chain.toggleTaskList().run();
         break;
       case 'codeblock':
         chain.setCodeBlock().run();
@@ -134,11 +160,11 @@ const MenuBar = ({ editor }: { editor: ReturnType<typeof useEditor> }) => {
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 p-1.5 bg-card/50 rounded-lg border border-border/50" role="toolbar" aria-label={t('notes')}>
       {/* Marks combinabili */}
       <div className="flex gap-1">
-        {markButton(t('bold'), state.isBold, () => editor.chain().focus().toggleBold().run(), 'font-black', 'B')}
-        {markButton(t('italic'), state.isItalic, () => editor.chain().focus().toggleItalic().run(), 'italic font-semibold', 'I')}
-        {markButton(t('underline'), state.isUnderline, () => editor.chain().focus().toggleUnderline().run(), 'underline decoration-2', 'U')}
+        {markButton(`${t('bold')} (Ctrl+B)`, state.isBold, () => editor.chain().focus().toggleBold().run(), 'font-black', 'B')}
+        {markButton(`${t('italic')} (Ctrl+I)`, state.isItalic, () => editor.chain().focus().toggleItalic().run(), 'italic font-semibold', 'I')}
+        {markButton(`${t('underline')} (Ctrl+U)`, state.isUnderline, () => editor.chain().focus().toggleUnderline().run(), 'underline decoration-2', 'U')}
         {markButton(t('strike'), state.isStrike, () => editor.chain().focus().toggleStrike().run(), 'line-through', 'S')}
-        {markButton(t('inlineCode'), state.isCode, () => editor.chain().focus().toggleCode().run(), 'font-mono text-xs', '</>')}
+        {markButton(`${t('inlineCode')} (Ctrl+E)`, state.isCode, () => editor.chain().focus().toggleCode().run(), 'font-mono text-xs', '</>')}
       </div>
 
       {/* Blocco (esclusivo) */}
@@ -153,9 +179,29 @@ const MenuBar = ({ editor }: { editor: ReturnType<typeof useEditor> }) => {
           <SelectItem value="h3" className="text-xs font-semibold">{t('heading3')}</SelectItem>
           <SelectItem value="bullet" className="text-xs">&bull; {t('bulletList')}</SelectItem>
           <SelectItem value="ordered" className="text-xs">1. {t('orderedList')}</SelectItem>
+          <SelectItem value="task" className="text-xs">&#9745; {t('taskList')}</SelectItem>
           <SelectItem value="codeblock" className="text-xs font-mono">{'{ }'} {t('codeBlock')}</SelectItem>
         </SelectContent>
       </Select>
+
+      {/* Linguaggio del blocco di codice in cui si trova il cursore */}
+      {state.block === 'codeblock' && (
+        <Select
+          value={state.codeLanguage}
+          onValueChange={(v) => editor.chain().focus().updateAttributes('codeBlock', { language: v === 'auto' ? null : v }).run()}
+        >
+          <SelectTrigger className="h-7 w-32 text-xs bg-secondary/50" aria-label={t('codeLanguage')} title={t('codeLanguage')}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {CODE_LANGUAGES.map(([value, label]) => (
+              <SelectItem key={value} value={value} className="text-xs">
+                {value === 'auto' ? t('autoDetect') : value === 'plaintext' ? t('plainText') : label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
 
       {/* Evidenziazione */}
       <Select value={state.highlight} onValueChange={setHighlight}>
@@ -228,17 +274,22 @@ export const NoteEditor = ({ content, onChange, testId }: NoteEditorProps) => {
         heading: {
           levels: [1, 2, 3],
         },
-        codeBlock: {
-          HTMLAttributes: {
-            class: 'code-block',
-          },
-        },
+        // Sostituito da CodeBlockLowlight (stesso nodo, con la sintassi colorata)
+        codeBlock: false,
         code: {
           HTMLAttributes: {
             class: 'code-inline',
           },
         },
       }),
+      CodeBlockLowlight.configure({
+        lowlight,
+        HTMLAttributes: {
+          class: 'code-block',
+        },
+      }),
+      TaskList,
+      TaskItem.configure({ nested: true }),
       Highlight.configure({
         multicolor: true,
       }),

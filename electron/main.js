@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, ipcMain, dialog, shell } = require('electron');
+const { app, BrowserWindow, Menu, ipcMain, dialog, shell, net } = require('electron');
 const path = require('path');
 const fs = require('fs').promises;
 const fsSync = require('fs');
@@ -204,6 +204,57 @@ ipcMain.handle('list-save-files', async () => {
   }
 });
 
+// Aggiornamenti WSTG: contano solo le release ufficiali (tag vX.Y), non i lavori in corso su master.
+// net.fetch usa la rete di Chromium, quindi anche il proxy di sistema.
+const WSTG_REPO = 'OWASP/wstg';
+const get = async (url) => {
+  const res = await net.fetch(url, { headers: { Accept: 'application/vnd.github+json' } });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res;
+};
+
+ipcMain.handle('wstg-latest-release', async () => {
+  try {
+    // releases/latest esclude bozze e prerelease
+    const release = await (await get(`https://api.github.com/repos/${WSTG_REPO}/releases/latest`)).json();
+    return { success: true, tag: release.tag_name, date: release.published_at };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+// Scarica la release in saves/wstg-<tag>: checklist e testi markdown della guida (inglese), con i percorsi del repository
+ipcMain.handle('wstg-download-release', async (event, tag) => {
+  try {
+    if (!/^v\d+(\.\d+)*$/.test(tag)) throw new Error(`versione non valida: ${tag}`);
+    const { tree, truncated } = await (await get(`https://api.github.com/repos/${WSTG_REPO}/git/trees/${tag}?recursive=1`)).json();
+    if (truncated) throw new Error('elenco dei file incompleto');
+    const files = tree.filter((f) => f.type === 'blob' && (/^document\/.+\.md$/.test(f.path) || /^checklists?\/checklist\.json$/.test(f.path)));
+    const dir = path.join(savesDir, `wstg-${tag}`);
+    // Pochi download alla volta, per non farsi limitare da GitHub
+    for (let i = 0; i < files.length; i += 8) {
+      await Promise.all(
+        files.slice(i, i + 8).map(async ({ path: file }) => {
+          const target = path.resolve(dir, file);
+          if (!target.startsWith(dir + path.sep)) throw new Error(`percorso non valido: ${file}`);
+          const res = await get(`https://raw.githubusercontent.com/${WSTG_REPO}/${tag}/${file.split('/').map(encodeURIComponent).join('/')}`);
+          await fs.mkdir(path.dirname(target), { recursive: true });
+          await fs.writeFile(target, Buffer.from(await res.arrayBuffer()));
+        }),
+      );
+    }
+    return { success: true, dir, count: files.length };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+// Apre nel file manager una cartella dentro saves (es. la release appena scaricata)
+ipcMain.handle('open-folder', async (event, dir) => {
+  const target = path.resolve(dir);
+  if (target.startsWith(savesDir + path.sep)) await shell.openPath(target);
+});
+
 ipcMain.on('set-unsaved-changes', (event, hasChanges) => {
   hasUnsavedChanges = hasChanges;
 });
@@ -262,7 +313,7 @@ function createMainWindow() {
     return { action: 'deny' };
   });
   mainWindow.webContents.on('will-navigate', (event, url) => {
-    if (/^https?:\/\//i.test(url) && !(isDev && url.startsWith('http://localhost:8080'))) {
+    if (/^https?:\/\//i.test(url) && !(isDev && url.startsWith('http://localhost:9999'))) {
       event.preventDefault();
       shell.openExternal(url);
     }
@@ -271,7 +322,7 @@ function createMainWindow() {
   // In development, carica da Vite dev server
   // In production, carica i file buildati
   if (isDev) {
-    mainWindow.loadURL('http://localhost:8080');
+    mainWindow.loadURL('http://localhost:9999');
     mainWindow.webContents.openDevTools({ mode: 'detach' }); // finestra separata: l'app resta larga come in produzione
   } else {
     mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));

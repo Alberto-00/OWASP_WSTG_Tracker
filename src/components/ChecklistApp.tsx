@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
-import { AlertTriangle, ChevronDown, ChevronsDownUp, ChevronsUpDown, FileText, FolderOpen, Globe, Save, Search, Shield, Sparkles, X } from 'lucide-react';
+import { AlertTriangle, ChevronDown, ChevronsDownUp, ChevronsUpDown, FileText, FolderOpen, Globe, RefreshCw, Save, Search, Shield, Sparkles, X } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useChecklist } from '@/hooks/useChecklist';
 import { useMessageModal } from '@/hooks/useMessageModal';
@@ -33,6 +33,10 @@ const legendColor: Record<TestStatus, string> = {
 };
 
 const today = () => new Date().toISOString().slice(0, 10);
+// Testi WSTG dell'app: commit d69a4842 del 5 gennaio 2026, successivo all'ultima release ufficiale (v4.2).
+// Il tasto "Aggiornamenti WSTG" segnala solo una release ufficiale diversa (es. v5.0).
+const WSTG_RELEASE = 'v4.2';
+const WSTG_TEXTS_DATE = '2026-01-05';
 const baseName = (filePath: string) => filePath.split(/[\\/]/).pop() || filePath;
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -57,6 +61,7 @@ export const ChecklistApp = () => {
   const [activeTab, setActiveTab] = useState<DetailTab>('summary');
   const [collapsedPart, setCollapsedPart] = useState<CollapsedPart | null>(null);
   const [top10Open, setTop10Open] = useState(false);
+  const [wstgBusy, setWstgBusy] = useState<'check' | 'download' | null>(null);
   const [top10Key, setTop10Key] = useState<string | null>(null);
   const [savedAt, setSavedAt] = useState<Date | null>(null);
   const [scrollTarget, setScrollTarget] = useState<string | null>(null);
@@ -143,8 +148,10 @@ export const ChecklistApp = () => {
   );
 
   const onCategoryClick = useCallback(
-    (cat: WSTGCategory) => {
-      toggleCategory(cat.id);
+    (cat: WSTGCategory, toggle = true) => {
+      // Dal pulsante "i" solo la descrizione: la fase resta com'è e il riquadro sopra si riapre se compresso
+      if (toggle) toggleCategory(cat.id);
+      else setCollapsedPart((c) => (c === 'info' ? null : c));
       setSelectedCategoryId(cat.id);
       setShowCategory(true);
       setSelectedTestId(null);
@@ -192,9 +199,9 @@ export const ChecklistApp = () => {
 
   const top10Refs = useMemo(() => {
     const refs: Record<string, Top10Ref> = {};
-    Object.entries(owaspTop10).forEach(([key, item]) => {
+    Object.keys(owaspTop10).forEach((key) => {
       const code = top10Code(key);
-      refs[code] = { key, code, title: key.split(' - ')[1] ?? key, level: item.level };
+      refs[code] = { key, code, title: key.split(' - ')[1] ?? key };
     });
     return refs;
   }, [owaspTop10]);
@@ -225,6 +232,56 @@ export const ChecklistApp = () => {
     if (key) setTop10Key(key);
     setTop10Open(true);
   }, []);
+
+  // Aggiornamenti WSTG: solo release ufficiali, scaricate in saves/wstg-<versione> per integrarle in seguito
+  const longDate = useCallback((iso: string) => new Date(iso).toLocaleDateString(language, { day: 'numeric', month: 'long', year: 'numeric' }), [language]);
+
+  const downloadWstg = useCallback(
+    async (tag: string) => {
+      setWstgBusy('download');
+      const res = await window.electron!.wstgDownloadRelease(tag);
+      setWstgBusy(null);
+      if (!res.success || !res.dir) {
+        showError(t('wstgDownloadErrorTitle'), t('wstgErrorMsg', { error: res.error ?? '' }));
+        return;
+      }
+      const dir = res.dir;
+      showModal({
+        type: 'success',
+        title: t('wstgDownloadedTitle', { tag }),
+        message: t('wstgDownloadedMsg', { count: res.count ?? 0, dir }),
+        confirmText: t('openFolder'),
+        cancelText: t('close'),
+        showCancel: true,
+        onConfirm: () => window.electron?.openFolder(dir),
+      });
+    },
+    [showError, showModal, t],
+  );
+
+  const checkWstg = useCallback(async () => {
+    setWstgBusy('check');
+    const res = await window.electron!.wstgLatestRelease();
+    setWstgBusy(null);
+    const tag = res.tag;
+    if (!res.success || !tag) {
+      showError(t('wstgErrorTitle'), t('wstgErrorMsg', { error: res.error ?? '' }));
+      return;
+    }
+    const date = res.date ? longDate(res.date) : '';
+    if (tag === WSTG_RELEASE) {
+      showModal({ type: 'success', title: t('wstgUpToDateTitle'), message: t('wstgUpToDateMsg', { tag, date, base: longDate(WSTG_TEXTS_DATE) }) });
+      return;
+    }
+    showModal({
+      type: 'info',
+      title: t('wstgNewTitle', { tag }),
+      message: t('wstgNewMsg', { tag, date }),
+      confirmText: t('download'),
+      showCancel: true,
+      onConfirm: () => downloadWstg(tag),
+    });
+  }, [downloadWstg, longDate, showError, showModal, t]);
 
   // Salvataggio: Salva sovrascrive il file aperto; senza file dell'utente si comporta come Salva con nome
   const finishSave = useCallback(
@@ -524,10 +581,11 @@ export const ChecklistApp = () => {
           <div className="flex-1" />
 
           <Button
+            variant="outline"
             size="sm"
             onClick={() => openTop10()}
             title={t('mappingHint')}
-            className="h-8 gap-1.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-sm text-white shadow-md"
+            className="h-8 gap-1.5 text-sm border-amber-500/50 text-amber-400 hover:bg-amber-500/10 hover:border-amber-500 hover:text-amber-300"
           >
             <Sparkles className="w-3.5 h-3.5" />
             <span className="hidden xl:inline">{t('mapping')}</span>
@@ -655,22 +713,35 @@ export const ChecklistApp = () => {
           ))}
         </div>
 
-        <div role="radiogroup" aria-label={t('language')} className="flex items-center gap-0.5 rounded-lg border border-primary/30 bg-gradient-to-r from-primary/10 to-accent/10 p-0.5">
-          <Globe className="w-4 h-4 mx-1.5 text-primary" aria-hidden />
-          {(['it', 'en'] as const).map((lang) => (
+        <div className="flex items-center gap-3">
+          {window.electron && (
             <button
-              key={lang}
-              role="radio"
-              aria-checked={language === lang}
-              onClick={() => setLanguage(lang)}
-              className={cn(
-                'focus-ring rounded-md px-2.5 py-0.5 text-xs font-semibold transition-colors',
-                language === lang ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground',
-              )}
+              onClick={checkWstg}
+              disabled={wstgBusy !== null}
+              title={t('wstgUpdatesHint')}
+              className="focus-ring flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-secondary/60 hover:text-foreground disabled:pointer-events-none disabled:opacity-70"
             >
-              {lang === 'it' ? 'Italiano' : 'English'}
+              <RefreshCw className={cn('w-3.5 h-3.5', wstgBusy && 'animate-spin')} />
+              {wstgBusy === 'download' ? t('wstgDownloading') : wstgBusy ? t('wstgChecking') : t('wstgUpdates')}
             </button>
-          ))}
+          )}
+          <div role="radiogroup" aria-label={t('language')} className="flex items-center gap-0.5 rounded-lg border border-primary/30 bg-gradient-to-r from-primary/10 to-accent/10 p-0.5">
+            <Globe className="w-4 h-4 mx-1.5 text-primary" aria-hidden />
+            {(['it', 'en'] as const).map((lang) => (
+              <button
+                key={lang}
+                role="radio"
+                aria-checked={language === lang}
+                onClick={() => setLanguage(lang)}
+                className={cn(
+                  'focus-ring rounded-md px-2.5 py-0.5 text-xs font-semibold transition-colors',
+                  language === lang ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground',
+                )}
+              >
+                {lang === 'it' ? 'Italiano' : 'English'}
+              </button>
+            ))}
+          </div>
         </div>
       </footer>
 

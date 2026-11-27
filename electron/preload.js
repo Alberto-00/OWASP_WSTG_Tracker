@@ -14,6 +14,11 @@ contextBridge.exposeInMainWorld('electron', {
   listSaveFiles: () => ipcRenderer.invoke('list-save-files'),
   fileExists: (filename) => ipcRenderer.invoke('file-exists', filename),
 
+  // Aggiornamenti WSTG (solo release ufficiali)
+  wstgLatestRelease: () => ipcRenderer.invoke('wstg-latest-release'),
+  wstgDownloadRelease: (tag) => ipcRenderer.invoke('wstg-download-release', tag),
+  openFolder: (dir) => ipcRenderer.invoke('open-folder', dir),
+
   // Window controls
   setUnsavedChanges: (hasChanges) => ipcRenderer.send('set-unsaved-changes', hasChanges),
   // I listener restituiscono una funzione di cleanup per evitare accumulo di handler

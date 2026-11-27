@@ -26,10 +26,17 @@ export interface TestInfoData {
   test_objectives?: string;
 }
 
+// Categoria OWASP Top 10:2025 come pubblicata su top10.owasp.org (scripts/import-top10.mjs)
 export interface OwaspTop10Item {
-  description: string;
   link: string;
-  level: 'basso' | 'medio' | 'alto' | 'critico';
+  // Tabella dei punteggi ufficiale: [etichetta, valore] come scritti nella pagina di quella lingua
+  stats: [string, string][];
+  background: string;
+  description: string;
+  prevention: string;
+  scenarios: string;
+  references: string;
+  cwes: { id: string; name: string; url: string }[];
 }
 
 export interface ProgressData {

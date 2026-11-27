@@ -12,11 +12,12 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "electron:dev": "concurrently \"cross-env BROWSER=none npm run dev\" \"wait-on http://localhost:8080 && cross-env NODE_ENV=development electron .\"",
+    "electron:dev": "concurrently \"cross-env BROWSER=none npm run dev\" \"wait-on http://localhost:9999 && cross-env NODE_ENV=development electron .\"",
     "electron:build": "npm run build && electron-builder",
     "electron:build:win": "npm run build && electron-builder --win",
     "electron:build:linux": "npm run build && electron-builder --linux",
-    "check:data": "node --experimental-strip-types --no-warnings scripts/check-data.mjs"
+    "check:data": "node --experimental-strip-types --no-warnings scripts/check-data.mjs",
+    "import:top10": "node scripts/import-top10.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -50,6 +51,7 @@
     "@tanstack/react-query": "^5.83.0",
     "@tiptap/extension-code-block-lowlight": "^3.14.0",
     "@tiptap/extension-highlight": "^3.14.0",
+    "@tiptap/extension-list": "^3.14.0",
     "@tiptap/extension-placeholder": "^3.14.0",
     "@tiptap/extension-underline": "^3.14.0",
     "@tiptap/react": "^3.14.0",
@@ -59,6 +61,7 @@
     "cmdk": "^1.1.1",
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.6.0",
+    "highlight.js": "^11.11.1",
     "input-otp": "^1.4.2",
     "lowlight": "^3.3.0",
     "lucide-react": "^0.462.0",

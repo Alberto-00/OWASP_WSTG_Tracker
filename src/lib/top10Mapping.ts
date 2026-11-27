@@ -128,3 +128,25 @@ export const TOP10_BY_TEST: Record<string, string[]> = {
 
 // Codice breve ("A05") dalla chiave di owasp_top_10.json ("A05:2025 - Injection").
 export const top10Code = (key: string) => key.slice(0, 3);
+
+// OWASP Top 10:2021 → 2025 come nella figura ufficiale dell'introduzione 2025
+// (https://top10.owasp.org/2025/0x00_2025-Introduction/): ogni categoria 2021 e la categoria 2025 in cui è confluita.
+// SSRF (A10:2021) è stata accorpata in A01:2025: è la linea tratteggiata della figura.
+export const TOP10_2021 = [
+  { code: 'A01', name: 'Broken Access Control', to: 'A01' },
+  { code: 'A02', name: 'Cryptographic Failures', to: 'A04' },
+  { code: 'A03', name: 'Injection', to: 'A05' },
+  { code: 'A04', name: 'Insecure Design', to: 'A06' },
+  { code: 'A05', name: 'Security Misconfiguration', to: 'A02' },
+  { code: 'A06', name: 'Vulnerable and Outdated Components', to: 'A03' },
+  { code: 'A07', name: 'Identification and Authentication Failures', to: 'A07' },
+  { code: 'A08', name: 'Software and Data Integrity Failures', to: 'A08' },
+  { code: 'A09', name: 'Security Logging and Monitoring Failures', to: 'A09' },
+  { code: 'A10', name: 'Server-Side Request Forgery (SSRF)', to: 'A01', merged: true },
+];
+
+// Segnate "(New)" nella figura: A03 amplia A06:2021, A10 non ha precedenti
+export const TOP10_NEW_2025 = ['A03', 'A10'];
+
+// Posizioni guadagnate (> 0) o perse (< 0) passando al 2025; null se la categoria è stata accorpata
+export const rankChange = (o: (typeof TOP10_2021)[number]) => (o.merged ? null : Number(o.code.slice(1)) - Number(o.to.slice(1)));

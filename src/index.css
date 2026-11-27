@@ -71,10 +71,7 @@
     --status-done: 160 60% 45%;
     --status-progress: 263 70% 66%;
     --status-pending: 195 85% 55%;
-    --level-critical: 0 84% 60%;
-    --level-high: 38 92% 50%;
-    --level-medium: 45 93% 55%;
-    --level-low: 160 60% 45%;
+    --top10: 38 92% 50%;
     --sidebar-background: 228 10% 16%;
     --sidebar-foreground: 220 9% 75%;
     --sidebar-primary: 239 84% 67%;
@@ -127,12 +124,12 @@
   /* Anello di focus da tastiera per i controlli personalizzati */
   .focus-ring:focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; }
 
-  /* Livello di rischio Top 10: il colore arriva da --lvl (impostata via style) */
-  .level-text { color: hsl(var(--lvl)); }
-  .level-chip { color: hsl(var(--lvl)); background: hsl(var(--lvl) / 0.12); border: 1px solid hsl(var(--lvl) / 0.35); }
-  button.level-chip:hover { background: hsl(var(--lvl) / 0.22); }
-  .level-item:hover { background: hsl(var(--lvl) / 0.08); }
-  .level-item[aria-selected='true'] { background: hsl(var(--lvl) / 0.16); box-shadow: inset 3px 0 0 hsl(var(--lvl)); }
+  /* OWASP Top 10: un solo colore (ambra) per codici, chip e voce selezionata */
+  .top10-text { color: hsl(var(--top10)); }
+  .top10-chip { color: hsl(var(--top10)); background: hsl(var(--top10) / 0.12); border: 1px solid hsl(var(--top10) / 0.35); }
+  button.top10-chip:hover { background: hsl(var(--top10) / 0.22); }
+  .top10-item:hover { background: hsl(var(--top10) / 0.08); }
+  .top10-item[aria-selected='true'] { background: hsl(var(--top10) / 0.16); box-shadow: inset 3px 0 0 hsl(var(--top10)); }
 
   /* Contenuti WSTG (HTML) nelle schede: scala tipografica coerente con la palette */
   .prose.tab-content {
@@ -187,19 +184,6 @@
   .prose.tab-content pre code { background: transparent; border: 0; padding: 0; font-size: inherit; }
   .prose.tab-content table { font-size: 12.5px; }
   .prose.tab-content table code { white-space: nowrap; }
-
-  /* Descrizione Top 10 */
-  .top10-description p + p { margin-top: 0.75rem; }
-  .top10-description strong { color: hsl(var(--foreground)); font-weight: 600; }
-  .top10-description code {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.85em;
-    color: hsl(var(--cyan));
-    background: hsl(228 10% 12%);
-    border: 1px solid hsl(220 9% 25%);
-    border-radius: 0.25rem;
-    padding: 0.05rem 0.35rem;
-  }
 }
 
 /* Entrata morbida: "both" evita il lampo durante il ritardo dello stagger */
@@ -354,6 +338,74 @@
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
 }
+
+/* Link (scritti o incollati): si aprono nel browser */
+.note-editor-content a {
+  color: hsl(var(--cyan));
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+/* Elenco di attività: casella a sinistra, testo barrato quando è fatta */
+.note-editor-content ul[data-type='taskList'] {
+  list-style: none;
+  padding-left: 0.25rem;
+}
+.note-editor-content ul[data-type='taskList'] > li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+.note-editor-content ul[data-type='taskList'] > li > label {
+  flex-shrink: 0;
+  margin-top: 0.2rem;
+}
+.note-editor-content ul[data-type='taskList'] > li > label input {
+  width: 14px;
+  height: 14px;
+  accent-color: hsl(var(--status-done));
+  cursor: pointer;
+}
+.note-editor-content ul[data-type='taskList'] > li > div {
+  flex: 1;
+  min-width: 0;
+}
+.note-editor-content ul[data-type='taskList'] > li > div > p {
+  margin: 0;
+}
+.note-editor-content ul[data-type='taskList'] > li[data-checked='true'] > div {
+  color: hsl(var(--muted-foreground));
+  text-decoration: line-through;
+}
+
+/* Sintassi colorata nei blocchi di codice (classi di highlight.js) con i colori dell'app */
+.note-editor-content pre .hljs-comment,
+.note-editor-content pre .hljs-quote { color: hsl(var(--muted-foreground) / 0.8); font-style: italic; }
+.note-editor-content pre .hljs-keyword,
+.note-editor-content pre .hljs-selector-tag,
+.note-editor-content pre .hljs-literal,
+.note-editor-content pre .hljs-built_in { color: hsl(var(--purple)); }
+.note-editor-content pre .hljs-string,
+.note-editor-content pre .hljs-regexp,
+.note-editor-content pre .hljs-addition { color: hsl(var(--status-done)); }
+.note-editor-content pre .hljs-number,
+.note-editor-content pre .hljs-symbol,
+.note-editor-content pre .hljs-bullet,
+.note-editor-content pre .hljs-meta { color: hsl(var(--top10)); }
+.note-editor-content pre .hljs-title,
+.note-editor-content pre .hljs-section,
+.note-editor-content pre .hljs-name,
+.note-editor-content pre .hljs-selector-id,
+.note-editor-content pre .hljs-selector-class { color: hsl(var(--cyan)); }
+.note-editor-content pre .hljs-attr,
+.note-editor-content pre .hljs-attribute,
+.note-editor-content pre .hljs-variable,
+.note-editor-content pre .hljs-template-variable,
+.note-editor-content pre .hljs-property { color: #f472b6; }
+.note-editor-content pre .hljs-deletion { color: hsl(var(--destructive)); }
+.note-editor-content pre .hljs-emphasis { font-style: italic; }
+.note-editor-content pre .hljs-strong { font-weight: 700; }
 
 /* Placeholder */
 .note-editor-content p.is-editor-empty:first-child::before {

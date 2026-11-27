@@ -1,9 +1,9 @@
 import { MouseEvent } from 'react';
 import * as Tabs from '@radix-ui/react-tabs';
 import { ChevronDown, ExternalLink, FileText, Lightbulb, Shield, ShieldCheck, StickyNote, Target, Wrench } from 'lucide-react';
-import { OwaspTop10Item, TestInfoData, TestStatus, WSTGCategory, WSTGTest } from '@/types/checklist';
+import { TestInfoData, TestStatus, WSTGCategory, WSTGTest } from '@/types/checklist';
 import { NoteEditor } from '@/components/NoteEditor';
-import { levelStyle, STATUSES, StatusIcon, statusLabelKey } from '@/components/status';
+import { STATUSES, StatusIcon, statusLabelKey } from '@/components/status';
 import { useLanguage } from '@/hooks/useLanguage';
 import { cn } from '@/lib/utils';
 
@@ -15,7 +15,6 @@ export interface Top10Ref {
   key: string;
   code: string;
   title: string;
-  level: OwaspTop10Item['level'];
 }
 
 interface TestDetailProps {
@@ -71,8 +70,7 @@ const Top10Chips = ({ items, onOpen }: { items: Top10Ref[]; onOpen: (key: string
       <button
         key={item.key}
         onClick={() => onOpen(item.key)}
-        style={levelStyle(item.level)}
-        className="level-chip focus-ring inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-medium transition-colors"
+        className="top10-chip focus-ring inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-medium transition-colors"
       >
         <span className="font-semibold tabular-nums">{item.code}:2025</span>
         <span className="text-foreground/85">{item.title}</span>

@@ -1,5 +1,5 @@
 import { KeyboardEvent, useRef } from 'react';
-import { ChevronRight, SearchX, X } from 'lucide-react';
+import { ChevronRight, Info, SearchX, X } from 'lucide-react';
 import { WSTGCategory, TestStatus } from '@/types/checklist';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu';
@@ -18,7 +18,7 @@ interface TestListProps {
   selectedTestId: string | null;
   selection: Set<string>;
   hasFilters: boolean;
-  onCategoryClick: (cat: WSTGCategory) => void;
+  onCategoryClick: (cat: WSTGCategory, toggle?: boolean) => void;
   onSelectTest: (id: string, mode?: 'toggle' | 'range') => void;
   onCycleStatus: (id: string) => void;
   onSetStatus: (ids: string[], status: TestStatus) => void;
@@ -94,24 +94,35 @@ export const TestList = ({
             const tone = categoryTone(statuses);
             return (
               <section key={cat.id} aria-label={cat.name} className="animate-fade-in" style={{ animationDelay: `${ci * 25}ms` }}>
-                <button
-                  onClick={() => onCategoryClick(cat)}
-                  aria-expanded={!collapsed}
-                  className={cn('focus-ring w-full rounded-lg px-2.5 pt-2.5 pb-2 text-left transition-[filter] hover:brightness-110', tone.bg)}
-                >
-                  <span className="flex items-center gap-2">
-                    <ChevronRight className={cn('w-4 h-4 flex-shrink-0 transition-transform duration-200', tone.text, !collapsed && 'rotate-90')} />
-                    <span className={cn('flex-1 font-semibold text-sm', tone.text)}>{cat.name}</span>
-                    <span className={cn('text-sm font-medium tabular-nums flex-shrink-0', tone.text)}>
-                      {done}/{cat.tests.length}
+                <div className="relative">
+                  <button
+                    onClick={() => onCategoryClick(cat)}
+                    aria-expanded={!collapsed}
+                    className={cn('focus-ring w-full rounded-lg px-2.5 pt-2.5 pb-2 text-left transition-[filter] hover:brightness-110', tone.bg)}
+                  >
+                    <span className="flex items-center gap-2 pr-7">
+                      <ChevronRight className={cn('w-4 h-4 flex-shrink-0 transition-transform duration-200', tone.text, !collapsed && 'rotate-90')} />
+                      <span className={cn('flex-1 font-semibold text-sm', tone.text)}>{cat.name}</span>
+                      <span className={cn('text-sm font-medium tabular-nums flex-shrink-0', tone.text)}>
+                        {done}/{cat.tests.length}
+                      </span>
                     </span>
-                  </span>
-                  {/* Avanzamento della categoria: completati (verde) + in corso (viola) */}
-                  <span className="mt-2 ml-6 flex h-1 rounded-full bg-background/40 overflow-hidden" aria-hidden>
-                    <span className="h-full bg-[hsl(var(--status-done))] transition-[width] duration-500" style={{ width: `${(done / cat.tests.length) * 100}%` }} />
-                    <span className="h-full bg-[hsl(var(--status-progress))] transition-[width] duration-500" style={{ width: `${(busy / cat.tests.length) * 100}%` }} />
-                  </span>
-                </button>
+                    {/* Avanzamento della categoria: completati (verde) + in corso (viola) */}
+                    <span className="mt-2 ml-6 flex h-1 rounded-full bg-background/40 overflow-hidden" aria-hidden>
+                      <span className="h-full bg-[hsl(var(--status-done))] transition-[width] duration-500" style={{ width: `${(done / cat.tests.length) * 100}%` }} />
+                      <span className="h-full bg-[hsl(var(--status-progress))] transition-[width] duration-500" style={{ width: `${(busy / cat.tests.length) * 100}%` }} />
+                    </span>
+                  </button>
+                  {/* Fratello e non figlio dell'header (niente pulsanti annidati): mostra solo la descrizione */}
+                  <button
+                    onClick={() => onCategoryClick(cat, false)}
+                    title={t('categoryDescription')}
+                    aria-label={`${t('categoryDescription')}: ${cat.name}`}
+                    className={cn('focus-ring absolute right-1.5 top-2 h-6 w-6 flex items-center justify-center rounded-md opacity-70 transition hover:opacity-100 hover:bg-foreground/10', tone.text)}
+                  >
+                    <Info className="w-4 h-4" />
+                  </button>
+                </div>
 
                 <div className={cn('grid transition-[grid-template-rows] duration-200 ease-out', collapsed ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]')}>
                   <div className="overflow-hidden" aria-hidden={collapsed || undefined}>

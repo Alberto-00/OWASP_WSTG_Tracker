@@ -1,52 +1,1727 @@
 {
   "A01:2025 - Broken Access Control": {
-    "description": "<p>Il controllo degli accessi impedisce agli utenti di agire oltre i permessi previsti. Le falle portano alla divulgazione, modifica o distruzione non autorizzata di dati, o all'esecuzione di funzioni oltre i limiti dell'utente. Dal 2025 la categoria comprende anche la Server-Side Request Forgery (SSRF), oltre alla Cross-Site Request Forgery (CSRF).</p><p><strong>Esempio:</strong> Un utente autenticato modifica l'ID dell'account nella richiesta (<code>GET /api/accounts/1043</code>) e legge i dati di un altro cliente.</p>",
     "link": "https://top10.owasp.org/2025/it/A01_2025-Broken_Access_Control/",
-    "level": "alto"
+    "stats": [
+      [
+        "CWE Mappate",
+        "40"
+      ],
+      [
+        "Tasso Massimo di Incidenza",
+        "20,15%"
+      ],
+      [
+        "Tasso Medio di Incidenza",
+        "3,74%"
+      ],
+      [
+        "Copertura Massima",
+        "100,00%"
+      ],
+      [
+        "Copertura Media",
+        "42,93%"
+      ],
+      [
+        "Exploit Medio Ponderato",
+        "7,04"
+      ],
+      [
+        "Impatto Medio Ponderato",
+        "3,84"
+      ],
+      [
+        "Totale Occorrenze",
+        "1.839.701"
+      ],
+      [
+        "Totale CVE",
+        "32.654"
+      ]
+    ],
+    "background": "<p>Mantenendo la sua posizione al #1 nel Top Ten, il 100% delle applicazioni testate è risultato avere qualche forma di broken access control. Tra le CWE degne di nota vi sono <em>CWE-200: Exposure of Sensitive Information to an Unauthorized Actor</em>, <em>CWE-201: Exposure of Sensitive Information Through Sent Data</em>, <em>CWE-918 Server-Side Request Forgery (SSRF)</em> e <em>CWE-352: Cross-Site Request Forgery (CSRF)</em>. Questa categoria ha il maggior numero di occorrenze nei dati contribuiti e il secondo più alto numero di CVE correlati.</p>",
+    "description": "<p>Il controllo degli accessi applica policy tali per cui gli utenti non possono agire al di fuori dei propri permessi previsti. I fallimenti portano tipicamente a divulgazione non autorizzata di informazioni, modifica o distruzione di tutti i dati, o all&#x27;esecuzione di una funzione di business al di fuori dei limiti dell&#x27;utente. Le vulnerabilità comuni di controllo degli accessi includono:</p>\n<ul>\n<li>Violazione del principio del minimo privilegio, comunemente noto come deny by default, dove l&#x27;accesso dovrebbe essere concesso solo per determinate capacità, ruoli o utenti, ma è disponibile a chiunque.</li>\n<li>Aggiramento dei controlli di accesso modificando l&#x27;URL (parameter tampering o force browsing), lo stato interno dell&#x27;applicazione o la pagina HTML, oppure utilizzando uno strumento di attacco che modifica le richieste API.</li>\n<li>Permettere la visualizzazione o la modifica dell&#x27;account di qualcun altro fornendo il suo identificatore univoco (insecure direct object references).</li>\n<li>Un&#x27;API accessibile con controlli di accesso mancanti per POST, PUT e DELETE.</li>\n<li>Escalation di privilegi. Agire come utente senza essere autenticati o acquisire privilegi superiori a quelli previsti per l&#x27;utente autenticato (es. accesso admin).</li>\n<li>Manipolazione dei metadati, come il replay o la manomissione di un token di controllo degli accessi JSON Web Token (JWT), un cookie o un campo nascosto manipolato per elevare i privilegi, o l&#x27;abuso dell&#x27;invalidazione JWT.</li>\n<li>La configurazione errata di CORS consente l&#x27;accesso alle API da origini non autorizzate o non attendibili.</li>\n<li>Force browsing (indovinare URL) verso pagine autenticate come utente non autenticato o verso pagine privilegiate come utente standard.</li>\n</ul>",
+    "prevention": "<p>Il controllo degli accessi è efficace solo se implementato in codice lato server attendibile o in API serverless, dove l&#x27;attaccante non può modificare il controllo degli accessi o i metadati.</p>\n<ul>\n<li>Tranne per le risorse pubbliche, negare l&#x27;accesso per default.</li>\n<li>Implementare i meccanismi di controllo degli accessi una sola volta e riutilizzarli in tutta l&#x27;applicazione, inclusa la minimizzazione dell&#x27;utilizzo del Cross-Origin Resource Sharing (CORS).</li>\n<li>I modelli di controllo degli accessi devono applicare la proprietà dei record piuttosto che consentire agli utenti di creare, leggere, aggiornare o eliminare qualsiasi record.</li>\n<li>I requisiti di limite di business univoci dell&#x27;applicazione devono essere applicati dai modelli di dominio.</li>\n<li>Disabilitare il directory listing del web server e garantire che i metadati dei file (es. .git) e i file di backup non siano presenti nelle web root.</li>\n<li>Registrare i fallimenti del controllo degli accessi, inviare alert agli amministratori quando appropriato (es. fallimenti ripetuti).</li>\n<li>Implementare limiti di frequenza sull&#x27;accesso ad API e controller per minimizzare i danni degli strumenti di attacco automatizzati.</li>\n<li>Gli identificatori di sessione con stato devono essere invalidati sul server dopo il logout. I token JWT senza stato devono avere una durata breve per minimizzare la finestra di opportunità per un attaccante. Per JWT con durata più lunga, considerare l&#x27;uso di refresh token e seguire gli standard OAuth per revocare l&#x27;accesso.</li>\n<li>Utilizzare toolkit o pattern ben consolidati che forniscono controlli degli accessi semplici e dichiarativi.</li>\n</ul>\n<p>Gli sviluppatori e il personale QA devono includere test funzionali del controllo degli accessi nei test unitari e di integrazione.</p>",
+    "scenarios": "<p><strong>Scenario #1:</strong> L&#x27;applicazione utilizza dati non verificati in una chiamata SQL che accede alle informazioni dell&#x27;account:</p>\n<pre><code>pstmt.setString(1, request.getParameter(&quot;acct&quot;));\nResultSet results = pstmt.executeQuery( );\n</code></pre>\n<p>Un attaccante può semplicemente modificare il parametro &#x27;acct&#x27; del browser per inviare qualsiasi numero di account desiderato. Se non verificato correttamente, l&#x27;attaccante può accedere all&#x27;account di qualsiasi utente.</p>\n<pre><code>https://example.com/app/accountInfo?acct=notmyacct\n</code></pre>\n<p><strong>Scenario #2:</strong> Un attaccante costringe semplicemente il browser a puntare a URL specifici. Sono necessari i diritti di amministratore per accedere alla pagina di amministrazione.</p>\n<pre><code>https://example.com/app/getappInfo\nhttps://example.com/app/admin_getappInfo\n</code></pre>\n<p>Se un utente non autenticato può accedere a una delle due pagine, si tratta di una falla. Se un non-amministratore può accedere alla pagina di amministrazione, si tratta di una falla.</p>\n<p><strong>Scenario #3:</strong> Un&#x27;applicazione gestisce tutto il controllo degli accessi nel front-end. Sebbene l&#x27;attaccante non riesca ad accedere a <code>https://example.com/app/admin_getappInfo</code> a causa del codice JavaScript in esecuzione nel browser, può semplicemente eseguire:</p>\n<pre><code>$ curl https://example.com/app/admin_getappInfo\n</code></pre>\n<p>dalla riga di comando.</p>",
+    "references": "<ul>\n<li><a href=\"https://top10proactive.owasp.org/archive/2024/the-top-10/c1-accesscontrol/\">OWASP Proactive Controls: C1: Implement Access Control</a></li>\n<li><a href=\"https://github.com/OWASP/ASVS/blob/master/5.0/en/0x17-V8-Authorization.md\">OWASP Application Security Verification Standard: V8 Authorization</a></li>\n<li><a href=\"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/05-Authorization_Testing/README\">OWASP Testing Guide: Authorization Testing</a></li>\n<li><a href=\"https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html\">OWASP Cheat Sheet: Authorization</a></li>\n<li><a href=\"https://portswigger.net/blog/exploiting-cors-misconfigurations-for-bitcoins-and-bounties\">PortSwigger: Exploiting CORS misconfiguration</a></li>\n<li><a href=\"https://www.oauth.com/oauth2-servers/listing-authorizations/revoking-access/\">OAuth: Revoking Access</a></li>\n</ul>",
+    "cwes": [
+      {
+        "id": "CWE-22",
+        "name": "Improper Limitation of a Pathname to a Restricted Directory ('Path Traversal')",
+        "url": "https://cwe.mitre.org/data/definitions/22.html"
+      },
+      {
+        "id": "CWE-23",
+        "name": "Relative Path Traversal",
+        "url": "https://cwe.mitre.org/data/definitions/23.html"
+      },
+      {
+        "id": "CWE-36",
+        "name": "Absolute Path Traversal",
+        "url": "https://cwe.mitre.org/data/definitions/36.html"
+      },
+      {
+        "id": "CWE-59",
+        "name": "Improper Link Resolution Before File Access ('Link Following')",
+        "url": "https://cwe.mitre.org/data/definitions/59.html"
+      },
+      {
+        "id": "CWE-61",
+        "name": "UNIX Symbolic Link (Symlink) Following",
+        "url": "https://cwe.mitre.org/data/definitions/61.html"
+      },
+      {
+        "id": "CWE-65",
+        "name": "Windows Hard Link",
+        "url": "https://cwe.mitre.org/data/definitions/65.html"
+      },
+      {
+        "id": "CWE-200",
+        "name": "Exposure of Sensitive Information to an Unauthorized Actor",
+        "url": "https://cwe.mitre.org/data/definitions/200.html"
+      },
+      {
+        "id": "CWE-201",
+        "name": "Exposure of Sensitive Information Through Sent Data",
+        "url": "https://cwe.mitre.org/data/definitions/201.html"
+      },
+      {
+        "id": "CWE-219",
+        "name": "Storage of File with Sensitive Data Under Web Root",
+        "url": "https://cwe.mitre.org/data/definitions/219.html"
+      },
+      {
+        "id": "CWE-276",
+        "name": "Incorrect Default Permissions",
+        "url": "https://cwe.mitre.org/data/definitions/276.html"
+      },
+      {
+        "id": "CWE-281",
+        "name": "Improper Preservation of Permissions",
+        "url": "https://cwe.mitre.org/data/definitions/281.html"
+      },
+      {
+        "id": "CWE-282",
+        "name": "Improper Ownership Management",
+        "url": "https://cwe.mitre.org/data/definitions/282.html"
+      },
+      {
+        "id": "CWE-283",
+        "name": "Unverified Ownership",
+        "url": "https://cwe.mitre.org/data/definitions/283.html"
+      },
+      {
+        "id": "CWE-284",
+        "name": "Improper Access Control",
+        "url": "https://cwe.mitre.org/data/definitions/284.html"
+      },
+      {
+        "id": "CWE-285",
+        "name": "Improper Authorization",
+        "url": "https://cwe.mitre.org/data/definitions/285.html"
+      },
+      {
+        "id": "CWE-352",
+        "name": "Cross-Site Request Forgery (CSRF)",
+        "url": "https://cwe.mitre.org/data/definitions/352.html"
+      },
+      {
+        "id": "CWE-359",
+        "name": "Exposure of Private Personal Information to an Unauthorized Actor",
+        "url": "https://cwe.mitre.org/data/definitions/359.html"
+      },
+      {
+        "id": "CWE-377",
+        "name": "Insecure Temporary File",
+        "url": "https://cwe.mitre.org/data/definitions/377.html"
+      },
+      {
+        "id": "CWE-379",
+        "name": "Creation of Temporary File in Directory with Insecure Permissions",
+        "url": "https://cwe.mitre.org/data/definitions/379.html"
+      },
+      {
+        "id": "CWE-402",
+        "name": "Transmission of Private Resources into a New Sphere ('Resource Leak')",
+        "url": "https://cwe.mitre.org/data/definitions/402.html"
+      },
+      {
+        "id": "CWE-424",
+        "name": "Improper Protection of Alternate Path",
+        "url": "https://cwe.mitre.org/data/definitions/424.html"
+      },
+      {
+        "id": "CWE-425",
+        "name": "Direct Request ('Forced Browsing')",
+        "url": "https://cwe.mitre.org/data/definitions/425.html"
+      },
+      {
+        "id": "CWE-441",
+        "name": "Unintended Proxy or Intermediary ('Confused Deputy')",
+        "url": "https://cwe.mitre.org/data/definitions/441.html"
+      },
+      {
+        "id": "CWE-497",
+        "name": "Exposure of Sensitive System Information to an Unauthorized Control Sphere",
+        "url": "https://cwe.mitre.org/data/definitions/497.html"
+      },
+      {
+        "id": "CWE-538",
+        "name": "Insertion of Sensitive Information into Externally-Accessible File or Directory",
+        "url": "https://cwe.mitre.org/data/definitions/538.html"
+      },
+      {
+        "id": "CWE-540",
+        "name": "Inclusion of Sensitive Information in Source Code",
+        "url": "https://cwe.mitre.org/data/definitions/540.html"
+      },
+      {
+        "id": "CWE-548",
+        "name": "Exposure of Information Through Directory Listing",
+        "url": "https://cwe.mitre.org/data/definitions/548.html"
+      },
+      {
+        "id": "CWE-552",
+        "name": "Files or Directories Accessible to External Parties",
+        "url": "https://cwe.mitre.org/data/definitions/552.html"
+      },
+      {
+        "id": "CWE-566",
+        "name": "Authorization Bypass Through User-Controlled SQL Primary Key",
+        "url": "https://cwe.mitre.org/data/definitions/566.html"
+      },
+      {
+        "id": "CWE-601",
+        "name": "URL Redirection to Untrusted Site ('Open Redirect')",
+        "url": "https://cwe.mitre.org/data/definitions/601.html"
+      },
+      {
+        "id": "CWE-615",
+        "name": "Inclusion of Sensitive Information in Source Code Comments",
+        "url": "https://cwe.mitre.org/data/definitions/615.html"
+      },
+      {
+        "id": "CWE-639",
+        "name": "Authorization Bypass Through User-Controlled Key",
+        "url": "https://cwe.mitre.org/data/definitions/639.html"
+      },
+      {
+        "id": "CWE-668",
+        "name": "Exposure of Resource to Wrong Sphere",
+        "url": "https://cwe.mitre.org/data/definitions/668.html"
+      },
+      {
+        "id": "CWE-732",
+        "name": "Incorrect Permission Assignment for Critical Resource",
+        "url": "https://cwe.mitre.org/data/definitions/732.html"
+      },
+      {
+        "id": "CWE-749",
+        "name": "Exposed Dangerous Method or Function",
+        "url": "https://cwe.mitre.org/data/definitions/749.html"
+      },
+      {
+        "id": "CWE-862",
+        "name": "Missing Authorization",
+        "url": "https://cwe.mitre.org/data/definitions/862.html"
+      },
+      {
+        "id": "CWE-863",
+        "name": "Incorrect Authorization",
+        "url": "https://cwe.mitre.org/data/definitions/863.html"
+      },
+      {
+        "id": "CWE-918",
+        "name": "Server-Side Request Forgery (SSRF)",
+        "url": "https://cwe.mitre.org/data/definitions/918.html"
+      },
+      {
+        "id": "CWE-922",
+        "name": "Insecure Storage of Sensitive Information",
+        "url": "https://cwe.mitre.org/data/definitions/922.html"
+      },
+      {
+        "id": "CWE-1275",
+        "name": "Sensitive Cookie with Improper SameSite Attribute",
+        "url": "https://cwe.mitre.org/data/definitions/1275.html"
+      }
+    ]
   },
   "A02:2025 - Security Misconfiguration": {
-    "description": "<p>Un sistema, un'applicazione o un servizio cloud è configurato in modo non sicuro: hardening assente, funzionalità o account non necessari abilitati, credenziali di default, messaggi di errore troppo dettagliati, permessi cloud permissivi o header di sicurezza mancanti. Sale dal #5 al #2 e ora comprende anche le XML External Entity (XXE).</p><p><strong>Esempio:</strong> Un server di produzione mantiene attivi la console di debug e l'account amministratore di default, e mostra gli stack trace agli utenti.</p>",
     "link": "https://top10.owasp.org/2025/it/A02_2025-Security_Misconfiguration/",
-    "level": "alto"
+    "stats": [
+      [
+        "CWE Mappate",
+        "16"
+      ],
+      [
+        "Tasso Massimo di Incidenza",
+        "27,70%"
+      ],
+      [
+        "Tasso Medio di Incidenza",
+        "3,00%"
+      ],
+      [
+        "Copertura Massima",
+        "100,00%"
+      ],
+      [
+        "Copertura Media",
+        "52,35%"
+      ],
+      [
+        "Exploit Medio Ponderato",
+        "7,96"
+      ],
+      [
+        "Impatto Medio Ponderato",
+        "3,97"
+      ],
+      [
+        "Totale Occorrenze",
+        "719.084"
+      ],
+      [
+        "Totale CVE",
+        "1.375"
+      ]
+    ],
+    "background": "<p>Salendo dal #5 dell&#x27;edizione precedente, il 100% delle applicazioni testate è risultato avere qualche forma di configurazione errata, con un tasso medio di incidenza del 3,00% e oltre 719k occorrenze di una Common Weakness Enumeration (CWE) in questa categoria di rischio. Con lo spostamento sempre maggiore verso software altamente configurabile, non sorprende vedere questa categoria salire. Tra le CWE degne di nota vi sono <em>CWE-16 Configuration</em> e <em>CWE-611 Improper Restriction of XML External Entity Reference (XXE)</em>.</p>",
+    "description": "<p>La Security Misconfiguration si verifica quando un sistema, un&#x27;applicazione o un servizio cloud è configurato in modo errato dal punto di vista della sicurezza, creando vulnerabilità.</p>\n<p>L&#x27;applicazione potrebbe essere vulnerabile se:</p>\n<ul>\n<li>Manca un adeguato hardening della sicurezza in qualsiasi parte dello stack applicativo o i permessi sui servizi cloud sono configurati in modo errato.</li>\n<li>Funzionalità non necessarie sono abilitate o installate (es. porte, servizi, pagine, account, framework di testing o privilegi non necessari).</li>\n<li>Gli account di default e le relative password sono ancora abilitati e non modificati.</li>\n<li>Manca una configurazione centrale per intercettare messaggi di errore eccessivi. La gestione degli errori rivela stack trace o altri messaggi di errore eccessivamente informativi agli utenti.</li>\n<li>Per i sistemi aggiornati, le ultime funzionalità di sicurezza sono disabilitate o non configurate in modo sicuro.</li>\n<li>Eccessiva priorità alla compatibilità con le versioni precedenti che porta a configurazioni non sicure.</li>\n<li>Le impostazioni di sicurezza nei server applicativi, nei framework applicativi (es. Struts, Spring, ASP.NET), nelle librerie, nei database, ecc. non sono impostate su valori sicuri.</li>\n<li>Il server non invia header o direttive di sicurezza, o non sono impostati su valori sicuri.</li>\n</ul>\n<p>Senza un processo ripetibile e concertato di hardening della configurazione della sicurezza applicativa, i sistemi sono a rischio più elevato.</p>",
+    "prevention": "<p>Devono essere implementati processi di installazione sicuri, incluso:</p>\n<ul>\n<li>Un processo di hardening ripetibile che consenta la distribuzione rapida e semplice di un altro ambiente adeguatamente protetto. Gli ambienti di sviluppo, QA e produzione devono essere configurati in modo identico, con credenziali diverse utilizzate in ciascun ambiente. Questo processo deve essere automatizzato per minimizzare lo sforzo necessario per configurare un nuovo ambiente sicuro.</li>\n<li>Una piattaforma minimale senza funzionalità, componenti, documentazione o campioni non necessari. Rimuovere o non installare funzionalità e framework non utilizzati.</li>\n<li>Un&#x27;attività di revisione e aggiornamento delle configurazioni appropriate a tutte le note di sicurezza, aggiornamenti e patch come parte del processo di gestione delle patch (vedi <a href=\"https://top10.owasp.org/2025/it/A03_2025-Software_Supply_Chain_Failures/\">A03 Software Supply Chain Failures</a>). Revisionare i permessi dello storage cloud (es. permessi dei bucket S3).</li>\n<li>Un&#x27;architettura applicativa segmentata che fornisca una separazione efficace e sicura tra componenti o tenant, con segmentazione, containerizzazione o gruppi di sicurezza cloud (ACL).</li>\n<li>Invio di direttive di sicurezza ai client, es. Security Headers.</li>\n<li>Un processo automatizzato per verificare l&#x27;efficacia delle configurazioni e delle impostazioni in tutti gli ambienti.</li>\n<li>Aggiungere proattivamente una configurazione centrale per intercettare messaggi di errore eccessivi come backup.</li>\n<li>Se queste verifiche non sono automatizzate, devono essere verificate manualmente almeno annualmente.</li>\n<li>Utilizzare la federazione di identità, credenziali di breve durata o meccanismi di accesso basati sui ruoli forniti dalla piattaforma sottostante anziché incorporare chiavi o segreti statici nel codice, nei file di configurazione o nelle pipeline.</li>\n</ul>",
+    "scenarios": "<p><strong>Scenario #1:</strong> Il server applicativo include applicazioni di esempio non rimosse dal server di produzione. Queste applicazioni di esempio hanno falle di sicurezza note che gli attaccanti utilizzano per compromettere il server. Supponiamo che una di queste applicazioni sia la console di amministrazione e che le credenziali predefinite non siano state cambiate. In tal caso, l&#x27;attaccante accede con la password predefinita e prende il controllo.</p>\n<p><strong>Scenario #2:</strong> Il directory listing non è disabilitato sul server. Un attaccante scopre che può semplicemente elencare le directory. L&#x27;attaccante trova e scarica le classi Java compilate, che decompila e fa reverse engineering per visualizzare il codice. L&#x27;attaccante trova quindi una grave falla nel controllo degli accessi nell&#x27;applicazione.</p>\n<p><strong>Scenario #3:</strong> La configurazione del server applicativo consente la restituzione di messaggi di errore dettagliati, come stack trace, agli utenti. Ciò potrebbe esporre informazioni sensibili o falle sottostanti, come le versioni dei componenti note per essere vulnerabili.</p>\n<p><strong>Scenario #4:</strong> Un cloud service provider (CSP) ha come default i permessi di condivisione aperti a Internet. Ciò consente l&#x27;accesso ai dati sensibili archiviati nello storage cloud.</p>",
+    "references": "<ul>\n<li><a href=\"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/02-Configuration_and_Deployment_Management_Testing/README\">OWASP Testing Guide: Configuration Management</a></li>\n<li><a href=\"https://owasp.org/www-project-web-security-testing-guide/stable/4-Web_Application_Security_Testing/08-Testing_for_Error_Handling/01-Testing_For_Improper_Error_Handling\">OWASP Testing Guide: Testing for Error Codes</a></li>\n<li><a href=\"https://github.com/OWASP/ASVS/blob/master/5.0/en/0x22-V13-Configuration.md\">Application Security Verification Standard V13 Configuration</a></li>\n<li><a href=\"https://csrc.nist.gov/publications/detail/sp/800-123/final\">NIST Guide to General Server Hardening</a></li>\n<li><a href=\"https://www.cisecurity.org/cis-benchmarks/\">CIS Security Configuration Guides/Benchmarks</a></li>\n<li><a href=\"https://blog.websecurify.com/2017/10/aws-s3-bucket-discovery.html\">Amazon S3 Bucket Discovery and Enumeration</a></li>\n</ul>",
+    "cwes": [
+      {
+        "id": "CWE-5",
+        "name": "J2EE Misconfiguration: Data Transmission Without Encryption",
+        "url": "https://cwe.mitre.org/data/definitions/5.html"
+      },
+      {
+        "id": "CWE-11",
+        "name": "ASP.NET Misconfiguration: Creating Debug Binary",
+        "url": "https://cwe.mitre.org/data/definitions/11.html"
+      },
+      {
+        "id": "CWE-13",
+        "name": "ASP.NET Misconfiguration: Password in Configuration File",
+        "url": "https://cwe.mitre.org/data/definitions/13.html"
+      },
+      {
+        "id": "CWE-15",
+        "name": "External Control of System or Configuration Setting",
+        "url": "https://cwe.mitre.org/data/definitions/15.html"
+      },
+      {
+        "id": "CWE-16",
+        "name": "Configuration",
+        "url": "https://cwe.mitre.org/data/definitions/16.html"
+      },
+      {
+        "id": "CWE-260",
+        "name": "Password in Configuration File",
+        "url": "https://cwe.mitre.org/data/definitions/260.html"
+      },
+      {
+        "id": "CWE-315",
+        "name": "Cleartext Storage of Sensitive Information in a Cookie",
+        "url": "https://cwe.mitre.org/data/definitions/315.html"
+      },
+      {
+        "id": "CWE-489",
+        "name": "Active Debug Code",
+        "url": "https://cwe.mitre.org/data/definitions/489.html"
+      },
+      {
+        "id": "CWE-526",
+        "name": "Exposure of Sensitive Information Through Environmental Variables",
+        "url": "https://cwe.mitre.org/data/definitions/526.html"
+      },
+      {
+        "id": "CWE-547",
+        "name": "Use of Hard-coded, Security-relevant Constants",
+        "url": "https://cwe.mitre.org/data/definitions/547.html"
+      },
+      {
+        "id": "CWE-611",
+        "name": "Improper Restriction of XML External Entity Reference",
+        "url": "https://cwe.mitre.org/data/definitions/611.html"
+      },
+      {
+        "id": "CWE-614",
+        "name": "Sensitive Cookie in HTTPS Session Without 'Secure' Attribute",
+        "url": "https://cwe.mitre.org/data/definitions/614.html"
+      },
+      {
+        "id": "CWE-776",
+        "name": "Improper Restriction of Recursive Entity References in DTDs ('XML Entity Expansion')",
+        "url": "https://cwe.mitre.org/data/definitions/776.html"
+      },
+      {
+        "id": "CWE-942",
+        "name": "Permissive Cross-domain Policy with Untrusted Domains",
+        "url": "https://cwe.mitre.org/data/definitions/942.html"
+      },
+      {
+        "id": "CWE-1004",
+        "name": "Sensitive Cookie Without 'HttpOnly' Flag",
+        "url": "https://cwe.mitre.org/data/definitions/1004.html"
+      },
+      {
+        "id": "CWE-1174",
+        "name": "ASP.NET Misconfiguration: Improper Model Validation",
+        "url": "https://cwe.mitre.org/data/definitions/1174.html"
+      }
+    ]
   },
   "A03:2025 - Software Supply Chain Failures": {
-    "description": "<p>Interruzioni o compromissioni nel processo di build, distribuzione o aggiornamento del software: componenti vulnerabili, non mantenuti o non tracciati, dipendenze malevole, pipeline CI/CD non sicure. Estende la precedente “Vulnerable and Outdated Components” all'intera supply chain e ha i punteggi medi di sfruttabilità e impatto più alti nei dati 2025.</p><p><strong>Esempio:</strong> L'applicazione include una libreria JavaScript con una CVE nota e la pipeline di build scarica le dipendenze senza fissarne le versioni né verificarne le firme.</p>",
     "link": "https://top10.owasp.org/2025/it/A03_2025-Software_Supply_Chain_Failures/",
-    "level": "alto"
+    "stats": [
+      [
+        "CWE Mappate",
+        "6"
+      ],
+      [
+        "Tasso Massimo di Incidenza",
+        "9,56%"
+      ],
+      [
+        "Tasso Medio di Incidenza",
+        "5,72%"
+      ],
+      [
+        "Copertura Massima",
+        "65,42%"
+      ],
+      [
+        "Copertura Media",
+        "27,47%"
+      ],
+      [
+        "Exploit Medio Ponderato",
+        "8,17"
+      ],
+      [
+        "Impatto Medio Ponderato",
+        "5,23"
+      ],
+      [
+        "Totale Occorrenze",
+        "215.248"
+      ],
+      [
+        "Totale CVE",
+        "11"
+      ]
+    ],
+    "background": "<p>Questa categoria è risultata al primo posto nel sondaggio della community del Top 10, con esattamente il 50% dei rispondenti che la classificava al #1. Dalla sua prima comparsa nel Top 10 del 2013 come &quot;A9 – Using Components with Known Vulnerabilities&quot;, il rischio è cresciuto fino a includere tutti i fallimenti della supply chain, non solo quelli che coinvolgono vulnerabilità note. Nonostante questo ambito ampliato, i fallimenti della supply chain continuano a essere difficili da identificare con solo 11 Common Vulnerability and Exposures (CVE) con le CWE correlate. Tuttavia, quando testata e riportata nei dati contribuiti, questa categoria ha il tasso medio di incidenza più alto al 5,19%. Le CWE rilevanti sono <em>CWE-477: Use of Obsolete Function, CWE-1104: Use of Unmaintained Third Party Components</em>, CWE-1329: <em>Reliance on Component That is Not Updateable</em>, e <em>CWE-1395: Dependency on Vulnerable Third-Party Component</em>.</p>",
+    "description": "<p>I fallimenti della supply chain del software sono interruzioni o altre compromissioni nel processo di costruzione, distribuzione o aggiornamento del software. Sono spesso causati da vulnerabilità o modifiche malevole nel codice di terze parti, negli strumenti o in altre dipendenze su cui il sistema si basa.</p>\n<p>È probabile che tu sia vulnerabile se:</p>\n<ul>\n<li>non monitori attentamente le versioni di tutti i componenti che utilizzi (sia lato client che lato server). Ciò include i componenti che utilizzi direttamente e le dipendenze annidate (transitive).</li>\n<li>il software è vulnerabile, non supportato o non aggiornato. Ciò include OS, server web/applicativi, DBMS, applicazioni, API e tutti i componenti, ambienti di runtime e librerie.</li>\n<li>non effettui scansioni regolari per le vulnerabilità e non ti abboni ai bollettini di sicurezza relativi ai componenti che utilizzi.</li>\n<li>non disponi di un processo di gestione delle modifiche o di monitoraggio delle modifiche all&#x27;interno della tua supply chain, incluso il monitoraggio di IDE, estensioni e aggiornamenti IDE, modifiche al repository di codice della tua organizzazione, sandbox, repository di immagini e librerie, il modo in cui gli artifact vengono creati e archiviati, ecc. Ogni parte della tua supply chain deve essere documentata, soprattutto le modifiche.</li>\n<li>non hai rafforzato ogni parte della tua supply chain, con particolare attenzione al controllo degli accessi e all&#x27;applicazione del minimo privilegio.</li>\n<li>i sistemi della tua supply chain non hanno alcuna separazione dei compiti. Nessuna singola persona dovrebbe poter scrivere codice e promuoverlo fino in produzione senza la supervisione di un&#x27;altra persona.</li>\n<li>vengono utilizzati componenti da fonti non attendibili, in qualsiasi parte dello stack tecnologico, o possono impattare gli ambienti di produzione.</li>\n<li>non correggi o aggiorni la piattaforma sottostante, i framework e le dipendenze in modo tempestivo e basato sul rischio. Ciò accade comunemente in ambienti dove le patch sono un&#x27;attività mensile o trimestrale sotto controllo delle modifiche, lasciando le organizzazioni esposte per giorni o mesi prima di correggere le vulnerabilità.</li>\n<li>gli sviluppatori software non testano la compatibilità delle librerie aggiornate, aggiornate o patchate.</li>\n<li>non metti in sicurezza le configurazioni di ogni parte del tuo sistema (vedi <a href=\"https://owasp.org/Top10/2025/A02_2025-Security_Misconfiguration/\">A02:2025-Security Misconfiguration</a>).</li>\n<li>la tua pipeline CI/CD ha una sicurezza più debole rispetto ai sistemi che costruisce e distribuisce, specialmente se è complessa.</li>\n</ul>",
+    "prevention": "<p>Deve essere in atto un processo di gestione delle patch per:</p>\n<ul>\n<li>Generare e gestire centralmente il Software Bill of Materials (SBOM) dell&#x27;intero software.</li>\n<li>Monitorare non solo le dipendenze dirette, ma anche le loro dipendenze (transitive), e così via.</li>\n<li>Ridurre la superficie di attacco rimuovendo dipendenze non utilizzate, funzionalità, componenti, file e documentazione non necessari.</li>\n<li>Fare un inventario continuo delle versioni dei componenti sia lato client che lato server (es. framework, librerie) e delle loro dipendenze utilizzando strumenti come OWASP Dependency Track, OWASP Dependency Check, retire.js, ecc.</li>\n<li>Monitorare continuamente fonti come Common Vulnerability and Exposures (CVE), National Vulnerability Database (NVD) e <a href=\"https://osv.dev/\">Open Source Vulnerabilities (OSV)</a> per le vulnerabilità nei componenti utilizzati. Utilizzare software composition analysis, supply chain del software o strumenti SBOM orientati alla sicurezza per automatizzare il processo. Abbonarsi agli alert per le vulnerabilità di sicurezza relative ai componenti utilizzati.</li>\n<li>Ottenere componenti solo da fonti ufficiali (attendibili) tramite link sicuri. Preferire pacchetti firmati per ridurre la possibilità di includere un componente modificato e malevolo (vedi <a href=\"https://owasp.org/Top10/2025/A08_2025-Software_or_Data_Integrity_Failures/\">A08:2025-Software and Data Integrity Failures</a>).</li>\n<li>Scegliere deliberatamente quale versione di una dipendenza utilizzare e aggiornare solo quando necessario.</li>\n<li>Monitorare le librerie e i componenti non mantenuti o che non creano patch di sicurezza per le versioni più vecchie. Se le patch non sono possibili, considerare la migrazione a un&#x27;alternativa. Se non è possibile, considerare l&#x27;implementazione di una virtual patch per monitorare, rilevare o proteggere dal problema scoperto.</li>\n<li>Aggiornare regolarmente CI/CD, IDE e qualsiasi altro strumento di sviluppo.</li>\n<li>Evitare di distribuire aggiornamenti a tutti i sistemi contemporaneamente. Utilizzare rollout graduali o canary deployment per limitare l&#x27;esposizione in caso di compromissione di un vendor attendibile.</li>\n</ul>\n<p>Deve essere in atto un processo di gestione delle modifiche o un sistema di monitoraggio per tracciare le modifiche a:</p>\n<ul>\n<li>Impostazioni CI/CD (tutti gli strumenti di build e pipeline)</li>\n<li>Repository di codice</li>\n<li>Aree sandbox</li>\n<li>IDE degli sviluppatori</li>\n<li>Strumenti SBOM e artifact creati</li>\n<li>Sistemi di logging e log</li>\n<li>Integrazioni di terze parti, come SaaS</li>\n<li>Repository di artifact</li>\n<li>Container registry</li>\n</ul>\n<p>Rafforzare i seguenti sistemi, inclusa l&#x27;abilitazione di MFA e il blocco degli IAM:</p>\n<ul>\n<li>Il repository di codice (che include il non inserimento di segreti, la protezione dei branch, i backup)</li>\n<li>Le workstation degli sviluppatori (patch regolari, MFA, monitoraggio e altro)</li>\n<li>Il server di build e CI/CD (separazione dei compiti, controllo degli accessi, build firmate, segreti con scope per ambiente, log a prova di manomissione e altro)</li>\n<li>Gli artifact (garantire l&#x27;integrità tramite provenienza, firma e timestamp, promuovere gli artifact piuttosto che ricostruirli per ogni ambiente, garantire che le build siano immutabili)</li>\n<li>L&#x27;infrastruttura come codice (gestita come tutto il codice, incluso l&#x27;uso di PR e controllo delle versioni)</li>\n</ul>\n<p>Ogni organizzazione deve garantire un piano continuo per il monitoraggio, il triage e l&#x27;applicazione di aggiornamenti o modifiche di configurazione per tutta la durata dell&#x27;applicazione o del portfolio.</p>",
+    "scenarios": "<p><strong>Scenario #1:</strong> Un vendor attendibile viene compromesso con malware, portando alla compromissione dei tuoi sistemi informatici quando esegui l&#x27;aggiornamento. L&#x27;esempio più famoso di questo è probabilmente:</p>\n<ul>\n<li>La compromissione di SolarWinds nel 2019 che ha portato alla compromissione di circa 18.000 organizzazioni. <a href=\"https://www.npr.org/2021/04/16/985439655/a-worst-nightmare-cyberattack-the-untold-story-of-the-solarwinds-hack\">https://www.npr.org/2021/04/16/985439655/a-worst-nightmare-cyberattack-the-untold-story-of-the-solarwinds-hack</a></li>\n</ul>\n<p><strong>Scenario #2:</strong> Un vendor attendibile viene compromesso in modo tale da comportarsi in modo malevolo solo sotto una condizione specifica.</p>\n<ul>\n<li>Il furto di 1,5 miliardi di dollari da Bybit nel 2025 è stato causato da <a href=\"https://www.sygnia.co/blog/sygnia-investigation-bybit-hack/\">un attacco alla supply chain nel software del wallet</a> che veniva eseguito solo quando il wallet target era in uso.</li>\n</ul>\n<p><strong>Scenario #3:</strong> Il <a href=\"https://www.cisa.gov/news-events/alerts/2025/09/23/widespread-supply-chain-compromise-impacting-npm-ecosystem\">supply chain attack <code>Shai-Hulud</code></a> nel 2025 è stato il primo worm npm auto-propagante di successo. Gli attacchi hanno seminato versioni malevole di pacchetti popolari, che utilizzavano uno script post-install per raccogliere ed esfiltrare dati sensibili in repository GitHub pubblici. Il malware rilevava anche i token npm nell&#x27;ambiente vittima e li utilizzava automaticamente per pubblicare versioni malevole di qualsiasi pacchetto accessibile. Il worm ha raggiunto oltre 500 versioni di pacchetti prima di essere interrotto da npm. Questo attacco alla supply chain era avanzato, a diffusione rapida e dannoso, e prendendo di mira le macchine degli sviluppatori ha dimostrato che gli sviluppatori stessi sono ora obiettivi primari degli attacchi alla supply chain.</p>\n<p><strong>Scenario #4:</strong> I componenti tipicamente vengono eseguiti con gli stessi privilegi dell&#x27;applicazione stessa, quindi le falle in qualsiasi componente possono avere un impatto grave. Tali falle possono essere accidentali (es. errore di codice) o intenzionali (es. una backdoor in un componente). Alcuni esempi di vulnerabilità di componenti sfruttabili scoperte sono:</p>\n<ul>\n<li>CVE-2017-5638, una vulnerabilità di remote code execution in Struts 2 che consente l&#x27;esecuzione di codice arbitrario sul server, è stata imputata a violazioni significative.</li>\n<li>CVE-2021-44228 (&quot;Log4Shell&quot;), una vulnerabilità zero-day di remote code execution in Apache Log4j, è stata imputata a campagne di ransomware, cryptomining e altri attacchi.</li>\n</ul>",
+    "references": "<ul>\n<li><a href=\"https://owasp.org/www-project-application-security-verification-standard/\">OWASP Application Security Verification Standard: V15 Secure Coding and Architecture</a></li>\n<li><a href=\"https://cheatsheetseries.owasp.org/cheatsheets/Dependency_Graph_SBOM_Cheat_Sheet.html\">OWASP Cheat Sheet Series: Dependency Graph SBOM</a></li>\n<li><a href=\"https://cheatsheetseries.owasp.org/cheatsheets/Vulnerable_Dependency_Management_Cheat_Sheet.html\">OWASP Cheat Sheet Series: Vulnerable Dependency Management</a></li>\n<li><a href=\"https://owasp.org/www-project-dependency-track/\">OWASP Dependency-Track</a></li>\n<li><a href=\"https://owasp.org/www-project-cyclonedx/\">OWASP CycloneDX</a></li>\n<li><a href=\"https://owasp.org/www-project-dependency-check/\">OWASP Dependency Check (for Java and .NET libraries)</a></li>\n<li><a href=\"https://owasp.org/www-community/Virtual_Patching_Best_Practices\">OWASP Virtual Patching Best Practices</a></li>\n<li><a href=\"https://www.cve.org\">MITRE Common Vulnerabilities and Exposures (CVE) search</a></li>\n<li><a href=\"https://nvd.nist.gov\">National Vulnerability Database (NVD)</a></li>\n<li><a href=\"https://retirejs.github.io/retire.js/\">Retire.js for detecting known vulnerable JavaScript libraries</a></li>\n<li><a href=\"https://github.com/advisories\">GitHub Advisory Database</a></li>\n</ul>",
+    "cwes": [
+      {
+        "id": "CWE-447",
+        "name": "Use of Obsolete Function",
+        "url": "https://cwe.mitre.org/data/definitions/447.html"
+      },
+      {
+        "id": "CWE-1035",
+        "name": "2017 Top 10 A9: Using Components with Known Vulnerabilities",
+        "url": "https://cwe.mitre.org/data/definitions/1035.html"
+      },
+      {
+        "id": "CWE-1104",
+        "name": "Use of Unmaintained Third Party Components",
+        "url": "https://cwe.mitre.org/data/definitions/1104.html"
+      },
+      {
+        "id": "CWE-1329",
+        "name": "Reliance on Component That is Not Updateable",
+        "url": "https://cwe.mitre.org/data/definitions/1329.html"
+      },
+      {
+        "id": "CWE-1357",
+        "name": "Reliance on Insufficiently Trustworthy Component",
+        "url": "https://cwe.mitre.org/data/definitions/1357.html"
+      },
+      {
+        "id": "CWE-1395",
+        "name": "Dependency on Vulnerable Third-Party Component",
+        "url": "https://cwe.mitre.org/data/definitions/1395.html"
+      }
+    ]
   },
   "A04:2025 - Cryptographic Failures": {
-    "description": "<p>Errori legati all'assenza o alla debolezza della crittografia: dati trasmessi o salvati in chiaro, algoritmi o protocolli obsoleti, gestione delle chiavi inadeguata, certificati non validati, casualità debole. Espongono i dati sensibili in transito e a riposo.</p><p><strong>Esempio:</strong> Password salvate come hash MD5 senza salt, oppure token di sessione generati con un generatore di numeri casuali non crittografico.</p>",
     "link": "https://top10.owasp.org/2025/it/A04_2025-Cryptographic_Failures/",
-    "level": "alto"
+    "stats": [
+      [
+        "CWE Mappate",
+        "32"
+      ],
+      [
+        "Tasso Massimo di Incidenza",
+        "13,77%"
+      ],
+      [
+        "Tasso Medio di Incidenza",
+        "3,80%"
+      ],
+      [
+        "Copertura Massima",
+        "100,00%"
+      ],
+      [
+        "Copertura Media",
+        "47,74%"
+      ],
+      [
+        "Exploit Medio Ponderato",
+        "7,23"
+      ],
+      [
+        "Impatto Medio Ponderato",
+        "3,90"
+      ],
+      [
+        "Totale Occorrenze",
+        "1.665.348"
+      ],
+      [
+        "Totale CVE",
+        "2.185"
+      ]
+    ],
+    "background": "<p>Scendendo di due posizioni al #4, questa debolezza si concentra sui fallimenti legati all&#x27;assenza di crittografia, a una crittografia insufficientemente forte, alla divulgazione di chiavi crittografiche e agli errori correlati. Tre delle CWE più comuni in questo rischio riguardano l&#x27;uso di un generatore di numeri pseudo-casuali debole: <em>CWE-327 Use of a Broken or Risky Cryptographic Algorithm, CWE-331: Insufficient Entropy</em>, <em>CWE-1241: Use of Predictable Algorithm in Random Number Generator</em>, e <em>CWE-338 Use of Cryptographically Weak Pseudo-Random Number Generator (PRNG)</em>.</p>",
+    "description": "<p>In linea generale, tutti i dati in transito devono essere cifrati a livello di <a href=\"https://en.wikipedia.org/wiki/Transport_layer\">trasporto</a> (<a href=\"https://en.wikipedia.org/wiki/OSI_model\">livello OSI</a> 4). Gli ostacoli precedenti come le prestazioni della CPU e la gestione di chiavi private/certificati sono ora gestiti da CPU con istruzioni progettate per accelerare la cifratura (es. <a href=\"https://en.wikipedia.org/wiki/AES_instruction_set\">supporto AES</a>) e dalla semplificazione della gestione di chiavi private e certificati da parte di servizi come <a href=\"https://LetsEncrypt.org\">LetsEncrypt.org</a>, con i principali vendor cloud che forniscono servizi di gestione dei certificati ancora più integrati per le loro specifiche piattaforme.</p>\n<p>Oltre alla protezione del livello di trasporto, è importante determinare quali dati necessitano di cifratura a riposo e quali dati necessitano di cifratura aggiuntiva in transito (al <a href=\"https://en.wikipedia.org/wiki/Application_layer\">livello applicativo</a>, livello OSI 7). Ad esempio, password, numeri di carta di credito, cartelle cliniche, informazioni personali e segreti aziendali richiedono una protezione aggiuntiva, specialmente se tali dati sono soggetti a leggi sulla privacy, es. il Regolamento Generale sulla Protezione dei Dati (GDPR) dell&#x27;UE, o normative come il PCI Data Security Standard (PCI DSS). Per tutti questi dati:</p>\n<ul>\n<li>Vengono utilizzati algoritmi o protocolli crittografici vecchi o deboli, sia per default che nel codice meno recente?</li>\n<li>Vengono utilizzate chiavi crittografiche predefinite, vengono generate chiavi crittografiche deboli, le chiavi vengono riutilizzate, o manca una corretta gestione e rotazione delle chiavi?</li>\n<li>Le chiavi crittografiche vengono inserite nei repository di codice sorgente?</li>\n<li>La cifratura non viene applicata, es. mancano direttive o header di sicurezza HTTP (browser)?</li>\n<li>Il certificato del server ricevuto e la catena di fiducia vengono correttamente validati?</li>\n<li>I vettori di inizializzazione vengono ignorati, riutilizzati o non generati in modo sufficientemente sicuro per la modalità di operazione crittografica? Viene utilizzata una modalità operativa non sicura come ECB? Viene utilizzata la cifratura quando sarebbe più appropriata la cifratura autenticata?</li>\n<li>Le password vengono utilizzate come chiavi crittografiche in assenza di una funzione di derivazione delle chiavi basata su password?</li>\n<li>Viene utilizzata la casualità non progettata per soddisfare i requisiti crittografici? Anche se viene scelta la funzione corretta, deve essere seminata dallo sviluppatore, e in caso contrario, lo sviluppatore ha sovrascritto la forte funzionalità di seeding integrata con un seed privo di sufficiente entropia/imprevedibilità?</li>\n<li>Vengono utilizzate funzioni hash deprecate come MD5 o SHA1, o vengono usate funzioni hash non crittografiche quando sono necessarie funzioni hash crittografiche?</li>\n<li>I messaggi di errore crittografici o le informazioni sui canali laterali sono sfruttabili, ad esempio sotto forma di attacchi padding oracle?</li>\n<li>L&#x27;algoritmo crittografico può essere declassato o bypassato?</li>\n</ul>\n<p>Vedi i riferimenti ASVS: Cryptography (V11), Secure Communication (V12) e Data Protection (V14).</p>",
+    "prevention": "<p>Fare almeno quanto segue e consultare i riferimenti:</p>\n<ul>\n<li>Classificare ed etichettare i dati elaborati, archiviati o trasmessi da un&#x27;applicazione. Identificare quali dati sono sensibili secondo le leggi sulla privacy, i requisiti normativi o le esigenze aziendali.</li>\n<li>Archiviare le chiavi più sensibili in un HSM hardware o cloud.</li>\n<li>Utilizzare implementazioni ben consolidate degli algoritmi crittografici ogni volta che è possibile.</li>\n<li>Non archiviare dati sensibili inutilmente. Eliminarli il prima possibile o utilizzare la tokenizzazione conforme a PCI DSS o anche la troncatura. I dati non conservati non possono essere rubati.</li>\n<li>Assicurarsi di cifrare tutti i dati sensibili a riposo.</li>\n<li>Garantire che algoritmi, protocolli e chiavi standard aggiornati e robusti siano in uso; utilizzare una corretta gestione delle chiavi.</li>\n<li>Cifrare tutti i dati in transito con protocolli &gt;= TLS 1.2 solamente, con cifrari con forward secrecy (FS), eliminare il supporto per i cifrari con cipher block chaining (CBC), supportare algoritmi di cambio chiave quantistici. Per HTTPS, applicare la cifratura utilizzando HTTP Strict Transport Security (HSTS). Verificare tutto con uno strumento.</li>\n<li>Disabilitare la cache per le risposte che contengono dati sensibili. Questo include la cache nel CDN, nel web server e nella cache applicativa (es. Redis).</li>\n<li>Applicare i controlli di sicurezza richiesti in base alla classificazione dei dati.</li>\n<li>Non utilizzare protocolli non cifrati come FTP e STARTTLS. Evitare l&#x27;uso di SMTP per trasmettere dati riservati.</li>\n<li>Archiviare le password utilizzando funzioni di hashing adaptive e con salt con un work factor (delay factor), come Argon2, yescrypt, scrypt o PBKDF2-HMAC-SHA-512. Per i sistemi legacy che utilizzano bcrypt, consultare <a href=\"https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html\">OWASP Cheat Sheet: Password Storage</a>.</li>\n<li>I vettori di inizializzazione devono essere scelti in modo appropriato per la modalità di operazione. Ciò potrebbe significare l&#x27;uso di un CSPRNG (generatore di numeri pseudo-casuali crittograficamente sicuro). Per le modalità che richiedono un nonce, il vettore di inizializzazione (IV) non necessita di un CSPRNG. In tutti i casi, l&#x27;IV non deve mai essere usato due volte per una chiave fissa.</li>\n<li>Utilizzare sempre la cifratura autenticata anziché la sola cifratura.</li>\n<li>Le chiavi devono essere generate crittograficamente in modo casuale e archiviate in memoria come array di byte. Se viene utilizzata una password, deve essere convertita in una chiave tramite una funzione appropriata di derivazione delle chiavi basata su password.</li>\n<li>Garantire che la casualità crittografica venga utilizzata dove appropriato e che non sia stata seminata in modo prevedibile o con bassa entropia. La maggior parte delle API moderne non richiede allo sviluppatore di seminare il CSPRNG per essere sicuro.</li>\n<li>Evitare funzioni crittografiche deprecate, metodi di costruzione a blocchi e schemi di padding, come MD5, SHA1, Cipher Block Chaining Mode (CBC), PKCS numero 1 v1.5.</li>\n<li>Garantire che le impostazioni e le configurazioni soddisfino i requisiti di sicurezza facendole rivedere da specialisti della sicurezza, strumenti progettati a tale scopo, o entrambi.</li>\n<li>È necessario prepararsi ora per la crittografia post-quantistica (PQC), vedi riferimento (ENISA), in modo che i sistemi ad alto rischio siano al sicuro entro la fine del 2030.</li>\n</ul>",
+    "scenarios": "<p><strong>Scenario #1:</strong> Un sito non utilizza o non applica TLS per tutte le pagine o supporta cifratura debole. Un attaccante monitora il traffico di rete (es. su una rete wireless non sicura), fa il downgrade delle connessioni da HTTPS a HTTP, intercetta le richieste e ruba il cookie di sessione dell&#x27;utente. L&#x27;attaccante poi riproduce questo cookie e dirottà la sessione (autenticata) dell&#x27;utente, accedendo o modificando i dati privati dell&#x27;utente. In alternativa potrebbe alterare tutti i dati trasportati, es. il destinatario di un bonifico bancario.</p>\n<p><strong>Scenario #2:</strong> Il database delle password utilizza hash non salati o semplici per archiviare le password di tutti. Una falla di caricamento file consente a un attaccante di recuperare il database delle password. Tutti gli hash non salati possono essere esposti con una rainbow table di hash pre-calcolati. Gli hash generati da funzioni hash semplici o veloci possono essere violati dalle GPU, anche se erano salati.</p>",
+    "references": "<ul>\n<li><a href=\"https://top10proactive.owasp.org/archive/2024/the-top-10/c2-crypto/\">OWASP Proactive Controls: C2: Use Cryptography to Protect Data</a></li>\n<li><a href=\"https://owasp.org/www-project-application-security-verification-standard\">OWASP Application Security Verification Standard (ASVS)</a></li>\n<li><a href=\"https://cheatsheetseries.owasp.org/cheatsheets/Transport_Layer_Protection_Cheat_Sheet.html\">OWASP Cheat Sheet: Transport Layer Protection</a></li>\n<li><a href=\"https://cheatsheetseries.owasp.org/cheatsheets/User_Privacy_Protection_Cheat_Sheet.html\">OWASP Cheat Sheet: User Privacy Protection</a></li>\n<li><a href=\"https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html\">OWASP Cheat Sheet: Password Storage</a></li>\n<li><a href=\"https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html\">OWASP Cheat Sheet: Cryptographic Storage</a></li>\n<li><a href=\"https://cheatsheetseries.owasp.org/cheatsheets/HTTP_Strict_Transport_Security_Cheat_Sheet.html\">OWASP Cheat Sheet: HSTS</a></li>\n<li><a href=\"https://owasp.org/www-project-web-security-testing-guide/stable/4-Web_Application_Security_Testing/09-Testing_for_Weak_Cryptography/README\">OWASP Testing Guide: Testing for weak cryptography</a></li>\n<li><a href=\"https://digital-strategy.ec.europa.eu/en/library/coordinated-implementation-roadmap-transition-post-quantum-cryptography\">ENISA: A Coordinated Implementation Roadmap for the Transition to Post-Quantum Cryptography</a></li>\n<li><a href=\"https://www.nist.gov/news-events/news/2024/08/nist-releases-first-3-finalized-post-quantum-encryption-standards\">NIST Releases First 3 Finalized Post-Quantum Encryption Standards</a></li>\n</ul>",
+    "cwes": [
+      {
+        "id": "CWE-261",
+        "name": "Weak Encoding for Password",
+        "url": "https://cwe.mitre.org/data/definitions/261.html"
+      },
+      {
+        "id": "CWE-296",
+        "name": "Improper Following of a Certificate's Chain of Trust",
+        "url": "https://cwe.mitre.org/data/definitions/296.html"
+      },
+      {
+        "id": "CWE-319",
+        "name": "Cleartext Transmission of Sensitive Information",
+        "url": "https://cwe.mitre.org/data/definitions/319.html"
+      },
+      {
+        "id": "CWE-320",
+        "name": "Key Management Errors (Prohibited)",
+        "url": "https://cwe.mitre.org/data/definitions/320.html"
+      },
+      {
+        "id": "CWE-321",
+        "name": "Use of Hard-coded Cryptographic Key",
+        "url": "https://cwe.mitre.org/data/definitions/321.html"
+      },
+      {
+        "id": "CWE-322",
+        "name": "Key Exchange without Entity Authentication",
+        "url": "https://cwe.mitre.org/data/definitions/322.html"
+      },
+      {
+        "id": "CWE-323",
+        "name": "Reusing a Nonce, Key Pair in Encryption",
+        "url": "https://cwe.mitre.org/data/definitions/323.html"
+      },
+      {
+        "id": "CWE-324",
+        "name": "Use of a Key Past its Expiration Date",
+        "url": "https://cwe.mitre.org/data/definitions/324.html"
+      },
+      {
+        "id": "CWE-325",
+        "name": "Missing Required Cryptographic Step",
+        "url": "https://cwe.mitre.org/data/definitions/325.html"
+      },
+      {
+        "id": "CWE-326",
+        "name": "Inadequate Encryption Strength",
+        "url": "https://cwe.mitre.org/data/definitions/326.html"
+      },
+      {
+        "id": "CWE-327",
+        "name": "Use of a Broken or Risky Cryptographic Algorithm",
+        "url": "https://cwe.mitre.org/data/definitions/327.html"
+      },
+      {
+        "id": "CWE-328",
+        "name": "Reversible One-Way Hash",
+        "url": "https://cwe.mitre.org/data/definitions/328.html"
+      },
+      {
+        "id": "CWE-329",
+        "name": "Not Using a Random IV with CBC Mode",
+        "url": "https://cwe.mitre.org/data/definitions/329.html"
+      },
+      {
+        "id": "CWE-330",
+        "name": "Use of Insufficiently Random Values",
+        "url": "https://cwe.mitre.org/data/definitions/330.html"
+      },
+      {
+        "id": "CWE-331",
+        "name": "Insufficient Entropy",
+        "url": "https://cwe.mitre.org/data/definitions/331.html"
+      },
+      {
+        "id": "CWE-332",
+        "name": "Insufficient Entropy in PRNG",
+        "url": "https://cwe.mitre.org/data/definitions/332.html"
+      },
+      {
+        "id": "CWE-334",
+        "name": "Small Space of Random Values",
+        "url": "https://cwe.mitre.org/data/definitions/334.html"
+      },
+      {
+        "id": "CWE-335",
+        "name": "Incorrect Usage of Seeds in Pseudo-Random Number Generator(PRNG)",
+        "url": "https://cwe.mitre.org/data/definitions/335.html"
+      },
+      {
+        "id": "CWE-336",
+        "name": "Same Seed in Pseudo-Random Number Generator (PRNG)",
+        "url": "https://cwe.mitre.org/data/definitions/336.html"
+      },
+      {
+        "id": "CWE-337",
+        "name": "Predictable Seed in Pseudo-Random Number Generator (PRNG)",
+        "url": "https://cwe.mitre.org/data/definitions/337.html"
+      },
+      {
+        "id": "CWE-338",
+        "name": "Use of Cryptographically Weak Pseudo-Random Number Generator(PRNG)",
+        "url": "https://cwe.mitre.org/data/definitions/338.html"
+      },
+      {
+        "id": "CWE-340",
+        "name": "Generation of Predictable Numbers or Identifiers",
+        "url": "https://cwe.mitre.org/data/definitions/340.html"
+      },
+      {
+        "id": "CWE-342",
+        "name": "Predictable Exact Value from Previous Values",
+        "url": "https://cwe.mitre.org/data/definitions/342.html"
+      },
+      {
+        "id": "CWE-347",
+        "name": "Improper Verification of Cryptographic Signature",
+        "url": "https://cwe.mitre.org/data/definitions/347.html"
+      },
+      {
+        "id": "CWE-523",
+        "name": "Unprotected Transport of Credentials",
+        "url": "https://cwe.mitre.org/data/definitions/523.html"
+      },
+      {
+        "id": "CWE-757",
+        "name": "Selection of Less-Secure Algorithm During Negotiation('Algorithm Downgrade')",
+        "url": "https://cwe.mitre.org/data/definitions/757.html"
+      },
+      {
+        "id": "CWE-759",
+        "name": "Use of a One-Way Hash without a Salt",
+        "url": "https://cwe.mitre.org/data/definitions/759.html"
+      },
+      {
+        "id": "CWE-760",
+        "name": "Use of a One-Way Hash with a Predictable Salt",
+        "url": "https://cwe.mitre.org/data/definitions/760.html"
+      },
+      {
+        "id": "CWE-780",
+        "name": "Use of RSA Algorithm without OAEP",
+        "url": "https://cwe.mitre.org/data/definitions/780.html"
+      },
+      {
+        "id": "CWE-916",
+        "name": "Use of Password Hash With Insufficient Computational Effort",
+        "url": "https://cwe.mitre.org/data/definitions/916.html"
+      },
+      {
+        "id": "CWE-1240",
+        "name": "Use of a Cryptographic Primitive with a Risky Implementation",
+        "url": "https://cwe.mitre.org/data/definitions/1240.html"
+      },
+      {
+        "id": "CWE-1241",
+        "name": "Use of Predictable Algorithm in Random Number Generator",
+        "url": "https://cwe.mitre.org/data/definitions/1241.html"
+      }
+    ]
   },
   "A05:2025 - Injection": {
-    "description": "<p>Input non attendibile raggiunge un interprete (browser, database, shell, LDAP, motore di template) e viene eseguito come parte di un comando o di una query. Comprende il Cross-Site Scripting, molto frequente, e la SQL injection, meno frequente ma ad alto impatto.</p><p><strong>Esempio:</strong> Form di login vulnerabile a SQL injection: l'input <code>' OR '1'='1</code> consente l'accesso senza credenziali valide.</p>",
     "link": "https://top10.owasp.org/2025/it/A05_2025-Injection/",
-    "level": "critico"
+    "stats": [
+      [
+        "CWE Mappate",
+        "37"
+      ],
+      [
+        "Tasso Massimo di Incidenza",
+        "13,77%"
+      ],
+      [
+        "Tasso Medio di Incidenza",
+        "3,08%"
+      ],
+      [
+        "Copertura Massima",
+        "100,00%"
+      ],
+      [
+        "Copertura Media",
+        "42,93%"
+      ],
+      [
+        "Exploit Medio Ponderato",
+        "7,15"
+      ],
+      [
+        "Impatto Medio Ponderato",
+        "4,32"
+      ],
+      [
+        "Totale Occorrenze",
+        "1.404.249"
+      ],
+      [
+        "Totale CVE",
+        "62.445"
+      ]
+    ],
+    "background": "<p>L&#x27;Injection scende di due posizioni dal #3 al #5 nella classifica, mantenendo la sua posizione relativa rispetto ad A04:2025-Cryptographic Failures e A06:2025-Insecure Design. L&#x27;Injection è una delle categorie più testate, con il 100% delle applicazioni testate per qualche forma di injection. Ha avuto il maggior numero di CVE per qualsiasi categoria, con 37 CWE in questa categoria. L&#x27;Injection include Cross-site Scripting (alta frequenza/basso impatto) con oltre 30k CVE e SQL Injection (bassa frequenza/alto impatto) con oltre 14k CVE. Il numero massivo di CVE segnalati per CWE-79 Improper Neutralization of Input During Web Page Generation (&#x27;Cross-site Scripting&#x27;) abbassa l&#x27;impatto medio ponderato di questa categoria.</p>",
+    "description": "<p>Una vulnerabilità di injection è una falla applicativa che consente all&#x27;input non attendibile dell&#x27;utente di essere inviato a un interprete (es. un browser, un database, la riga di comando) e fa sì che l&#x27;interprete esegua parti di quell&#x27;input come comandi.</p>\n<p>Un&#x27;applicazione è vulnerabile agli attacchi quando:</p>\n<ul>\n<li>I dati forniti dall&#x27;utente non vengono validati, filtrati o sanificati dall&#x27;applicazione.</li>\n<li>Query dinamiche o chiamate non parametrizzate senza escape consapevole del contesto vengono utilizzate direttamente nell&#x27;interprete.</li>\n<li>Dati non sanificati vengono utilizzati nei parametri di ricerca dell&#x27;object-relational mapping (ORM) per estrarre record aggiuntivi e sensibili.</li>\n<li>Dati potenzialmente ostili vengono direttamente utilizzati o concatenati. L&#x27;SQL o il comando contiene la struttura e i dati malevoli in query dinamiche, comandi o stored procedure.</li>\n</ul>\n<p>Alcune delle injection più comuni sono SQL, NoSQL, OS command, Object Relational Mapping (ORM), LDAP e Expression Language (EL) o Object Graph Navigation Library (OGNL) injection. Il concetto è identico tra tutti gli interpreti. Il rilevamento è meglio ottenuto tramite una combinazione di revisione del codice sorgente e testing automatizzato (incluso il fuzzing) di tutti i parametri, header, URL, cookie, dati JSON, SOAP e XML. L&#x27;aggiunta di strumenti di testing della sicurezza applicativa statici (SAST), dinamici (DAST) e interattivi (IAST) nella pipeline CI/CD può essere utile per identificare le falle di injection prima della distribuzione in produzione.</p>\n<p>Una classe correlata di vulnerabilità di injection è diventata comune negli LLM. Queste sono discusse separatamente nell&#x27;<a href=\"https://genai.owasp.org/llm-top-10/\">OWASP LLM Top 10</a>, specificamente <a href=\"https://genai.owasp.org/llmrisk/llm01-prompt-injection/\">LLM01:2025 Prompt Injection</a>.</p>",
+    "prevention": "<p>Il modo migliore per prevenire l&#x27;injection richiede di mantenere i dati separati dai comandi e dalle query:</p>\n<ul>\n<li>L&#x27;opzione preferita è utilizzare un&#x27;API sicura, che eviti l&#x27;uso dell&#x27;interprete interamente, fornisca un&#x27;interfaccia parametrizzata, o migri verso Object Relational Mapping Tools (ORM).\n<strong>Nota:</strong> Anche quando parametrizzate, le stored procedure possono ancora introdurre SQL injection se PL/SQL o T-SQL concatena query e dati o esegue dati ostili con EXECUTE IMMEDIATE o exec().</li>\n</ul>\n<p>Quando non è possibile separare i dati dai comandi, è possibile ridurre le minacce utilizzando le seguenti tecniche.</p>\n<ul>\n<li>Utilizzare la validazione degli input positiva lato server. Non si tratta di una difesa completa poiché molte applicazioni richiedono caratteri speciali, come aree di testo o API per applicazioni mobile.</li>\n<li>Per qualsiasi query dinamica residua, eseguire l&#x27;escape dei caratteri speciali utilizzando la sintassi di escape specifica per quell&#x27;interprete.\n<strong>Nota:</strong> Le strutture SQL come i nomi delle tabelle, i nomi delle colonne, ecc. non possono essere sottoposte a escape, quindi i nomi di struttura forniti dall&#x27;utente sono pericolosi. Questo è un problema comune nel software di generazione di report.</li>\n</ul>\n<p><strong>Attenzione:</strong> queste tecniche implicano l&#x27;analisi e l&#x27;escape di stringhe complesse, rendendole soggette a errori e non robuste a fronte di piccole modifiche al sistema sottostante.</p>",
+    "scenarios": "<p><strong>Scenario #1:</strong> Un&#x27;applicazione utilizza dati non attendibili nella costruzione della seguente chiamata SQL vulnerabile:</p>\n<pre><code>String query = &quot;SELECT * FROM accounts WHERE custID=&#x27;&quot; + request.getParameter(&quot;id&quot;) + &quot;&#x27;&quot;;\n</code></pre>\n<p>Un attaccante modifica il valore del parametro &#x27;id&#x27; nel browser inviando: <code>&#x27; OR &#x27;1&#x27;=&#x27;1</code>. Ad esempio:</p>\n<pre><code>http://example.com/app/accountView?id=&#x27; OR &#x27;1&#x27;=&#x27;1\n</code></pre>\n<p>Questo modifica il significato della query per restituire tutti i record dalla tabella degli account. Attacchi più pericolosi potrebbero modificare o eliminare dati o persino invocare stored procedure.</p>\n<p><strong>Scenario #2:</strong> L&#x27;eccessiva fiducia di un&#x27;applicazione nei framework può risultare in query ancora vulnerabili. Ad esempio, Hibernate Query Language (HQL):</p>\n<pre><code>Query HQLQuery = session.createQuery(&quot;FROM accounts WHERE custID=&#x27;&quot; + request.getParameter(&quot;id&quot;) + &quot;&#x27;&quot;);\n</code></pre>\n<p>Un attaccante fornisce: <code>&#x27; OR custID IS NOT NULL OR custID=&#x27;</code>. Questo bypassa il filtro e restituisce tutti gli account. Sebbene HQL abbia meno funzioni pericolose del SQL grezzo, consente ancora l&#x27;accesso non autorizzato ai dati quando l&#x27;input dell&#x27;utente viene concatenato nelle query.</p>\n<p><strong>Scenario #3:</strong> Un&#x27;applicazione passa direttamente l&#x27;input dell&#x27;utente a un comando OS:</p>\n<pre><code>String cmd = &quot;nslookup &quot; + request.getParameter(&quot;domain&quot;);\nRuntime.getRuntime().exec(cmd);\n</code></pre>\n<p>Un attaccante fornisce <code>example.com; cat /etc/passwd</code> per eseguire comandi arbitrari sul server.</p>",
+    "references": "<ul>\n<li><a href=\"https://owasp.org/www-project-proactive-controls/v3/en/c3-secure-database\">OWASP Proactive Controls: Secure Database Access</a></li>\n<li><a href=\"https://owasp.org/www-project-application-security-verification-standard\">OWASP ASVS: V5 Input Validation and Encoding</a></li>\n<li><a href=\"https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/07-Input_Validation_Testing/05-Testing_for_SQL_Injection\">OWASP Testing Guide: SQL Injection</a></li>\n<li><a href=\"https://cheatsheetseries.owasp.org/cheatsheets/Injection_Prevention_Cheat_Sheet.html\">OWASP Cheat Sheet: Injection Prevention</a></li>\n<li><a href=\"https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html\">OWASP Cheat Sheet: SQL Injection Prevention</a></li>\n<li><a href=\"https://cheatsheetseries.owasp.org/cheatsheets/Query_Parameterization_Cheat_Sheet.html\">OWASP Cheat Sheet: Query Parameterization</a></li>\n<li><a href=\"https://genai.owasp.org/llmrisk/llm01-prompt-injection/\">OWASP LLM Top 10: LLM01:2025 Prompt Injection</a></li>\n</ul>",
+    "cwes": [
+      {
+        "id": "CWE-20",
+        "name": "Improper Input Validation",
+        "url": "https://cwe.mitre.org/data/definitions/20.html"
+      },
+      {
+        "id": "CWE-74",
+        "name": "Improper Neutralization of Special Elements in Output Used by a Downstream Component ('Injection')",
+        "url": "https://cwe.mitre.org/data/definitions/74.html"
+      },
+      {
+        "id": "CWE-76",
+        "name": "Improper Neutralization of Equivalent Special Elements",
+        "url": "https://cwe.mitre.org/data/definitions/76.html"
+      },
+      {
+        "id": "CWE-77",
+        "name": "Improper Neutralization of Special Elements used in a Command ('Command Injection')",
+        "url": "https://cwe.mitre.org/data/definitions/77.html"
+      },
+      {
+        "id": "CWE-78",
+        "name": "Improper Neutralization of Special Elements used in an OS Command ('OS Command Injection')",
+        "url": "https://cwe.mitre.org/data/definitions/78.html"
+      },
+      {
+        "id": "CWE-79",
+        "name": "Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')",
+        "url": "https://cwe.mitre.org/data/definitions/79.html"
+      },
+      {
+        "id": "CWE-80",
+        "name": "Improper Neutralization of Script-Related HTML Tags in a Web Page (Basic XSS)",
+        "url": "https://cwe.mitre.org/data/definitions/80.html"
+      },
+      {
+        "id": "CWE-83",
+        "name": "Improper Neutralization of Script in Attributes in a Web Page",
+        "url": "https://cwe.mitre.org/data/definitions/83.html"
+      },
+      {
+        "id": "CWE-86",
+        "name": "Improper Neutralization of Invalid Characters in Identifiers in Web Pages",
+        "url": "https://cwe.mitre.org/data/definitions/86.html"
+      },
+      {
+        "id": "CWE-88",
+        "name": "Improper Neutralization of Argument Delimiters in a Command ('Argument Injection')",
+        "url": "https://cwe.mitre.org/data/definitions/88.html"
+      },
+      {
+        "id": "CWE-89",
+        "name": "Improper Neutralization of Special Elements used in an SQL Command ('SQL Injection')",
+        "url": "https://cwe.mitre.org/data/definitions/89.html"
+      },
+      {
+        "id": "CWE-90",
+        "name": "Improper Neutralization of Special Elements used in an LDAP Query ('LDAP Injection')",
+        "url": "https://cwe.mitre.org/data/definitions/90.html"
+      },
+      {
+        "id": "CWE-91",
+        "name": "XML Injection (aka Blind XPath Injection)",
+        "url": "https://cwe.mitre.org/data/definitions/91.html"
+      },
+      {
+        "id": "CWE-93",
+        "name": "Improper Neutralization of CRLF Sequences ('CRLF Injection')",
+        "url": "https://cwe.mitre.org/data/definitions/93.html"
+      },
+      {
+        "id": "CWE-94",
+        "name": "Improper Control of Generation of Code ('Code Injection')",
+        "url": "https://cwe.mitre.org/data/definitions/94.html"
+      },
+      {
+        "id": "CWE-95",
+        "name": "Improper Neutralization of Directives in Dynamically Evaluated Code ('Eval Injection')",
+        "url": "https://cwe.mitre.org/data/definitions/95.html"
+      },
+      {
+        "id": "CWE-96",
+        "name": "Improper Neutralization of Directives in Statically Saved Code ('Static Code Injection')",
+        "url": "https://cwe.mitre.org/data/definitions/96.html"
+      },
+      {
+        "id": "CWE-97",
+        "name": "Improper Neutralization of Server-Side Includes (SSI) Within a Web Page",
+        "url": "https://cwe.mitre.org/data/definitions/97.html"
+      },
+      {
+        "id": "CWE-98",
+        "name": "Improper Control of Filename for Include/Require Statement in PHP Program ('PHP Remote File Inclusion')",
+        "url": "https://cwe.mitre.org/data/definitions/98.html"
+      },
+      {
+        "id": "CWE-99",
+        "name": "Improper Control of Resource Identifiers ('Resource Injection')",
+        "url": "https://cwe.mitre.org/data/definitions/99.html"
+      },
+      {
+        "id": "CWE-103",
+        "name": "Struts: Incomplete validate() Method Definition",
+        "url": "https://cwe.mitre.org/data/definitions/103.html"
+      },
+      {
+        "id": "CWE-104",
+        "name": "Struts: Form Bean Does Not Extend Validation Class",
+        "url": "https://cwe.mitre.org/data/definitions/104.html"
+      },
+      {
+        "id": "CWE-112",
+        "name": "Missing XML Validation",
+        "url": "https://cwe.mitre.org/data/definitions/112.html"
+      },
+      {
+        "id": "CWE-113",
+        "name": "Improper Neutralization of CRLF Sequences in HTTP Headers ('HTTP Response Splitting')",
+        "url": "https://cwe.mitre.org/data/definitions/113.html"
+      },
+      {
+        "id": "CWE-114",
+        "name": "Process Control",
+        "url": "https://cwe.mitre.org/data/definitions/114.html"
+      },
+      {
+        "id": "CWE-115",
+        "name": "Misinterpretation of Output",
+        "url": "https://cwe.mitre.org/data/definitions/115.html"
+      },
+      {
+        "id": "CWE-116",
+        "name": "Improper Encoding or Escaping of Output",
+        "url": "https://cwe.mitre.org/data/definitions/116.html"
+      },
+      {
+        "id": "CWE-129",
+        "name": "Improper Validation of Array Index",
+        "url": "https://cwe.mitre.org/data/definitions/129.html"
+      },
+      {
+        "id": "CWE-159",
+        "name": "Improper Handling of Invalid Use of Special Elements",
+        "url": "https://cwe.mitre.org/data/definitions/159.html"
+      },
+      {
+        "id": "CWE-470",
+        "name": "Use of Externally-Controlled Input to Select Classes or Code ('Unsafe Reflection')",
+        "url": "https://cwe.mitre.org/data/definitions/470.html"
+      },
+      {
+        "id": "CWE-493",
+        "name": "Critical Public Variable Without Final Modifier",
+        "url": "https://cwe.mitre.org/data/definitions/493.html"
+      },
+      {
+        "id": "CWE-500",
+        "name": "Public Static Field Not Marked Final",
+        "url": "https://cwe.mitre.org/data/definitions/500.html"
+      },
+      {
+        "id": "CWE-564",
+        "name": "SQL Injection: Hibernate",
+        "url": "https://cwe.mitre.org/data/definitions/564.html"
+      },
+      {
+        "id": "CWE-610",
+        "name": "Externally Controlled Reference to a Resource in Another Sphere",
+        "url": "https://cwe.mitre.org/data/definitions/610.html"
+      },
+      {
+        "id": "CWE-643",
+        "name": "Improper Neutralization of Data within XPath Expressions ('XPath Injection')",
+        "url": "https://cwe.mitre.org/data/definitions/643.html"
+      },
+      {
+        "id": "CWE-644",
+        "name": "Improper Neutralization of HTTP Headers for Scripting Syntax",
+        "url": "https://cwe.mitre.org/data/definitions/644.html"
+      },
+      {
+        "id": "CWE-917",
+        "name": "Improper Neutralization of Special Elements used in an Expression Language Statement ('Expression Language Injection')",
+        "url": "https://cwe.mitre.org/data/definitions/917.html"
+      }
+    ]
   },
   "A06:2025 - Insecure Design": {
-    "description": "<p>Controlli di sicurezza mancanti o inefficaci già in fase di progettazione, comprese le falle nella logica di business. Un'implementazione perfetta non corregge un design non sicuro: servono threat modeling, pattern di progettazione sicura e architetture di riferimento.</p><p><strong>Esempio:</strong> Un flusso di checkout permette al client di impostare il prezzo dell'articolo, oppure il recupero password si basa su domande di sicurezza con risposte pubbliche.</p>",
     "link": "https://top10.owasp.org/2025/it/A06_2025-Insecure_Design/",
-    "level": "medio"
+    "stats": [
+      [
+        "CWE Mappate",
+        "39"
+      ],
+      [
+        "Tasso Massimo di Incidenza",
+        "22,18%"
+      ],
+      [
+        "Tasso Medio di Incidenza",
+        "1,86%"
+      ],
+      [
+        "Copertura Massima",
+        "88,76%"
+      ],
+      [
+        "Copertura Media",
+        "35,18%"
+      ],
+      [
+        "Exploit Medio Ponderato",
+        "6,96"
+      ],
+      [
+        "Impatto Medio Ponderato",
+        "4,05"
+      ],
+      [
+        "Totale Occorrenze",
+        "729.882"
+      ],
+      [
+        "Totale CVE",
+        "7.647"
+      ]
+    ],
+    "background": "<p>L&#x27;Insecure Design scende di due posizioni dal #4 al #6 nella classifica mentre <strong><a href=\"https://top10.owasp.org/2025/it/A02_2025-Security_Misconfiguration/\">A02:2025-Security Misconfiguration</a></strong> e <strong><a href=\"https://top10.owasp.org/2025/it/A03_2025-Software_Supply_Chain_Failures/\">A03:2025-Software Supply Chain Failures</a></strong> la superano. Questa categoria è stata introdotta nel 2021 e abbiamo visto miglioramenti evidenti nel settore relativi al threat modeling e una maggiore enfasi sulla progettazione sicura. Questa categoria si concentra sui rischi legati a falle di design e architetturali, con un appello a un maggiore utilizzo del threat modeling, di pattern di design sicuro e di architetture di riferimento. Ciò include falle nella logica di business di un&#x27;applicazione, es. la mancanza di definizione di cambiamenti di stato indesiderati o imprevisti all&#x27;interno di un&#x27;applicazione. Come community, dobbiamo andare oltre lo &quot;shift-left&quot; nello spazio del codice, verso attività pre-codice come la stesura dei requisiti e la progettazione dell&#x27;applicazione, che sono critiche per i principi di Secure by Design (es. vedi <strong><a href=\"https://top10.owasp.org/2025/it/0x03_2025-Establishing_a_Modern_Application_Security_Program/\">Establish a Modern AppSec Program: Planning and Design Phase</a></strong>). Le CWE notevoli includono <em>CWE-256: Unprotected Storage of Credentials, CWE-269 Improper Privilege Management, CWE-434 Unrestricted Upload of File with Dangerous Type, CWE-501: Trust Boundary Violation, e CWE-522: Insufficiently Protected Credentials.</em></p>",
+    "description": "<p>L&#x27;Insecure Design è una categoria ampia che rappresenta diverse debolezze, espresse come &quot;progettazione dei controlli mancante o inefficace&quot;. L&#x27;Insecure Design non è la fonte di tutte le altre categorie di rischio del Top Ten. Si noti che c&#x27;è una differenza tra Insecure Design e implementazione non sicura. Distinguiamo tra falle di design e difetti di implementazione per una ragione: hanno cause principali diverse, si verificano in momenti diversi nel processo di sviluppo e hanno rimedi diversi. Un design sicuro può ancora avere difetti di implementazione che portano a vulnerabilità sfruttabili. Un design non sicuro non può essere corretto da un&#x27;implementazione perfetta poiché i controlli di sicurezza necessari non sono mai stati creati per difendersi da attacchi specifici. Uno dei fattori che contribuisce all&#x27;Insecure Design è la mancanza di profilazione del rischio di business inerente al software o al sistema in fase di sviluppo, e quindi il fallimento nel determinare quale livello di progettazione della sicurezza è richiesto.</p>\n<p>Tre parti fondamentali per avere un design sicuro sono:</p>\n<ul>\n<li>Raccolta dei Requisiti e Gestione delle Risorse</li>\n<li>Creazione di un Design Sicuro</li>\n<li>Un Secure Development Lifecycle</li>\n</ul>\n<h4>Requisiti e Gestione delle Risorse</h4>\n<p>Raccogliere e negoziare i requisiti di business per un&#x27;applicazione con il business, inclusi i requisiti di protezione riguardanti la riservatezza, l&#x27;integrità, la disponibilità e l&#x27;autenticità di tutti i data asset e la logica di business prevista. Tenere conto di quanto sarà esposta la tua applicazione e se hai bisogno di segregazione dei tenant (oltre a quelle necessarie per il controllo degli accessi). Compilare i requisiti tecnici, inclusi i requisiti di sicurezza funzionali e non funzionali. Pianificare e negoziare il budget coprendo tutto il design, la costruzione, il testing e l&#x27;operatività, incluse le attività di sicurezza.</p>\n<h4>Design Sicuro</h4>\n<p>Il design sicuro è una cultura e una metodologia che valuta costantemente le minacce e garantisce che il codice sia progettato e testato in modo robusto per prevenire metodi di attacco noti. Il threat modeling dovrebbe essere integrato nelle sessioni di refinement (o attività simili); cercare i cambiamenti nei flussi di dati e nel controllo degli accessi o in altri controlli di sicurezza. Nello sviluppo delle user story, determinare il flusso corretto e gli stati di fallimento, assicurarsi che siano ben compresi e concordati dalle parti responsabili e interessate. Analizzare le assunzioni e le condizioni per i flussi previsti e di fallimento per garantire che rimangano accurate e desiderabili. Determinare come validare le assunzioni e applicare le condizioni necessarie per i comportamenti corretti. Assicurarsi che i risultati siano documentati nella user story. Imparare dagli errori e offrire incentivi positivi per promuovere i miglioramenti. Il design sicuro non è né un componente aggiuntivo né uno strumento che puoi aggiungere al software.</p>\n<h4>Secure Development Lifecycle</h4>\n<p>Il software sicuro richiede un secure development lifecycle, un pattern di design sicuro, una metodologia &quot;paved road&quot;, una libreria di componenti sicuri, strumenti appropriati, threat modeling e post-mortem degli incidenti che vengono utilizzati per migliorare il processo. Contatta i tuoi specialisti della sicurezza all&#x27;inizio di un progetto software, durante il progetto e per la manutenzione continuativa del software. Considera di sfruttare l&#x27;<a href=\"https://owaspsamm.org/\">OWASP Software Assurance Maturity Model (SAMM)</a> per aiutare a strutturare i tuoi sforzi di sviluppo software sicuro.</p>\n<p>Spesso l&#x27;auto-responsabilità degli sviluppatori è sottovalutata. Favorire una cultura di consapevolezza, responsabilità e mitigazione proattiva dei rischi. Scambi regolari sulla sicurezza (es. durante le sessioni di threat modeling) possono generare una mentalità che include la sicurezza in tutte le decisioni di design importanti.</p>",
+    "prevention": "<ul>\n<li>Stabilire e utilizzare un secure development lifecycle con professionisti AppSec per aiutare a valutare e progettare controlli di sicurezza e privacy</li>\n<li>Stabilire e utilizzare una libreria di pattern di design sicuro o componenti &quot;paved-road&quot;</li>\n<li>Utilizzare il threat modeling per le parti critiche dell&#x27;applicazione come autenticazione, controllo degli accessi, logica di business e flussi chiave</li>\n<li>Utilizzare il threat modeling come strumento educativo per generare una mentalità di sicurezza</li>\n<li>Integrare il linguaggio e i controlli di sicurezza nelle user story</li>\n<li>Integrare controlli di plausibilità a ogni livello dell&#x27;applicazione (dal frontend al backend)</li>\n<li>Scrivere test unitari e di integrazione per validare che tutti i flussi critici siano resistenti al modello di minaccia. Compilare use-case <em>e</em> misuse-case per ogni livello dell&#x27;applicazione.</li>\n<li>Segregare i livelli del sistema e della rete a seconda dell&#x27;esposizione e delle esigenze di protezione</li>\n<li>Segregare i tenant in modo robusto by design attraverso tutti i livelli</li>\n</ul>",
+    "scenarios": "<p><strong>Scenario #1:</strong> Un flusso di recupero delle credenziali potrebbe includere &quot;domande e risposte&quot;, che è vietato da NIST 800-63b, dall&#x27;OWASP ASVS e dall&#x27;OWASP Top 10. Le domande e risposte non possono essere considerate attendibili come prova di identità, poiché più di una persona può conoscere le risposte. Tale funzionalità dovrebbe essere rimossa e sostituita con un design più sicuro.</p>\n<p><strong>Scenario #2:</strong> Una catena cinematografica consente sconti per prenotazioni di gruppo e ha un massimo di quindici partecipanti prima di richiedere un deposito. Gli attaccanti potrebbero fare threat modeling di questo flusso e testare se riescono a trovare un vettore di attacco nella logica di business dell&#x27;applicazione, es. prenotare seicento posti e tutti i cinema contemporaneamente in poche richieste, causando una massiccia perdita di reddito.</p>\n<p><strong>Scenario #3:</strong> Il sito di e-commerce di una catena retail non ha protezione contro bot usati da scalper per acquistare schede video di fascia alta da rivendere su siti di aste. Questo crea pubblicità terribile per i produttori di schede video e i proprietari delle catene retail, e risentimenti duraturi con gli appassionati che non riescono a ottenere queste schede a nessun prezzo. Un attento design anti-bot e regole di logica di dominio, come acquisti effettuati entro pochi secondi dalla disponibilità, potrebbero identificare acquisti non autentici e rifiutare tali transazioni.</p>",
+    "references": "<ul>\n<li><a href=\"https://cheatsheetseries.owasp.org/cheatsheets/Secure_Product_Design_Cheat_Sheet.html\">OWASP Cheat Sheet: Secure Design Principles</a></li>\n<li><a href=\"https://owaspsamm.org/model/design/secure-architecture/\">OWASP SAMM: Design | Secure Architecture</a></li>\n<li><a href=\"https://owaspsamm.org/model/design/threat-assessment/\">OWASP SAMM: Design | Threat Assessment</a></li>\n<li><a href=\"https://www.nist.gov/publications/guidelines-minimum-standards-developer-verification-software\">NIST – Guidelines on Minimum Standards for Developer Verification of Software</a></li>\n<li><a href=\"https://threatmodelingmanifesto.org/\">The Threat Modeling Manifesto</a></li>\n<li><a href=\"https://github.com/hysnsec/awesome-threat-modelling\">Awesome Threat Modeling</a></li>\n</ul>",
+    "cwes": [
+      {
+        "id": "CWE-73",
+        "name": "External Control of File Name or Path",
+        "url": "https://cwe.mitre.org/data/definitions/73.html"
+      },
+      {
+        "id": "CWE-183",
+        "name": "Permissive List of Allowed Inputs",
+        "url": "https://cwe.mitre.org/data/definitions/183.html"
+      },
+      {
+        "id": "CWE-256",
+        "name": "Unprotected Storage of Credentials",
+        "url": "https://cwe.mitre.org/data/definitions/256.html"
+      },
+      {
+        "id": "CWE-266",
+        "name": "Incorrect Privilege Assignment",
+        "url": "https://cwe.mitre.org/data/definitions/266.html"
+      },
+      {
+        "id": "CWE-269",
+        "name": "Improper Privilege Management",
+        "url": "https://cwe.mitre.org/data/definitions/269.html"
+      },
+      {
+        "id": "CWE-286",
+        "name": "Incorrect User Management",
+        "url": "https://cwe.mitre.org/data/definitions/286.html"
+      },
+      {
+        "id": "CWE-311",
+        "name": "Missing Encryption of Sensitive Data",
+        "url": "https://cwe.mitre.org/data/definitions/311.html"
+      },
+      {
+        "id": "CWE-312",
+        "name": "Cleartext Storage of Sensitive Information",
+        "url": "https://cwe.mitre.org/data/definitions/312.html"
+      },
+      {
+        "id": "CWE-313",
+        "name": "Cleartext Storage in a File or on Disk",
+        "url": "https://cwe.mitre.org/data/definitions/313.html"
+      },
+      {
+        "id": "CWE-316",
+        "name": "Cleartext Storage of Sensitive Information in Memory",
+        "url": "https://cwe.mitre.org/data/definitions/316.html"
+      },
+      {
+        "id": "CWE-362",
+        "name": "Concurrent Execution using Shared Resource with Improper Synchronization ('Race Condition')",
+        "url": "https://cwe.mitre.org/data/definitions/362.html"
+      },
+      {
+        "id": "CWE-382",
+        "name": "J2EE Bad Practices: Use of System.exit()",
+        "url": "https://cwe.mitre.org/data/definitions/382.html"
+      },
+      {
+        "id": "CWE-419",
+        "name": "Unprotected Primary Channel",
+        "url": "https://cwe.mitre.org/data/definitions/419.html"
+      },
+      {
+        "id": "CWE-434",
+        "name": "Unrestricted Upload of File with Dangerous Type",
+        "url": "https://cwe.mitre.org/data/definitions/434.html"
+      },
+      {
+        "id": "CWE-436",
+        "name": "Interpretation Conflict",
+        "url": "https://cwe.mitre.org/data/definitions/436.html"
+      },
+      {
+        "id": "CWE-444",
+        "name": "Inconsistent Interpretation of HTTP Requests ('HTTP Request Smuggling')",
+        "url": "https://cwe.mitre.org/data/definitions/444.html"
+      },
+      {
+        "id": "CWE-451",
+        "name": "User Interface (UI) Misrepresentation of Critical Information",
+        "url": "https://cwe.mitre.org/data/definitions/451.html"
+      },
+      {
+        "id": "CWE-454",
+        "name": "External Initialization of Trusted Variables or Data Stores",
+        "url": "https://cwe.mitre.org/data/definitions/454.html"
+      },
+      {
+        "id": "CWE-472",
+        "name": "External Control of Assumed-Immutable Web Parameter",
+        "url": "https://cwe.mitre.org/data/definitions/472.html"
+      },
+      {
+        "id": "CWE-501",
+        "name": "Trust Boundary Violation",
+        "url": "https://cwe.mitre.org/data/definitions/501.html"
+      },
+      {
+        "id": "CWE-522",
+        "name": "Insufficiently Protected Credentials",
+        "url": "https://cwe.mitre.org/data/definitions/522.html"
+      },
+      {
+        "id": "CWE-525",
+        "name": "Use of Web Browser Cache Containing Sensitive Information",
+        "url": "https://cwe.mitre.org/data/definitions/525.html"
+      },
+      {
+        "id": "CWE-539",
+        "name": "Use of Persistent Cookies Containing Sensitive Information",
+        "url": "https://cwe.mitre.org/data/definitions/539.html"
+      },
+      {
+        "id": "CWE-598",
+        "name": "Use of GET Request Method With Sensitive Query Strings",
+        "url": "https://cwe.mitre.org/data/definitions/598.html"
+      },
+      {
+        "id": "CWE-602",
+        "name": "Client-Side Enforcement of Server-Side Security",
+        "url": "https://cwe.mitre.org/data/definitions/602.html"
+      },
+      {
+        "id": "CWE-628",
+        "name": "Function Call with Incorrectly Specified Arguments",
+        "url": "https://cwe.mitre.org/data/definitions/628.html"
+      },
+      {
+        "id": "CWE-642",
+        "name": "External Control of Critical State Data",
+        "url": "https://cwe.mitre.org/data/definitions/642.html"
+      },
+      {
+        "id": "CWE-646",
+        "name": "Reliance on File Name or Extension of Externally-Supplied File",
+        "url": "https://cwe.mitre.org/data/definitions/646.html"
+      },
+      {
+        "id": "CWE-653",
+        "name": "Insufficient Compartmentalization",
+        "url": "https://cwe.mitre.org/data/definitions/653.html"
+      },
+      {
+        "id": "CWE-656",
+        "name": "Reliance on Security Through Obscurity",
+        "url": "https://cwe.mitre.org/data/definitions/656.html"
+      },
+      {
+        "id": "CWE-657",
+        "name": "Violation of Secure Design Principles",
+        "url": "https://cwe.mitre.org/data/definitions/657.html"
+      },
+      {
+        "id": "CWE-676",
+        "name": "Use of Potentially Dangerous Function",
+        "url": "https://cwe.mitre.org/data/definitions/676.html"
+      },
+      {
+        "id": "CWE-693",
+        "name": "Protection Mechanism Failure",
+        "url": "https://cwe.mitre.org/data/definitions/693.html"
+      },
+      {
+        "id": "CWE-799",
+        "name": "Improper Control of Interaction Frequency",
+        "url": "https://cwe.mitre.org/data/definitions/799.html"
+      },
+      {
+        "id": "CWE-807",
+        "name": "Reliance on Untrusted Inputs in a Security Decision",
+        "url": "https://cwe.mitre.org/data/definitions/807.html"
+      },
+      {
+        "id": "CWE-841",
+        "name": "Improper Enforcement of Behavioral Workflow",
+        "url": "https://cwe.mitre.org/data/definitions/841.html"
+      },
+      {
+        "id": "CWE-1021",
+        "name": "Improper Restriction of Rendered UI Layers or Frames",
+        "url": "https://cwe.mitre.org/data/definitions/1021.html"
+      },
+      {
+        "id": "CWE-1022",
+        "name": "Use of Web Link to Untrusted Target with window.opener Access",
+        "url": "https://cwe.mitre.org/data/definitions/1022.html"
+      },
+      {
+        "id": "CWE-1125",
+        "name": "Excessive Attack Surface",
+        "url": "https://cwe.mitre.org/data/definitions/1125.html"
+      }
+    ]
   },
   "A07:2025 - Authentication Failures": {
-    "description": "<p>Il sistema può essere indotto a riconoscere come legittimo un utente non valido: credential stuffing e brute force non bloccati, password di default o deboli, procedure di recupero deboli, MFA assente o aggirabile, identificativi di sessione non rigenerati o non invalidati.</p><p><strong>Esempio:</strong> Il session ID non viene rigenerato dopo il login, consentendo una session fixation.</p>",
     "link": "https://top10.owasp.org/2025/it/A07_2025-Authentication_Failures/",
-    "level": "alto"
+    "stats": [
+      [
+        "CWE Mappate",
+        "36"
+      ],
+      [
+        "Tasso Massimo di Incidenza",
+        "15,80%"
+      ],
+      [
+        "Tasso Medio di Incidenza",
+        "2,92%"
+      ],
+      [
+        "Copertura Massima",
+        "100,00%"
+      ],
+      [
+        "Copertura Media",
+        "37,14%"
+      ],
+      [
+        "Exploit Medio Ponderato",
+        "7,69"
+      ],
+      [
+        "Impatto Medio Ponderato",
+        "4,44"
+      ],
+      [
+        "Totale Occorrenze",
+        "1.120.673"
+      ],
+      [
+        "Totale CVE",
+        "7.147"
+      ]
+    ],
+    "background": "<p>Authentication Failures mantiene la sua posizione al #7 con una leggera modifica del nome per riflettere più accuratamente le 36 CWE in questa categoria. Nonostante i benefici dei framework standardizzati, questa categoria ha mantenuto il suo rango #7 dal 2021. Tra le CWE degne di nota vi sono <em>CWE-259 Use of Hard-coded Password</em>, <em>CWE-297: Improper Validation of Certificate with Host Mismatch</em>, <em>CWE-287: Improper Authentication</em>, <em>CWE-384: Session Fixation</em>, e <em>CWE-798 Use of Hard-coded Credentials</em>.</p>",
+    "description": "<p>Quando un attaccante riesce a ingannare un sistema facendogli riconoscere come legittimo un utente non valido o non corretto, questa vulnerabilità è presente. Potrebbero esserci debolezze di autenticazione se l&#x27;applicazione:</p>\n<ul>\n<li>Permette attacchi automatizzati come il credential stuffing, dove l&#x27;attaccante dispone di un elenco violato di username e password validi. Più recentemente questo tipo di attacco è stato esteso a includere attacchi ibridi di credential stuffing (noti anche come password spray attack), dove l&#x27;attaccante utilizza variazioni o incrementi delle credenziali trafugate per ottenere l&#x27;accesso, ad esempio provando Password1!, Password2!, Password3! e così via.</li>\n<li>Permette attacchi a forza bruta o altri attacchi automatizzati con script che non vengono bloccati rapidamente.</li>\n<li>Permette password predefinite, deboli o ben note, come &quot;Password1&quot; o username &quot;admin&quot; con password &quot;admin&quot;.</li>\n<li>Consente agli utenti di creare nuovi account con credenziali già note come violate.</li>\n<li>Consente l&#x27;uso di processi di recupero credenziali e di password dimenticate deboli o inefficaci, come le &quot;risposte alle domande di sicurezza&quot;, che non possono essere rese sicure.</li>\n<li>Utilizza store di dati di password in chiaro, cifrate o con hashing debole (vedi <a href=\"https://owasp.org/Top10/2025/A04_2025-Cryptographic_Failures/\">A04:2025-Cryptographic Failures</a>).</li>\n<li>Ha un&#x27;autenticazione a più fattori assente o inefficace.</li>\n<li>Consente l&#x27;uso di fallback deboli o inefficaci se l&#x27;autenticazione a più fattori non è disponibile.</li>\n<li>Espone l&#x27;identificatore di sessione nell&#x27;URL, in un campo nascosto o in un&#x27;altra posizione non sicura accessibile al client.</li>\n<li>Riutilizza lo stesso identificatore di sessione dopo un login riuscito.</li>\n<li>Non invalida correttamente le sessioni utente o i token di autenticazione (principalmente token di single sign-on (SSO)) durante il logout o dopo un periodo di inattività.</li>\n<li>Non verifica correttamente l&#x27;ambito e il pubblico previsto delle credenziali fornite.</li>\n</ul>",
+    "prevention": "<ul>\n<li>Dove possibile, implementare e applicare l&#x27;uso dell&#x27;autenticazione a più fattori per prevenire attacchi automatizzati di credential stuffing, forza bruta e riutilizzo di credenziali rubate.</li>\n<li>Dove possibile, incoraggiare e abilitare l&#x27;uso di password manager, per aiutare gli utenti a fare scelte migliori.</li>\n<li>Non distribuire o deployare con credenziali predefinite, in particolare per gli utenti amministratori.</li>\n<li>Implementare controlli sulle password deboli, come testare le password nuove o modificate rispetto all&#x27;elenco delle 10.000 password peggiori.</li>\n<li>Durante la creazione di nuovi account e i cambi di password, validare rispetto agli elenchi di credenziali note come violate (es. usando <a href=\"https://haveibeenpwned.com\">haveibeenpwned.com</a>).</li>\n<li>Allineare le policy di lunghezza, complessità e rotazione delle password con le <a href=\"https://pages.nist.gov/800-63-3/sp800-63b.html\">linee guida NIST 800-63b nella sezione 5.1.1</a> per Memorized Secrets o altre policy di password moderne basate su evidenze.</li>\n<li>Non forzare le persone a ruotare le password a meno che non si sospetti una violazione. Se si sospetta una violazione, forzare immediatamente il reset delle password.</li>\n<li>Garantire che i percorsi di registrazione, recupero credenziali e API siano rafforzati contro gli attacchi di account enumeration utilizzando gli stessi messaggi per tutti gli esiti (&quot;Username o password non validi.&quot;).</li>\n<li>Limitare o ritardare progressivamente i tentativi di login falliti, ma fare attenzione a non creare uno scenario di denial of service. Registrare tutti i fallimenti e inviare alert agli amministratori quando vengono rilevati o sospettati attacchi di credential stuffing, forza bruta o altri attacchi.</li>\n<li>Utilizzare un session manager integrato, sicuro e lato server che generi un nuovo ID di sessione casuale con alta entropia dopo il login. Gli identificatori di sessione non devono essere nell&#x27;URL, devono essere archiviati in modo sicuro in un cookie sicuro e invalidati dopo il logout, il timeout di inattività e il timeout assoluto.</li>\n<li>Idealmente, utilizzare un sistema pre-costruito e ben collaudato per gestire autenticazione, identità e gestione delle sessioni. Trasferire questo rischio ogni volta che è possibile acquistando e utilizzando un sistema rafforzato e ben testato.</li>\n<li>Verificare l&#x27;uso previsto delle credenziali fornite, es. per i JWT validare i claim <code>aud</code>, <code>iss</code> e gli scope.</li>\n</ul>",
+    "scenarios": "<p><strong>Scenario #1:</strong> Il credential stuffing, l&#x27;uso di elenchi di combinazioni note di username e password, è ora un attacco molto comune. Più recentemente gli attaccanti hanno trovato il modo di &#x27;incrementare&#x27; o altrimenti adattare le password, in base al comportamento umano comune. Ad esempio, cambiando &#x27;Winter2025&#x27; in &#x27;Winter2026&#x27;, o &#x27;ILoveMyDog6&#x27; in &#x27;ILoveMyDog7&#x27; o &#x27;ILoveMyDog5&#x27;. Questo adattamento dei tentativi di password è chiamato attacco ibrido di credential stuffing o password spray attack, e può essere ancora più efficace della versione tradizionale. Se un&#x27;applicazione non implementa difese contro le minacce automatizzate (forza bruta, script o bot) o il credential stuffing, l&#x27;applicazione può essere usata come oracolo di password per determinare se le credenziali sono valide e ottenere accesso non autorizzato.</p>\n<p><strong>Scenario #2:</strong> La maggior parte degli attacchi di autenticazione riusciti si verifica a causa del continuo utilizzo delle password come unico fattore di autenticazione. Una volta considerate best practice, i requisiti di rotazione e complessità delle password incoraggiano gli utenti sia a riutilizzare le password che a usare password deboli. Si raccomanda alle organizzazioni di interrompere queste pratiche secondo NIST 800-63 e di applicare l&#x27;uso dell&#x27;autenticazione a più fattori su tutti i sistemi importanti.</p>\n<p><strong>Scenario #3:</strong> I timeout delle sessioni dell&#x27;applicazione non sono implementati correttamente. Un utente utilizza un computer pubblico per accedere a un&#x27;applicazione e invece di selezionare &quot;logout&quot;, chiude semplicemente la scheda del browser e se ne va. Un altro esempio è se una sessione Single Sign On (SSO) non può essere chiusa da un Single Logout (SLO). Cioè, un singolo login ti autentica, ad esempio, al tuo lettore di posta, al tuo sistema di documenti e al tuo sistema di chat. Ma il logout avviene solo per il sistema corrente. Se un attaccante usa lo stesso browser dopo che la vittima pensa di essersi disconnessa con successo, ma con l&#x27;utente ancora autenticato ad alcune delle applicazioni, può accedere all&#x27;account della vittima.</p>",
+    "references": "<ul>\n<li><a href=\"https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html\">OWASP Authentication Cheat Sheet</a></li>\n<li><a href=\"https://owasp.org/www-project-secure-coding-practices-quick-reference-guide/stable-en/01-introduction/05-introduction\">OWASP Secure Coding Practices</a></li>\n</ul>",
+    "cwes": [
+      {
+        "id": "CWE-258",
+        "name": "Empty Password in Configuration File",
+        "url": "https://cwe.mitre.org/data/definitions/258.html"
+      },
+      {
+        "id": "CWE-259",
+        "name": "Use of Hard-coded Password",
+        "url": "https://cwe.mitre.org/data/definitions/259.html"
+      },
+      {
+        "id": "CWE-287",
+        "name": "Improper Authentication",
+        "url": "https://cwe.mitre.org/data/definitions/287.html"
+      },
+      {
+        "id": "CWE-288",
+        "name": "Authentication Bypass Using an Alternate Path or Channel",
+        "url": "https://cwe.mitre.org/data/definitions/288.html"
+      },
+      {
+        "id": "CWE-289",
+        "name": "Authentication Bypass by Alternate Name",
+        "url": "https://cwe.mitre.org/data/definitions/289.html"
+      },
+      {
+        "id": "CWE-290",
+        "name": "Authentication Bypass by Spoofing",
+        "url": "https://cwe.mitre.org/data/definitions/290.html"
+      },
+      {
+        "id": "CWE-291",
+        "name": "Reliance on IP Address for Authentication",
+        "url": "https://cwe.mitre.org/data/definitions/291.html"
+      },
+      {
+        "id": "CWE-293",
+        "name": "Using Referer Field for Authentication",
+        "url": "https://cwe.mitre.org/data/definitions/293.html"
+      },
+      {
+        "id": "CWE-294",
+        "name": "Authentication Bypass by Capture-replay",
+        "url": "https://cwe.mitre.org/data/definitions/294.html"
+      },
+      {
+        "id": "CWE-295",
+        "name": "Improper Certificate Validation",
+        "url": "https://cwe.mitre.org/data/definitions/295.html"
+      },
+      {
+        "id": "CWE-297",
+        "name": "Improper Validation of Certificate with Host Mismatch",
+        "url": "https://cwe.mitre.org/data/definitions/297.html"
+      },
+      {
+        "id": "CWE-298",
+        "name": "Improper Validation of Certificate with Host Mismatch",
+        "url": "https://cwe.mitre.org/data/definitions/298.html"
+      },
+      {
+        "id": "CWE-299",
+        "name": "Improper Validation of Certificate with Host Mismatch",
+        "url": "https://cwe.mitre.org/data/definitions/299.html"
+      },
+      {
+        "id": "CWE-300",
+        "name": "Channel Accessible by Non-Endpoint",
+        "url": "https://cwe.mitre.org/data/definitions/300.html"
+      },
+      {
+        "id": "CWE-302",
+        "name": "Authentication Bypass by Assumed-Immutable Data",
+        "url": "https://cwe.mitre.org/data/definitions/302.html"
+      },
+      {
+        "id": "CWE-303",
+        "name": "Incorrect Implementation of Authentication Algorithm",
+        "url": "https://cwe.mitre.org/data/definitions/303.html"
+      },
+      {
+        "id": "CWE-304",
+        "name": "Missing Critical Step in Authentication",
+        "url": "https://cwe.mitre.org/data/definitions/304.html"
+      },
+      {
+        "id": "CWE-305",
+        "name": "Authentication Bypass by Primary Weakness",
+        "url": "https://cwe.mitre.org/data/definitions/305.html"
+      },
+      {
+        "id": "CWE-306",
+        "name": "Missing Authentication for Critical Function",
+        "url": "https://cwe.mitre.org/data/definitions/306.html"
+      },
+      {
+        "id": "CWE-307",
+        "name": "Improper Restriction of Excessive Authentication Attempts",
+        "url": "https://cwe.mitre.org/data/definitions/307.html"
+      },
+      {
+        "id": "CWE-308",
+        "name": "Use of Single-factor Authentication",
+        "url": "https://cwe.mitre.org/data/definitions/308.html"
+      },
+      {
+        "id": "CWE-309",
+        "name": "Use of Password System for Primary Authentication",
+        "url": "https://cwe.mitre.org/data/definitions/309.html"
+      },
+      {
+        "id": "CWE-346",
+        "name": "Origin Validation Error",
+        "url": "https://cwe.mitre.org/data/definitions/346.html"
+      },
+      {
+        "id": "CWE-350",
+        "name": "Reliance on Reverse DNS Resolution for a Security-Critical Action",
+        "url": "https://cwe.mitre.org/data/definitions/350.html"
+      },
+      {
+        "id": "CWE-384",
+        "name": "Session Fixation",
+        "url": "https://cwe.mitre.org/data/definitions/384.html"
+      },
+      {
+        "id": "CWE-521",
+        "name": "Weak Password Requirements",
+        "url": "https://cwe.mitre.org/data/definitions/521.html"
+      },
+      {
+        "id": "CWE-613",
+        "name": "Insufficient Session Expiration",
+        "url": "https://cwe.mitre.org/data/definitions/613.html"
+      },
+      {
+        "id": "CWE-620",
+        "name": "Unverified Password Change",
+        "url": "https://cwe.mitre.org/data/definitions/620.html"
+      },
+      {
+        "id": "CWE-640",
+        "name": "Weak Password Recovery Mechanism for Forgotten Password",
+        "url": "https://cwe.mitre.org/data/definitions/640.html"
+      },
+      {
+        "id": "CWE-798",
+        "name": "Use of Hard-coded Credentials",
+        "url": "https://cwe.mitre.org/data/definitions/798.html"
+      },
+      {
+        "id": "CWE-940",
+        "name": "Improper Verification of Source of a Communication Channel",
+        "url": "https://cwe.mitre.org/data/definitions/940.html"
+      },
+      {
+        "id": "CWE-941",
+        "name": "Incorrectly Specified Destination in a Communication Channel",
+        "url": "https://cwe.mitre.org/data/definitions/941.html"
+      },
+      {
+        "id": "CWE-1390",
+        "name": "Weak Authentication",
+        "url": "https://cwe.mitre.org/data/definitions/1390.html"
+      },
+      {
+        "id": "CWE-1391",
+        "name": "Use of Weak Credentials",
+        "url": "https://cwe.mitre.org/data/definitions/1391.html"
+      },
+      {
+        "id": "CWE-1392",
+        "name": "Use of Default Credentials",
+        "url": "https://cwe.mitre.org/data/definitions/1392.html"
+      },
+      {
+        "id": "CWE-1393",
+        "name": "Use of Default Password",
+        "url": "https://cwe.mitre.org/data/definitions/1393.html"
+      }
+    ]
   },
   "A08:2025 - Software or Data Integrity Failures": {
-    "description": "<p>Codice o dati provenienti da fonti non attendibili vengono trattati come affidabili senza verificarne l'integrità: aggiornamenti, plugin o risorse CDN non firmati, deserializzazione non sicura, attributi degli oggetti modificati dal client (mass assignment).</p><p><strong>Esempio:</strong> L'applicazione deserializza il valore di un cookie senza verificarne la firma e l'attaccante ottiene l'esecuzione di codice remoto.</p>",
     "link": "https://top10.owasp.org/2025/it/A08_2025-Software_or_Data_Integrity_Failures/",
-    "level": "medio"
+    "stats": [
+      [
+        "CWE Mappate",
+        "14"
+      ],
+      [
+        "Tasso Massimo di Incidenza",
+        "8,98%"
+      ],
+      [
+        "Tasso Medio di Incidenza",
+        "2,75%"
+      ],
+      [
+        "Copertura Massima",
+        "78,52%"
+      ],
+      [
+        "Copertura Media",
+        "45,49%"
+      ],
+      [
+        "Exploit Medio Ponderato",
+        "7,11"
+      ],
+      [
+        "Impatto Medio Ponderato",
+        "4,79"
+      ],
+      [
+        "Totale Occorrenze",
+        "501.327"
+      ],
+      [
+        "Totale CVE",
+        "3.331"
+      ]
+    ],
+    "background": "<p>Software or Data Integrity Failures continua all&#x27;#8, con una leggera modifica chiarificatrice del nome da &quot;Software <em>and</em> Data Integrity Failures&quot;. Questa categoria si concentra sul fallimento nel mantenimento dei confini di fiducia e nella verifica dell&#x27;integrità di software, codice e artefatti dati a un livello inferiore rispetto ai Software Supply Chain Failures. Questa categoria si concentra sulle assunzioni relative agli aggiornamenti software e ai dati critici, senza verificarne l&#x27;integrità. Le CWE notevoli includono <em>CWE-829: Inclusion of Functionality from Untrusted Control Sphere</em>, <em>CWE-915: Improperly Controlled Modification of Dynamically-Determined Object Attributes</em>, e <em>CWE-502: Deserialization of Untrusted Data</em>.</p>",
+    "description": "<p>I fallimenti di integrità del software e dei dati riguardano codice e infrastruttura che non proteggono da codice o dati non validi o non attendibili trattati come attendibili e validi. Un esempio è dove un&#x27;applicazione si basa su plugin, librerie o moduli da fonti non attendibili, repository e content delivery network (CDN). Una pipeline CI/CD non sicura priva di controlli di integrità del software in consumo e fornitura può introdurre la possibilità di accesso non autorizzato, codice non sicuro o malevolo, o compromissione del sistema. Un altro esempio è una CI/CD che estrae codice o artefatti da luoghi non attendibili e/o non li verifica prima dell&#x27;uso (controllando la firma o un meccanismo simile). Infine, molte applicazioni ora includono funzionalità di aggiornamento automatico, dove gli aggiornamenti vengono scaricati senza una verifica dell&#x27;integrità sufficiente e applicati all&#x27;applicazione precedentemente attendibile. Gli attaccanti potrebbero potenzialmente caricare i propri aggiornamenti da distribuire ed eseguire su tutte le installazioni. Un altro esempio è dove oggetti o dati sono codificati o serializzati in una struttura che un attaccante può vedere e modificare, rendendoli vulnerabili alla deserializzazione non sicura.</p>",
+    "prevention": "<ul>\n<li>Utilizzare firme digitali o meccanismi simili per verificare che il software o i dati provengano dalla fonte prevista e non siano stati alterati.</li>\n<li>Garantire che librerie e dipendenze, come npm o Maven, consumino solo repository attendibili. Se si ha un profilo di rischio più elevato, considerare l&#x27;hosting di un repository interno noto-buono e verificato.</li>\n<li>Garantire che ci sia un processo di revisione per le modifiche al codice e alla configurazione per minimizzare la possibilità che codice o configurazione malevoli vengano introdotti nella pipeline software.</li>\n<li>Garantire che la pipeline CI/CD abbia un&#x27;adeguata segregazione, configurazione e controllo degli accessi per garantire l&#x27;integrità del codice che scorre attraverso i processi di build e deploy.</li>\n<li>Garantire che dati serializzati non firmati o non cifrati non vengano ricevuti da client non attendibili e successivamente utilizzati senza qualche forma di controllo dell&#x27;integrità o firma digitale per rilevare manomissioni o replay dei dati serializzati.</li>\n</ul>",
+    "scenarios": "<p><strong>Scenario #1 Inclusione di funzionalità web da una fonte non attendibile:</strong> Un&#x27;azienda utilizza un provider di servizi esterno per fornire funzionalità di supporto. Per comodità, ha un mapping DNS per <code>myCompany.SupportProvider.com</code> verso <code>support.myCompany.com</code>. Ciò significa che tutti i cookie, inclusi i cookie di autenticazione, impostati sul dominio <code>myCompany.com</code> verranno ora inviati al provider di supporto. Chiunque abbia accesso all&#x27;infrastruttura del provider di supporto può rubare i cookie di tutti gli utenti che hanno visitato <code>support.myCompany.com</code> ed eseguire un attacco di session hijacking.</p>\n<p><strong>Scenario #2 Aggiornamento senza firma:</strong> Molti router domestici, set-top box, firmware di dispositivi e altri non verificano gli aggiornamenti tramite firmware firmato. Il firmware non firmato è un obiettivo crescente per gli attaccanti e si prevede che peggiorerà ulteriormente. Questa è una preoccupazione importante poiché molte volte non esiste alcun meccanismo per rimediare se non correggere in una versione futura e attendere che le versioni precedenti vengano dismesse.</p>\n<p><strong>Scenario #3 Utilizzo di pacchetti da una fonte non attendibile:</strong> Uno sviluppatore ha difficoltà a trovare la versione aggiornata di un pacchetto che sta cercando, quindi lo scarica non dal gestore di pacchetti regolare e attendibile, ma da un sito web online. Il pacchetto non è firmato, quindi non c&#x27;è opportunità di garantire l&#x27;integrità. Il pacchetto include codice malevolo.</p>\n<p><strong>Scenario #4 Deserializzazione non sicura:</strong> Un&#x27;applicazione React chiama una serie di microservizi Spring Boot. Essendo programmatori funzionali, hanno cercato di garantire che il loro codice sia immutabile. La soluzione a cui sono arrivati è serializzare lo stato dell&#x27;utente e passarlo avanti e indietro con ogni richiesta. Un attaccante nota la firma dell&#x27;oggetto Java &quot;rO0&quot; (in base64) e utilizza il <a href=\"https://github.com/federicodotta/Java-Deserialization-Scanner\">Java Deserialization Scanner</a> per ottenere l&#x27;esecuzione di codice remoto sul server applicativo.</p>",
+    "references": "<ul>\n<li><a href=\"https://cheatsheetseries.owasp.org/cheatsheets/Software_Supply_Chain_Security_Cheat_Sheet.html\">OWASP Cheat Sheet: Software Supply Chain Security</a></li>\n<li><a href=\"https://cheatsheetseries.owasp.org/cheatsheets/Infrastructure_as_Code_Security_Cheat_Sheet.html\">OWASP Cheat Sheet: Infrastructure as Code</a></li>\n<li><a href=\"https://wiki.owasp.org/index.php/Deserialization_Cheat_Sheet\">OWASP Cheat Sheet: Deserialization</a></li>\n<li><a href=\"https://safecode.org/publication/SAFECode_Software_Integrity_Controls0610.pdf\">SAFECode Software Integrity Controls</a></li>\n<li><a href=\"https://www.npr.org/2021/04/16/985439655/a-worst-nightmare-cyberattack-the-untold-story-of-the-solarwinds-hack\">A &#x27;Worst Nightmare&#x27; Cyberattack: The Untold Story Of The SolarWinds Hack</a></li>\n<li><a href=\"https://about.codecov.io/security-update\">CodeCov Bash Uploader Compromise</a></li>\n</ul>",
+    "cwes": [
+      {
+        "id": "CWE-345",
+        "name": "Insufficient Verification of Data Authenticity",
+        "url": "https://cwe.mitre.org/data/definitions/345.html"
+      },
+      {
+        "id": "CWE-353",
+        "name": "Missing Support for Integrity Check",
+        "url": "https://cwe.mitre.org/data/definitions/353.html"
+      },
+      {
+        "id": "CWE-426",
+        "name": "Untrusted Search Path",
+        "url": "https://cwe.mitre.org/data/definitions/426.html"
+      },
+      {
+        "id": "CWE-427",
+        "name": "Uncontrolled Search Path Element",
+        "url": "https://cwe.mitre.org/data/definitions/427.html"
+      },
+      {
+        "id": "CWE-494",
+        "name": "Download of Code Without Integrity Check",
+        "url": "https://cwe.mitre.org/data/definitions/494.html"
+      },
+      {
+        "id": "CWE-502",
+        "name": "Deserialization of Untrusted Data",
+        "url": "https://cwe.mitre.org/data/definitions/502.html"
+      },
+      {
+        "id": "CWE-506",
+        "name": "Embedded Malicious Code",
+        "url": "https://cwe.mitre.org/data/definitions/506.html"
+      },
+      {
+        "id": "CWE-509",
+        "name": "Replicating Malicious Code (Virus or Worm)",
+        "url": "https://cwe.mitre.org/data/definitions/509.html"
+      },
+      {
+        "id": "CWE-565",
+        "name": "Reliance on Cookies without Validation and Integrity Checking",
+        "url": "https://cwe.mitre.org/data/definitions/565.html"
+      },
+      {
+        "id": "CWE-784",
+        "name": "Reliance on Cookies without Validation and Integrity Checking in a Security Decision",
+        "url": "https://cwe.mitre.org/data/definitions/784.html"
+      },
+      {
+        "id": "CWE-829",
+        "name": "Inclusion of Functionality from Untrusted Control Sphere",
+        "url": "https://cwe.mitre.org/data/definitions/829.html"
+      },
+      {
+        "id": "CWE-830",
+        "name": "Inclusion of Web Functionality from an Untrusted Source",
+        "url": "https://cwe.mitre.org/data/definitions/830.html"
+      },
+      {
+        "id": "CWE-915",
+        "name": "Improperly Controlled Modification of Dynamically-Determined Object Attributes",
+        "url": "https://cwe.mitre.org/data/definitions/915.html"
+      },
+      {
+        "id": "CWE-926",
+        "name": "Improper Export of Android Application Components",
+        "url": "https://cwe.mitre.org/data/definitions/926.html"
+      }
+    ]
   },
   "A09:2025 - Security Logging & Alerting Failures": {
-    "description": "<p>Senza logging, monitoraggio e alerting, attacchi e violazioni passano inosservati e la risposta arriva tardi. Comprende eventi di sicurezza non registrati, log senza protezione d'integrità, dati sensibili scritti nei log e soglie di allarme assenti o ignorate.</p><p><strong>Esempio:</strong> Un attacco brute force passa inosservato perché i login falliti non vengono registrati né generano allarmi.</p>",
     "link": "https://top10.owasp.org/2025/it/A09_2025-Security_Logging_and_Alerting_Failures/",
-    "level": "basso"
+    "stats": [
+      [
+        "CWE Mappate",
+        "5"
+      ],
+      [
+        "Tasso Massimo di Incidenza",
+        "11,33%"
+      ],
+      [
+        "Tasso Medio di Incidenza",
+        "3,91%"
+      ],
+      [
+        "Copertura Massima",
+        "85,96%"
+      ],
+      [
+        "Copertura Media",
+        "46,48%"
+      ],
+      [
+        "Exploit Medio Ponderato",
+        "7,19"
+      ],
+      [
+        "Impatto Medio Ponderato",
+        "2,65"
+      ],
+      [
+        "Totale Occorrenze",
+        "260.288"
+      ],
+      [
+        "Totale CVE",
+        "723"
+      ]
+    ],
+    "background": "<p>Security Logging &amp; Alerting Failures mantiene la sua posizione al #9. Questa categoria ha una leggera modifica del nome per enfatizzare la funzione di alerting necessaria per indurre azioni sugli eventi di logging rilevanti. Questa categoria sarà sempre sottorappresentata nei dati e per la terza volta è stata votata in una posizione nella lista dai partecipanti al sondaggio della community. Questa categoria è incredibilmente difficile da testare e ha una rappresentazione minima nei dati CVE/CVSS (solo 723 CVE); ma può essere molto impattante per la visibilità, l&#x27;alerting degli incidenti e la forensica. Questa categoria include problemi con la <em>corretta gestione dell&#x27;encoding dell&#x27;output nei file di log (CWE-117), l&#x27;inserimento di dati sensibili nei file di log (CWE-532) e il logging insufficiente (CWE-778).</em></p>",
+    "description": "<p>Senza logging e monitoraggio, gli attacchi e le violazioni non possono essere rilevati, e senza alerting è molto difficile rispondere in modo rapido ed efficace durante un incidente di sicurezza. Un logging insufficiente, un monitoraggio continuo, il rilevamento e l&#x27;alerting per avviare risposte attive si verificano ogni volta che:</p>\n<ul>\n<li>Gli eventi verificabili, come i login, i login falliti e le transazioni di alto valore, non vengono registrati o vengono registrati in modo incoerente (ad esempio, vengono registrati solo i login riusciti, ma non i tentativi falliti).</li>\n<li>Gli avvisi e gli errori generano messaggi di log assenti, inadeguati o poco chiari.</li>\n<li>L&#x27;integrità dei log non è adeguatamente protetta dalla manomissione.</li>\n<li>I log delle applicazioni e delle API non vengono monitorati per attività sospette.</li>\n<li>I log vengono archiviati solo localmente e non vengono adeguatamente sottoposti a backup.</li>\n<li>Soglie di alerting appropriate e processi di escalation delle risposte non sono in atto o efficaci. Gli alert non vengono ricevuti o esaminati entro un tempo ragionevole.</li>\n<li>I penetration test e le scansioni degli strumenti di dynamic application security testing (DAST) (come Burp o ZAP) non attivano alert.</li>\n<li>L&#x27;applicazione non è in grado di rilevare, escalare o avvisare per attacchi attivi in tempo reale o quasi in tempo reale.</li>\n<li>Sei vulnerabile alla fuga di informazioni sensibili rendendo visibili gli eventi di logging e alerting a un utente o a un attaccante (vedi <a href=\"https://top10.owasp.org/2025/it/A01_2025-Broken_Access_Control/\">A01:2025-Broken Access Control</a>), o registrando informazioni sensibili che non dovrebbero essere registrate (come PII o PHI).</li>\n<li>Sei vulnerabile a injection o attacchi ai sistemi di logging o monitoraggio se i dati dei log non sono correttamente codificati.</li>\n<li>L&#x27;applicazione manca o gestisce male gli errori e altre condizioni eccezionali, in modo tale che il sistema non sia consapevole che si è verificato un errore e quindi non sia in grado di registrare che c&#x27;è stato un problema.</li>\n<li>Mancano o sono obsoleti adeguati &#x27;use case&#x27; per l&#x27;emissione di alert per riconoscere una situazione speciale.</li>\n<li>Troppi alert falsi positivi rendono impossibile distinguere gli alert importanti da quelli non importanti, con il risultato che vengono riconosciuti troppo tardi o per niente (sovraccarico fisico del team SOC).</li>\n<li>Gli alert rilevati non possono essere elaborati correttamente perché il playbook per il caso d&#x27;uso è incompleto, obsoleto o mancante.</li>\n</ul>",
+    "prevention": "<p>Gli sviluppatori dovrebbero implementare alcuni o tutti i seguenti controlli, a seconda del rischio dell&#x27;applicazione:</p>\n<ul>\n<li>Garantire che tutti i fallimenti di login, controllo degli accessi e validazione degli input lato server possano essere registrati con un contesto utente sufficiente per identificare account sospetti o malevoli e conservati per un tempo sufficiente a consentire un&#x27;analisi forense differita.</li>\n<li>Garantire che ogni parte dell&#x27;app che contiene un controllo di sicurezza venga registrata, indipendentemente dal fatto che abbia successo o fallisca.</li>\n<li>Garantire che i log vengano generati in un formato che le soluzioni di gestione dei log possano consumare facilmente.</li>\n<li>Garantire che i dati dei log siano codificati correttamente per prevenire injection o attacchi ai sistemi di logging o monitoraggio.</li>\n<li>Garantire che tutte le transazioni abbiano una traccia di audit con controlli di integrità per prevenire manomissioni o cancellazioni, come tabelle di database append-only o simili.</li>\n<li>Garantire che tutte le transazioni che generano un errore vengano annullate e ricominciare. Fallire sempre in modo chiuso.</li>\n<li>Se la tua applicazione o i suoi utenti si comportano in modo sospetto, emettere un alert. Creare linee guida per gli sviluppatori su questo argomento in modo che possano programmare in base a questo o acquistare un sistema per questo.</li>\n<li>I team DevSecOps e di sicurezza dovrebbero stabilire use case efficaci di monitoraggio e alerting inclusi playbook in modo che le attività sospette vengano rilevate e gestite rapidamente dal team del Security Operations Center (SOC).</li>\n<li>Aggiungere &#x27;honeytoken&#x27; come trappole per gli attaccanti nella tua applicazione, ad esempio nel database, nei dati, come identità utente reale e/o tecnica. Poiché non vengono utilizzati nel normale business, qualsiasi accesso genera dati di logging che possono essere segnalati con quasi nessun falso positivo.</li>\n<li>L&#x27;analisi comportamentale e il supporto AI potrebbero essere opzionalmente una tecnica aggiuntiva per supportare bassi tassi di falsi positivi per gli alert.</li>\n<li>Stabilire o adottare un piano di risposta agli incidenti e di recupero, come NIST 800-61r2 o successivo. Insegnare agli sviluppatori software come appaiono gli attacchi e gli incidenti alle applicazioni, in modo che possano segnalarli.</li>\n</ul>\n<p>Esistono prodotti commerciali e open-source per la protezione delle applicazioni come l&#x27;OWASP ModSecurity Core Rule Set, e software open-source di correlazione dei log, come lo stack Elasticsearch, Logstash, Kibana (ELK), che includono dashboard personalizzate e alerting che potrebbero aiutarti a combattere questi problemi. Esistono anche strumenti di osservabilità commerciali che possono aiutarti a rispondere o bloccare gli attacchi in tempo quasi reale.</p>",
+    "scenarios": "<p><strong>Scenario #1:</strong> L&#x27;operatore del sito web di un fornitore di piani sanitari per bambini non ha potuto rilevare una violazione a causa della mancanza di monitoraggio e logging. Una parte esterna ha informato il fornitore del piano sanitario che un attaccante aveva acceduto e modificato migliaia di cartelle sanitarie sensibili di oltre 3,5 milioni di bambini. Una revisione post-incidente ha rilevato che gli sviluppatori del sito web non avevano affrontato vulnerabilità significative. Poiché non esisteva alcun logging o monitoraggio del sistema, la violazione dei dati potrebbe essere stata in corso dal 2013, un periodo di oltre sette anni.</p>\n<p><strong>Scenario #2:</strong> Una importante compagnia aerea indiana ha subito una violazione dei dati che coinvolgeva oltre dieci anni di dati personali di milioni di passeggeri, inclusi dati di passaporto e carte di credito. La violazione dei dati si è verificata presso un provider di cloud hosting di terze parti, che ha notificato la compagnia aerea della violazione dopo qualche tempo.</p>\n<p><strong>Scenario #3:</strong> Una importante compagnia aerea europea ha subito una violazione segnalabile al GDPR. La violazione è stata causata da vulnerabilità di sicurezza dell&#x27;applicazione di pagamento sfruttate dagli attaccanti, che hanno raccolto oltre 400.000 record di pagamento dei clienti. La compagnia aerea è stata multata di 20 milioni di sterline dall&#x27;autorità di regolamentazione della privacy.</p>",
+    "references": "<ul>\n<li><a href=\"https://top10proactive.owasp.org/archive/2024/the-top-10/c9-security-logging-and-monitoring/\">OWASP Proactive Controls: C9: Implement Logging and Monitoring</a></li>\n<li><a href=\"https://github.com/OWASP/ASVS/blob/v5.0.0/5.0/en/0x25-V16-Security-Logging-and-Error-Handling.md\">OWASP Application Security Verification Standard: V16 Security Logging and Error Handling</a></li>\n<li><a href=\"https://cheatsheetseries.owasp.org/cheatsheets/Application_Logging_Vocabulary_Cheat_Sheet.html\">OWASP Cheat Sheet: Application Logging Vocabulary</a></li>\n<li><a href=\"https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html\">OWASP Cheat Sheet: Logging</a></li>\n<li><a href=\"https://csrc.nist.gov/publications/detail/sp/1800-11/final\">Data Integrity: Recovering from Ransomware and Other Destructive Events</a></li>\n<li><a href=\"https://www.huntress.com/threat-library/data-breach/snowflake-data-breach\">Real world example of such failures in Snowflake Breach</a></li>\n</ul>",
+    "cwes": [
+      {
+        "id": "CWE-117",
+        "name": "Improper Output Neutralization for Logs",
+        "url": "https://cwe.mitre.org/data/definitions/117.html"
+      },
+      {
+        "id": "CWE-221",
+        "name": "Information Loss of Omission",
+        "url": "https://cwe.mitre.org/data/definitions/221.html"
+      },
+      {
+        "id": "CWE-223",
+        "name": "Omission of Security-relevant Information",
+        "url": "https://cwe.mitre.org/data/definitions/223.html"
+      },
+      {
+        "id": "CWE-532",
+        "name": "Insertion of Sensitive Information into Log File",
+        "url": "https://cwe.mitre.org/data/definitions/532.html"
+      },
+      {
+        "id": "CWE-778",
+        "name": "Insufficient Logging",
+        "url": "https://cwe.mitre.org/data/definitions/778.html"
+      }
+    ]
   },
   "A10:2025 - Mishandling of Exceptional Conditions": {
-    "description": "<p>Novità del 2025: l'applicazione non previene, non rileva o non gestisce correttamente le condizioni anomale. Eccezioni non gestite, messaggi di errore che rivelano dettagli interni e logiche che falliscono in modo aperto (fail open) portano a crash, stati incoerenti e controlli aggirati.</p><p><strong>Esempio:</strong> Un'eccezione nel controllo di autorizzazione viene catturata da un gestore generico che lascia passare la richiesta.</p>",
     "link": "https://top10.owasp.org/2025/it/A10_2025-Mishandling_of_Exceptional_Conditions/",
-    "level": "medio"
+    "stats": [
+      [
+        "CWE Mappati",
+        "24"
+      ],
+      [
+        "Tasso di Incidenza Massimo",
+        "20,67%"
+      ],
+      [
+        "Tasso di Incidenza Medio",
+        "2,95%"
+      ],
+      [
+        "Copertura Massima",
+        "100,00%"
+      ],
+      [
+        "Copertura Media",
+        "37,95%"
+      ],
+      [
+        "Exploit Ponderato Medio",
+        "7,11"
+      ],
+      [
+        "Impatto Ponderato Medio",
+        "3,81"
+      ],
+      [
+        "Occorrenze Totali",
+        "769.581"
+      ],
+      [
+        "CVE Totali",
+        "3.416"
+      ]
+    ],
+    "background": "<p>La gestione impropria delle condizioni eccezionali è una nuova categoria per il 2025. Questa categoria contiene 24 CWE e si concentra sulla gestione impropria degli errori, errori logici, failing open e altri scenari correlati derivanti da condizioni anomale che i sistemi possono incontrare. Questa categoria include alcuni CWE precedentemente associati a scarsa qualità del codice. Per noi era troppo generico; a nostro avviso, questa categoria più specifica fornisce indicazioni migliori.</p>\n<p>CWE notevoli inclusi in questa categoria: <em>CWE-209 Generation of Error Message Containing Sensitive Information, CWE-234 Failure to Handle Missing Parameter, CWE-274 Improper Handling of Insufficient Privileges, CWE-476 NULL Pointer Dereference,</em> e <em>CWE-636 Not Failing Securely (&#x27;Failing Open&#x27;)</em>.</p>",
+    "description": "<p>La gestione impropria delle condizioni eccezionali nel software si verifica quando i programmi non riescono a prevenire, rilevare e rispondere a situazioni insolite e imprevedibili, il che porta a crash, comportamenti imprevisti e talvolta vulnerabilità. Questo può coinvolgere uno o più dei seguenti 3 fallimenti: l&#x27;applicazione non previene una situazione insolita, non la identifica mentre si sta verificando e/o risponde in modo inadeguato o non risponde affatto alla situazione in seguito.</p>\n<p>Le condizioni eccezionali possono essere causate da validazione dell&#x27;input mancante, scarsa o incompleta, o gestione degli errori tardiva ad alto livello invece che nelle funzioni dove si verificano, o stati ambientali imprevisti come problemi di memoria, privilegi o rete, gestione incoerente delle eccezioni, o eccezioni non gestite del tutto, che permettono al sistema di cadere in uno stato sconosciuto e imprevedibile. Ogni volta che un&#x27;applicazione non è sicura della sua prossima istruzione, una condizione eccezionale è stata gestita in modo improprio. Errori ed eccezioni difficili da trovare possono minacciare la sicurezza dell&#x27;intera applicazione per molto tempo.</p>\n<p>Molte diverse vulnerabilità di sicurezza possono verificarsi quando gestiamo male le condizioni eccezionali, come bug logici, overflow, race condition, transazioni fraudolente, o problemi con memoria, stato, risorse, timing, autenticazione e autorizzazione. Questi tipi di vulnerabilità possono influenzare negativamente la riservatezza, la disponibilità e/o l&#x27;integrità di un sistema o dei suoi dati. Gli attaccanti manipolano la gestione degli errori difettosa di un&#x27;applicazione per colpire questa vulnerabilità.</p>",
+    "prevention": "<p>Per gestire correttamente una condizione eccezionale dobbiamo pianificare tali situazioni (aspettarsi il peggio). Dobbiamo &quot;catturare&quot; ogni possibile errore di sistema direttamente nel punto in cui si verifica e poi gestirlo (il che significa fare qualcosa di significativo per risolvere il problema e assicurarci di riprenderci dalla questione). Come parte della gestione, dovremmo includere la generazione di un errore (per informare l&#x27;utente in modo comprensibile), la registrazione dell&#x27;evento, nonché l&#x27;emissione di un alert se riteniamo che sia giustificato. Dovremmo anche avere un gestore globale delle eccezioni nel caso in cui ci sia qualcosa che abbiamo mancato. Idealmente, avremmo anche strumenti o funzionalità di monitoraggio e/o osservabilità che vigilano su errori ripetuti o pattern che indicano un attacco in corso, in grado di emettere una risposta, una difesa o un blocco di qualche tipo. Questo può aiutarci a bloccare e rispondere a script e bot che si concentrano sulle nostre debolezze nella gestione degli errori.</p>\n<p>Catturare e gestire le condizioni eccezionali garantisce che l&#x27;infrastruttura sottostante dei nostri programmi non sia lasciata a gestire situazioni imprevedibili. Se siamo nel mezzo di una transazione di qualsiasi tipo, è estremamente importante eseguire il rollback di ogni parte della transazione e ricominciare (noto anche come failing closed). Tentare di recuperare una transazione a metà è spesso il punto in cui creiamo errori irrecuperabili.</p>\n<p>Quando possibile, aggiungere rate limiting, quote di risorse, throttling e altri limiti ovunque sia possibile, per prevenire le condizioni eccezionali in primo luogo. Nulla nell&#x27;informatica dovrebbe essere illimitato, poiché questo porta a mancanza di resilienza applicativa, denial of service, attacchi a forza bruta riusciti e bollette cloud straordinarie. Considerare se errori ripetuti identici, al di sopra di un certo tasso, debbano essere emessi solo come statistiche che mostrano con quale frequenza si sono verificati e in quale arco temporale. Queste informazioni dovrebbero essere aggiunte al messaggio originale in modo da non interferire con il logging e il monitoraggio automatizzati, vedere <a href=\"https://top10.owasp.org/2025/it/A09_2025-Security_Logging_and_Alerting_Failures/\">A09:2025 Security Logging &amp; Alerting Failures</a>.</p>\n<p>Oltre a questo, vorremmo includere una validazione rigorosa dell&#x27;input (con sanificazione o escaping per caratteri potenzialmente pericolosi che dobbiamo accettare), e gestione degli errori <em>centralizzata</em>, logging, monitoraggio e alerting, e un gestore globale delle eccezioni. Un&#x27;applicazione non dovrebbe avere più funzioni per la gestione delle condizioni eccezionali, dovrebbe essere eseguita in un unico posto, allo stesso modo ogni volta. Dovremmo anche creare requisiti di sicurezza del progetto per tutti i consigli in questa sezione, eseguire attività di threat modeling e/o revisione del design sicuro nella fase di progettazione dei nostri progetti, eseguire code review o analisi statica, nonché eseguire test di stress, prestazioni e penetration testing del sistema finale.</p>\n<p>Se possibile, l&#x27;intera organizzazione dovrebbe gestire le condizioni eccezionali allo stesso modo, poiché rende più facile rivedere e verificare il codice per errori in questo importante controllo di sicurezza.</p>",
+    "scenarios": "<p><strong>Scenario #1:</strong> L&#x27;esaurimento delle risorse dovuto alla gestione impropria delle condizioni eccezionali (Denial of Service) potrebbe essere causato se l&#x27;applicazione cattura le eccezioni quando i file vengono caricati, ma non rilascia correttamente le risorse dopo. Ogni nuova eccezione lascia risorse bloccate o altrimenti non disponibili, finché tutte le risorse non sono esaurite.</p>\n<p><strong>Scenario #2:</strong> L&#x27;esposizione di dati sensibili tramite la gestione impropria degli errori del database che rivela l&#x27;errore di sistema completo all&#x27;utente. L&#x27;attaccante continua a forzare errori al fine di utilizzare le informazioni di sistema sensibili per creare un attacco SQL injection migliore. I dati sensibili nei messaggi di errore all&#x27;utente sono ricognizione.</p>\n<p><strong>Scenario #3:</strong> La corruzione dello stato nelle transazioni finanziarie potrebbe essere causata da un attaccante che interrompe una transazione multi-step tramite interruzioni di rete. Immaginate che l&#x27;ordine della transazione fosse: addebitare l&#x27;account utente, accreditare l&#x27;account di destinazione, registrare la transazione. Se il sistema non esegue correttamente il rollback dell&#x27;intera transazione (failing closed) quando si verifica un errore a metà, l&#x27;attaccante potrebbe potenzialmente prosciugare l&#x27;account dell&#x27;utente, o possibilmente una race condition che consente all&#x27;attaccante di inviare denaro alla destinazione più volte.</p>",
+    "references": "<p>OWASP MASVS‑RESILIENCE</p>\n<ul>\n<li>\n<p><a href=\"https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html\">OWASP Cheat Sheet: Logging</a></p>\n</li>\n<li>\n<p><a href=\"https://cheatsheetseries.owasp.org/cheatsheets/Error_Handling_Cheat_Sheet.html\">OWASP Cheat Sheet: Error Handling</a></p>\n</li>\n<li>\n<p><a href=\"https://github.com/OWASP/ASVS/blob/master/5.0/en/0x25-V16-Security-Logging-and-Error-Handling.md#v165-error-handling\">OWASP Application Security Verification Standard (ASVS): V16.5 Error Handling</a></p>\n</li>\n<li>\n<p><a href=\"https://owasp.org/www-project-web-security-testing-guide/stable/4-Web_Application_Security_Testing/08-Testing_for_Error_Handling/01-Testing_For_Improper_Error_Handling\">OWASP Testing Guide: 4.8.1 Testing for Error Handling</a></p>\n</li>\n</ul>\n<ul>\n<li>\n<p><a href=\"https://learn.microsoft.com/en-us/dotnet/standard/exceptions/best-practices-for-exceptions\">Best practices for exceptions (Microsoft, .Net)</a></p>\n</li>\n<li>\n<p><a href=\"https://www.toptal.com/developers/abap/clean-code-and-the-art-of-exception-handling\">Clean Code and the Art of Exception Handling (Toptal)</a></p>\n</li>\n<li>\n<p><a href=\"https://developers.google.com/tech-writing/error-messages/error-handling\">General error handling rules (Google for Developers)</a></p>\n</li>\n<li>\n<p><a href=\"https://www.firstreference.com/blog/human-error-and-internal-control-failures-cause-us62m-fine/\">Example of real-world mishandling of an exceptional condition</a></p>\n</li>\n</ul>",
+    "cwes": [
+      {
+        "id": "CWE-209",
+        "name": "Generation of Error Message Containing Sensitive Information",
+        "url": "https://cwe.mitre.org/data/definitions/209.html"
+      },
+      {
+        "id": "CWE-215",
+        "name": "Insertion of Sensitive Information Into Debugging Code",
+        "url": "https://cwe.mitre.org/data/definitions/215.html"
+      },
+      {
+        "id": "CWE-234",
+        "name": "Failure to Handle Missing Parameter",
+        "url": "https://cwe.mitre.org/data/definitions/234.html"
+      },
+      {
+        "id": "CWE-235",
+        "name": "Improper Handling of Extra Parameters",
+        "url": "https://cwe.mitre.org/data/definitions/235.html"
+      },
+      {
+        "id": "CWE-248",
+        "name": "Uncaught Exception",
+        "url": "https://cwe.mitre.org/data/definitions/248.html"
+      },
+      {
+        "id": "CWE-252",
+        "name": "Unchecked Return Value",
+        "url": "https://cwe.mitre.org/data/definitions/252.html"
+      },
+      {
+        "id": "CWE-274",
+        "name": "Improper Handling of Insufficient Privileges",
+        "url": "https://cwe.mitre.org/data/definitions/274.html"
+      },
+      {
+        "id": "CWE-280",
+        "name": "Improper Handling of Insufficient Permissions or Privileges",
+        "url": "https://cwe.mitre.org/data/definitions/280.html"
+      },
+      {
+        "id": "CWE-369",
+        "name": "Divide By Zero",
+        "url": "https://cwe.mitre.org/data/definitions/369.html"
+      },
+      {
+        "id": "CWE-390",
+        "name": "Detection of Error Condition Without Action",
+        "url": "https://cwe.mitre.org/data/definitions/390.html"
+      },
+      {
+        "id": "CWE-391",
+        "name": "Unchecked Error Condition",
+        "url": "https://cwe.mitre.org/data/definitions/391.html"
+      },
+      {
+        "id": "CWE-394",
+        "name": "Unexpected Status Code or Return Value",
+        "url": "https://cwe.mitre.org/data/definitions/394.html"
+      },
+      {
+        "id": "CWE-396",
+        "name": "Declaration of Catch for Generic Exception",
+        "url": "https://cwe.mitre.org/data/definitions/396.html"
+      },
+      {
+        "id": "CWE-397",
+        "name": "Declaration of Throws for Generic Exception",
+        "url": "https://cwe.mitre.org/data/definitions/397.html"
+      },
+      {
+        "id": "CWE-460",
+        "name": "Improper Cleanup on Thrown Exception",
+        "url": "https://cwe.mitre.org/data/definitions/460.html"
+      },
+      {
+        "id": "CWE-476",
+        "name": "NULL Pointer Dereference",
+        "url": "https://cwe.mitre.org/data/definitions/476.html"
+      },
+      {
+        "id": "CWE-478",
+        "name": "Missing Default Case in Multiple Condition Expression",
+        "url": "https://cwe.mitre.org/data/definitions/478.html"
+      },
+      {
+        "id": "CWE-484",
+        "name": "Omitted Break Statement in Switch",
+        "url": "https://cwe.mitre.org/data/definitions/484.html"
+      },
+      {
+        "id": "CWE-550",
+        "name": "Server-generated Error Message Containing Sensitive Information",
+        "url": "https://cwe.mitre.org/data/definitions/550.html"
+      },
+      {
+        "id": "CWE-636",
+        "name": "Not Failing Securely ('Failing Open')",
+        "url": "https://cwe.mitre.org/data/definitions/636.html"
+      },
+      {
+        "id": "CWE-703",
+        "name": "Improper Check or Handling of Exceptional Conditions",
+        "url": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      {
+        "id": "CWE-754",
+        "name": "Improper Check for Unusual or Exceptional Conditions",
+        "url": "https://cwe.mitre.org/data/definitions/754.html"
+      },
+      {
+        "id": "CWE-755",
+        "name": "Improper Handling of Exceptional Conditions",
+        "url": "https://cwe.mitre.org/data/definitions/755.html"
+      },
+      {
+        "id": "CWE-756",
+        "name": "Missing Custom Error Page",
+        "url": "https://cwe.mitre.org/data/definitions/756.html"
+      }
+    ]
   }
 }
